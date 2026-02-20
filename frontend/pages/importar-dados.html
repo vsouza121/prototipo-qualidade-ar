@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Importar Dados - Acoem Brasil</title>
+    <link rel="stylesheet" href="../css/styles.css?v=5">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .import-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .import-card {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .import-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .import-card h3 i {
+            color: var(--primary);
+        }
+        
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 60px 40px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+        
+        .upload-area i {
+            font-size: 64px;
+            color: var(--primary);
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .upload-area h4 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        
+        .upload-area p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+        
+        .upload-area .btn {
+            margin-top: 10px;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .file-info {
+            display: none;
+            background: var(--bg-primary);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            margin-top: 20px;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .file-info.visible {
+            display: flex;
+        }
+        
+        .file-info i {
+            font-size: 32px;
+            color: #10b981;
+        }
+        
+        .file-details {
+            flex: 1;
+        }
+        
+        .file-details h4 {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .file-details p {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .file-info .btn-remove {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 8px;
+            transition: color 0.2s;
+        }
+        
+        .file-info .btn-remove:hover {
+            color: var(--danger);
+        }
+        
+        .template-section {
+            background: var(--bg-primary);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .template-section h4 {
+            font-size: 14px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .template-section h4 i {
+            color: var(--warning);
+        }
+        
+        .template-section p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+        
+        .template-columns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .template-columns span {
+            background: var(--bg-secondary);
+            padding: 6px 12px;
+            border-radius: var(--radius);
+            font-size: 12px;
+            font-family: monospace;
+        }
+        
+        .preview-section {
+            margin-top: 20px;
+        }
+        
+        .preview-section h4 {
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+        
+        .preview-table {
+            width: 100%;
+            overflow-x: auto;
+        }
+        
+        .preview-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        
+        .preview-table th,
+        .preview-table td {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+        
+        .preview-table th {
+            background: var(--bg-primary);
+            font-weight: 600;
+        }
+        
+        .preview-table tr:nth-child(even) {
+            background: var(--bg-primary);
+        }
+        
+        .preview-table .error-row {
+            background: #fee2e2 !important;
+        }
+        
+        .import-summary {
+            display: flex;
+            gap: 30px;
+            padding: 20px;
+            background: var(--bg-primary);
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+        }
+        
+        .summary-item {
+            text-align: center;
+        }
+        
+        .summary-item strong {
+            display: block;
+            font-size: 24px;
+            color: var(--text-primary);
+        }
+        
+        .summary-item span {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .summary-item.success strong { color: #10b981; }
+        .summary-item.error strong { color: #ef4444; }
+        .summary-item.warning strong { color: #f59e0b; }
+        
+        .import-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .result-card {
+            display: none;
+        }
+        
+        .result-card.visible {
+            display: block;
+        }
+        
+        .result-message {
+            padding: 20px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+        }
+        
+        .result-message.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .result-message.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .result-message i {
+            margin-right: 10px;
+        }
+        
+        .errors-list {
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 13px;
+        }
+        
+        .errors-list li {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .errors-list li:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <img src="../img/logo-acoem.png" alt="Acoem Brasil" class="logo-img">
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <span class="nav-section-title">PRINCIPAL</span>
+                <a href="index.html" class="nav-item">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="supervisorio.html" class="nav-item">
+                    <i class="fas fa-desktop"></i>
+                    <span>Supervisório</span>
+                </a>
+                <a href="mapa.html" class="nav-item">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>Mapa Georreferenciado</span>
+                </a>
+                <a href="evolucao-temporal.html" class="nav-item">
+                    <i class="fas fa-chart-area"></i>
+                    <span>Evolução Temporal</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">DADOS</span>
+                <a href="validacao.html" class="nav-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Validação de Dados</span>
+                </a>
+                <a href="importar-dados.html" class="nav-item active">
+                    <i class="fas fa-database"></i>
+                    <span>Importar Dados</span>
+                </a>
+                <a href="exportar-dados.html" class="nav-item">
+                    <i class="fas fa-download"></i>
+                    <span>Exportar Dados</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">ANÁLISES</span>
+                <a href="relatorios.html" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Relatórios</span>
+                </a>
+                <a href="estatisticas.html" class="nav-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Estatísticas</span>
+                </a>
+                <a href="rosa-ventos.html" class="nav-item">
+                    <i class="fas fa-wind"></i>
+                    <span>Rosa dos Ventos</span>
+                </a>
+                <a href="iqar.html" class="nav-item">
+                    <i class="fas fa-smog"></i>
+                    <span>Índice IQAr</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">CONFIGURAÇÕES</span>
+                <a href="configuracoes.html" class="nav-item">
+                    <i class="fas fa-broadcast-tower"></i>
+                    <span>Estações</span>
+                </a>
+                <a href="configuracoes.html#usuarios" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Usuários</span>
+                </a>
+                <a href="configuracoes.html#alertas" class="nav-item">
+                    <i class="fas fa-bell"></i>
+                    <span>Alertas</span>
+                </a>
+                <a href="configuracoes.html#sistema" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Sistema</span>
+                </a>
+            </div>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="#" class="nav-item">
+                <i class="fas fa-question-circle"></i>
+                <span>FAQ / Ajuda</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-headset"></i>
+                <span>Suporte Técnico</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Overlay para mobile -->
+    <div class="sidebar-overlay"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <button class="menu-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Buscar...">
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <div class="header-actions">
+                    <button class="header-btn" title="Notificações">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </button>
+                </div>
+                
+                <div class="user-menu" id="userMenu" onclick="toggleUserDropdown()">
+                    <div class="user-info">
+                        <span class="user-name">Carregando...</span>
+                        <span class="user-role">-</span>
+                    </div>
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                    
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="index.html" class="dropdown-item">
+                            <i class="fas fa-th-large"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-user-cog"></i>
+                            <span>Meu Perfil</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item logout" onclick="fazerLogout(); return false;">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Sair</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="page-content">
+            <!-- Page Title -->
+            <div class="page-header">
+                <div class="page-title">
+                    <h1>Importar Dados</h1>
+                    <p>Importe medições a partir de arquivos CSV</p>
+                </div>
+            </div>
+
+            <div class="import-container">
+                <!-- Upload Area -->
+                <div class="import-card">
+                    <h3><i class="fas fa-cloud-upload-alt"></i> Upload de Arquivo</h3>
+                    
+                    <div class="template-section">
+                        <h4><i class="fas fa-info-circle"></i> Formato Esperado</h4>
+                        <p>O arquivo CSV deve conter as seguintes colunas (separadas por ponto-e-vírgula):</p>
+                        <div class="template-columns">
+                            <span>data_hora</span>
+                            <span>estacao_codigo</span>
+                            <span>parametro_codigo</span>
+                            <span>valor</span>
+                            <span>flag (opcional)</span>
+                            <span>motivo (opcional)</span>
+                        </div>
+                        <button class="btn btn-outline btn-small" onclick="baixarTemplate()">
+                            <i class="fas fa-download"></i> Baixar Template CSV
+                        </button>
+                    </div>
+                    
+                    <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h4>Arraste e solte seu arquivo aqui</h4>
+                        <p>ou clique para selecionar</p>
+                        <span class="btn btn-outline btn-small">Selecionar Arquivo</span>
+                        <input type="file" id="fileInput" accept=".csv,.txt" onchange="handleFileSelect(event)">
+                    </div>
+                    
+                    <div class="file-info" id="fileInfo">
+                        <i class="fas fa-file-csv"></i>
+                        <div class="file-details">
+                            <h4 id="fileName">arquivo.csv</h4>
+                            <p id="fileSize">0 KB</p>
+                        </div>
+                        <button class="btn-remove" onclick="removerArquivo()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Preview Section -->
+                <div class="import-card" id="previewCard" style="display: none;">
+                    <h3><i class="fas fa-eye"></i> Prévia dos Dados</h3>
+                    
+                    <div class="import-summary">
+                        <div class="summary-item">
+                            <strong id="totalLinhas">0</strong>
+                            <span>Total de linhas</span>
+                        </div>
+                        <div class="summary-item success">
+                            <strong id="linhasValidas">0</strong>
+                            <span>Linhas válidas</span>
+                        </div>
+                        <div class="summary-item error">
+                            <strong id="linhasErro">0</strong>
+                            <span>Com erros</span>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-section">
+                        <h4>Primeiras 10 linhas:</h4>
+                        <div class="preview-table">
+                            <table id="previewTable">
+                                <thead>
+                                    <tr>
+                                        <th>Data/Hora</th>
+                                        <th>Estação</th>
+                                        <th>Parâmetro</th>
+                                        <th>Valor</th>
+                                        <th>Flag</th>
+                                        <th>Motivo</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="import-actions">
+                        <button class="btn btn-outline" onclick="removerArquivo()">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                        <button class="btn btn-primary" onclick="importarDados()" id="btnImportar">
+                            <i class="fas fa-upload"></i> Importar Dados
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Result Card -->
+                <div class="import-card result-card" id="resultCard">
+                    <h3><i class="fas fa-check-circle"></i> Resultado da Importação</h3>
+                    
+                    <div class="result-message" id="resultMessage">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Importação concluída com sucesso!</span>
+                    </div>
+                    
+                    <div class="import-summary">
+                        <div class="summary-item success">
+                            <strong id="importados">0</strong>
+                            <span>Importados</span>
+                        </div>
+                        <div class="summary-item error">
+                            <strong id="errosImportacao">0</strong>
+                            <span>Erros</span>
+                        </div>
+                    </div>
+                    
+                    <div id="errorsContainer" style="display: none;">
+                        <h4 style="margin-bottom: 12px;">Erros encontrados:</h4>
+                        <ul class="errors-list" id="errorsList"></ul>
+                    </div>
+                    
+                    <div class="import-actions">
+                        <button class="btn btn-primary" onclick="novaImportacao()">
+                            <i class="fas fa-plus"></i> Nova Importação
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../js/api.js?v=4"></script>
+    
+    <!-- Sidebar Toggle Script -->
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            const isMobile = window.innerWidth <= 992;
+            
+            if (isMobile) {
+                sidebar.classList.toggle('open');
+                if (overlay) overlay.classList.toggle('active');
+            } else {
+                sidebar.classList.toggle('collapsed');
+                document.body.classList.toggle('sidebar-collapsed');
+            }
+        }
+        
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('sidebar-overlay')) {
+                const sidebar = document.querySelector('.sidebar');
+                const overlay = document.querySelector('.sidebar-overlay');
+                sidebar.classList.remove('open');
+                if (overlay) overlay.classList.remove('active');
+            }
+        });
+        
+        window.addEventListener('resize', function() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            const isMobile = window.innerWidth <= 992;
+            
+            if (isMobile) {
+                sidebar.classList.remove('collapsed');
+                document.body.classList.remove('sidebar-collapsed');
+            } else {
+                sidebar.classList.remove('open');
+                if (overlay) overlay.classList.remove('active');
+            }
+        });
+    </script>
+    
+    <script>
+        let dadosParseados = [];
+        let arquivoSelecionado = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!AuthService.isLoggedIn()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const usuario = AuthService.getUsuario();
+            if (usuario) {
+                document.querySelector('.user-name').textContent = usuario.nome;
+                const roles = { 'admin': 'Administrador', 'supervisor': 'Supervisor', 'analista': 'Analista', 'operador': 'Operador' };
+                document.querySelector('.user-role').textContent = roles[usuario.role] || usuario.role;
+            }
+
+            // Setup drag and drop
+            const uploadArea = document.getElementById('uploadArea');
+            
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    processarArquivo(files[0]);
+                }
+            });
+        });
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                processarArquivo(file);
+            }
+        }
+
+        function processarArquivo(file) {
+            if (!file.name.endsWith('.csv') && !file.name.endsWith('.txt')) {
+                alert('Por favor, selecione um arquivo CSV ou TXT.');
+                return;
+            }
+
+            arquivoSelecionado = file;
+            
+            // Mostrar info do arquivo
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatarTamanho(file.size);
+            document.getElementById('fileInfo').classList.add('visible');
+
+            // Ler e parsear arquivo
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const conteudo = e.target.result;
+                parsearCSV(conteudo);
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        function formatarTamanho(bytes) {
+            if (bytes < 1024) return bytes + ' bytes';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        function parsearCSV(conteudo) {
+            const linhas = conteudo.split('\n').filter(l => l.trim());
+            if (linhas.length < 2) {
+                alert('Arquivo vazio ou sem dados.');
+                return;
+            }
+
+            // Detectar separador (vírgula ou ponto-e-vírgula)
+            const header = linhas[0];
+            const separador = header.includes(';') ? ';' : ',';
+
+            const colunas = header.split(separador).map(c => c.trim().toLowerCase());
+            
+            // Mapear índices das colunas
+            const colIndex = {
+                data_hora: colunas.findIndex(c => c.includes('data') || c.includes('hora') || c === 'datetime'),
+                estacao: colunas.findIndex(c => c.includes('estacao') || c.includes('station')),
+                parametro: colunas.findIndex(c => c.includes('parametro') || c.includes('parameter')),
+                valor: colunas.findIndex(c => c.includes('valor') || c.includes('value')),
+                flag: colunas.findIndex(c => c.includes('flag') || c.includes('status')),
+                motivo: colunas.findIndex(c => c.includes('motivo') || c.includes('reason') || c.includes('obs'))
+            };
+
+            // Validar colunas obrigatórias
+            if (colIndex.data_hora === -1 || colIndex.estacao === -1 || 
+                colIndex.parametro === -1 || colIndex.valor === -1) {
+                alert('Arquivo não contém as colunas obrigatórias: data_hora, estacao_codigo, parametro_codigo, valor');
+                return;
+            }
+
+            dadosParseados = [];
+            let erros = 0;
+
+            for (let i = 1; i < linhas.length; i++) {
+                const valores = linhas[i].split(separador).map(v => v.trim());
+                
+                const dado = {
+                    data_hora: valores[colIndex.data_hora] || '',
+                    estacao_codigo: valores[colIndex.estacao] || '',
+                    parametro_codigo: valores[colIndex.parametro] || '',
+                    valor: valores[colIndex.valor] || '',
+                    flag: colIndex.flag >= 0 ? valores[colIndex.flag] || 'pending' : 'pending',
+                    motivo: colIndex.motivo >= 0 ? valores[colIndex.motivo] || '' : '',
+                    erro: null
+                };
+
+                // Validações básicas
+                if (!dado.data_hora) {
+                    dado.erro = 'Data/hora ausente';
+                    erros++;
+                } else if (!dado.estacao_codigo) {
+                    dado.erro = 'Código da estação ausente';
+                    erros++;
+                } else if (!dado.parametro_codigo) {
+                    dado.erro = 'Código do parâmetro ausente';
+                    erros++;
+                } else if (!dado.valor || isNaN(parseFloat(dado.valor))) {
+                    dado.erro = 'Valor inválido';
+                    erros++;
+                }
+
+                dadosParseados.push(dado);
+            }
+
+            // Atualizar resumo
+            document.getElementById('totalLinhas').textContent = dadosParseados.length;
+            document.getElementById('linhasValidas').textContent = dadosParseados.length - erros;
+            document.getElementById('linhasErro').textContent = erros;
+
+            // Mostrar prévia
+            renderizarPrevia();
+            document.getElementById('previewCard').style.display = 'block';
+            document.getElementById('resultCard').classList.remove('visible');
+        }
+
+        function renderizarPrevia() {
+            const tbody = document.querySelector('#previewTable tbody');
+            tbody.innerHTML = '';
+
+            const preview = dadosParseados.slice(0, 10);
+            preview.forEach(d => {
+                const tr = document.createElement('tr');
+                if (d.erro) tr.classList.add('error-row');
+                
+                tr.innerHTML = `
+                    <td>${d.data_hora}</td>
+                    <td>${d.estacao_codigo}</td>
+                    <td>${d.parametro_codigo}</td>
+                    <td>${d.valor}</td>
+                    <td>${d.flag}</td>
+                    <td>${d.motivo || d.erro || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function removerArquivo() {
+            arquivoSelecionado = null;
+            dadosParseados = [];
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileInfo').classList.remove('visible');
+            document.getElementById('previewCard').style.display = 'none';
+        }
+
+        async function importarDados() {
+            if (dadosParseados.length === 0) {
+                alert('Nenhum dado para importar.');
+                return;
+            }
+
+            const dadosValidos = dadosParseados
+                .filter(d => !d.erro)
+                .map(d => ({
+                    data_hora: d.data_hora,
+                    estacao_codigo: d.estacao_codigo,
+                    parametro_codigo: d.parametro_codigo,
+                    valor: d.valor,
+                    flag: d.flag || 'pending',
+                    motivo: d.motivo
+                }));
+
+            if (dadosValidos.length === 0) {
+                alert('Nenhum dado válido para importar.');
+                return;
+            }
+
+            const btnImportar = document.getElementById('btnImportar');
+            btnImportar.disabled = true;
+            btnImportar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importando...';
+
+            try {
+                const token = AuthService.getToken();
+                const response = await fetch('http://localhost:3000/api/importar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ dados: dadosValidos })
+                });
+
+                const result = await response.json();
+
+                // Mostrar resultado
+                document.getElementById('previewCard').style.display = 'none';
+                document.getElementById('resultCard').classList.add('visible');
+
+                const resultMessage = document.getElementById('resultMessage');
+                document.getElementById('importados').textContent = result.importados || 0;
+                document.getElementById('errosImportacao').textContent = result.erros?.length || 0;
+
+                if (result.sucesso) {
+                    resultMessage.className = 'result-message success';
+                    resultMessage.innerHTML = `<i class="fas fa-check-circle"></i> <span>${result.mensagem}</span>`;
+                } else {
+                    resultMessage.className = 'result-message error';
+                    resultMessage.innerHTML = `<i class="fas fa-exclamation-circle"></i> <span>${result.mensagem}</span>`;
+                }
+
+                // Mostrar erros se houver
+                if (result.erros && result.erros.length > 0) {
+                    document.getElementById('errorsContainer').style.display = 'block';
+                    const errorsList = document.getElementById('errorsList');
+                    errorsList.innerHTML = '';
+                    result.erros.forEach(err => {
+                        const li = document.createElement('li');
+                        li.textContent = `Linha ${err.linha}: ${err.erro}`;
+                        errorsList.appendChild(li);
+                    });
+                } else {
+                    document.getElementById('errorsContainer').style.display = 'none';
+                }
+
+            } catch (error) {
+                console.error('Erro na importação:', error);
+                alert('Erro ao importar dados: ' + error.message);
+            } finally {
+                btnImportar.disabled = false;
+                btnImportar.innerHTML = '<i class="fas fa-upload"></i> Importar Dados';
+            }
+        }
+
+        function novaImportacao() {
+            removerArquivo();
+            document.getElementById('resultCard').classList.remove('visible');
+        }
+
+        function baixarTemplate() {
+            const template = `data_hora;estacao_codigo;parametro_codigo;valor;flag;motivo
+2024-01-15 10:00:00;REPLAN-01;PM2.5;12.5;pending;
+2024-01-15 10:00:00;REPLAN-01;PM10;25.3;pending;
+2024-01-15 11:00:00;REPLAN-01;PM2.5;14.2;valid;Valor verificado`;
+
+            const blob = new Blob(['\uFEFF' + template], { type: 'text/csv;charset=utf-8;' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'template_importacao.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function fazerLogout() {
+            AuthService.logout();
+        }
+
+        function toggleUserDropdown() {
+            document.getElementById('userDropdown').classList.toggle('active');
+        }
+
+        document.addEventListener('click', function(event) {
+            const userMenu = document.getElementById('userMenu');
+            const dropdown = document.getElementById('userDropdown');
+            if (userMenu && !userMenu.contains(event.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

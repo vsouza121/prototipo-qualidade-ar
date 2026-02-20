@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuração de Parâmetros - Acoem Brasil</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .config-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .config-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .config-header h2 {
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .config-stats {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .stat-card {
+            background: var(--bg-secondary);
+            padding: 15px 25px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: var(--shadow);
+        }
+        
+        .stat-card i {
+            font-size: 24px;
+            color: var(--primary);
+        }
+        
+        .stat-info h4 {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+        
+        .stat-info span {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .config-table-container {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        
+        .config-table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .config-table-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .filter-tab {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        
+        .filter-tab:hover {
+            background: var(--bg-hover);
+        }
+        
+        .filter-tab.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .config-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .config-table th {
+            background: var(--bg-primary);
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .config-table td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+        }
+        
+        .config-table tr:hover {
+            background: var(--bg-hover);
+        }
+        
+        .param-code {
+            font-family: 'Monaco', 'Consolas', monospace;
+            background: var(--bg-primary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        .param-type {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .param-type.poluente {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+        
+        .param-type.meteorologico {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+        
+        .param-type.outro {
+            background: rgba(156, 163, 175, 0.1);
+            color: #6b7280;
+        }
+        
+        .iqar-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .iqar-badge.sim {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+        
+        .iqar-badge.nao {
+            background: rgba(156, 163, 175, 0.1);
+            color: #6b7280;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .btn-icon.edit {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+        
+        .btn-icon.edit:hover {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-icon.delete {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+        
+        .btn-icon.delete:hover {
+            background: #ef4444;
+            color: white;
+        }
+        
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            width: 600px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .modal-header h3 {
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-close:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+        
+        .form-group label span {
+            color: #ef4444;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 14px;
+            color: var(--text-primary);
+            background: var(--bg-primary);
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 161, 154, 0.1);
+        }
+        
+        .form-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .form-section h4 {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .help-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        
+        .limits-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+        }
+        
+        .limits-grid .form-group {
+            margin-bottom: 0;
+        }
+        
+        .limits-grid input {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <a href="index.html" class="logo">
+                <img src="../img/logo-acoem.png" alt="Acoem Brasil" onerror="this.onerror=null;this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22120%22 height=%2240%22><text y=%2230%22 fill=%22%23fff%22 font-size=%2224%22 font-weight=%22bold%22>Acoem</text></svg>'">
+            </a>
+            <nav class="nav-menu">
+                <a href="index.html" class="nav-link"><i class="fas fa-chart-line"></i> Dashboard</a>
+                <a href="mapa.html" class="nav-link"><i class="fas fa-map-marked-alt"></i> Mapa</a>
+                <a href="validacao.html" class="nav-link"><i class="fas fa-check-circle"></i> Validação</a>
+                <div class="nav-dropdown">
+                    <button class="nav-link dropdown-toggle"><i class="fas fa-cog"></i> Configurações <i class="fas fa-chevron-down"></i></button>
+                    <div class="dropdown-menu">
+                        <a href="configuracao-parametros.html" class="dropdown-item active"><i class="fas fa-sliders-h"></i> Parâmetros</a>
+                        <a href="#" class="dropdown-item"><i class="fas fa-broadcast-tower"></i> Estações</a>
+                        <a href="#" class="dropdown-item"><i class="fas fa-users"></i> Usuários</a>
+                    </div>
+                </div>
+            </nav>
+        </div>
+        <div class="header-right">
+            <div class="user-info">
+                <span class="user-name" id="userName">Administrador</span>
+                <span class="user-role" id="userRole">admin</span>
+            </div>
+            <button class="btn-icon-header" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="config-container">
+            <!-- Header da página -->
+            <div class="config-header">
+                <h2><i class="fas fa-sliders-h"></i> Configuração de Parâmetros</h2>
+                <div class="config-stats">
+                    <div class="stat-card">
+                        <i class="fas fa-smog"></i>
+                        <div class="stat-info">
+                            <h4>Poluentes</h4>
+                            <span id="totalPoluentes">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-cloud-sun"></i>
+                        <div class="stat-info">
+                            <h4>Meteorológicos</h4>
+                            <span id="totalMeteorologicos">0</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-calculator"></i>
+                        <div class="stat-info">
+                            <h4>Calculam IQAr</h4>
+                            <span id="totalCalculamIqar">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabela de parâmetros -->
+            <div class="config-table-container">
+                <div class="config-table-header">
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" data-filter="todos">Todos</button>
+                        <button class="filter-tab" data-filter="poluente">Poluentes</button>
+                        <button class="filter-tab" data-filter="meteorologico">Meteorológicos</button>
+                        <button class="filter-tab" data-filter="iqar">Calculam IQAr</button>
+                    </div>
+                    <div class="config-table-actions">
+                        <button class="btn btn-primary" onclick="abrirModalNovo()">
+                            <i class="fas fa-plus"></i> Novo Parâmetro
+                        </button>
+                    </div>
+                </div>
+                
+                <table class="config-table">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Nome</th>
+                            <th>Tipo</th>
+                            <th>Unidade</th>
+                            <th>Calcula IQAr</th>
+                            <th>Média</th>
+                            <th>Limites IQAr</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="parametrosTableBody">
+                        <!-- Preenchido via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de Edição/Criação -->
+    <div class="modal-overlay" id="modalParametro">
+        <div class="modal">
+            <div class="modal-header">
+                <h3><i class="fas fa-sliders-h"></i> <span id="modalTitle">Novo Parâmetro</span></h3>
+                <button class="modal-close" onclick="fecharModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="formParametro">
+                    <input type="hidden" id="paramId">
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Código <span>*</span></label>
+                            <input type="text" id="paramCodigo" required placeholder="Ex: PM25, O3, TEMP">
+                            <p class="help-text">Identificador único do parâmetro</p>
+                        </div>
+                        <div class="form-group">
+                            <label>Nome <span>*</span></label>
+                            <input type="text" id="paramNome" required placeholder="Ex: Material Particulado 2.5">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome Científico</label>
+                            <input type="text" id="paramNomeCientifico" placeholder="Ex: Particulate Matter 2.5">
+                        </div>
+                        <div class="form-group">
+                            <label>Unidade de Medida <span>*</span></label>
+                            <select id="paramUnidade" required>
+                                <option value="µg/m³">µg/m³ (Micrograma por metro cúbico)</option>
+                                <option value="ppm">ppm (Partes por milhão)</option>
+                                <option value="ppb">ppb (Partes por bilhão)</option>
+                                <option value="mg/m³">mg/m³ (Miligrama por metro cúbico)</option>
+                                <option value="°C">°C (Graus Celsius)</option>
+                                <option value="%">% (Porcentagem)</option>
+                                <option value="hPa">hPa (Hectopascal)</option>
+                                <option value="m/s">m/s (Metros por segundo)</option>
+                                <option value="km/h">km/h (Quilômetros por hora)</option>
+                                <option value="°">° (Graus)</option>
+                                <option value="mm">mm (Milímetros)</option>
+                                <option value="W/m²">W/m² (Watts por metro quadrado)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tipo <span>*</span></label>
+                            <select id="paramTipo" required onchange="atualizarFormulario()">
+                                <option value="poluente">Poluente</option>
+                                <option value="meteorologico">Meteorológico</option>
+                                <option value="outro">Outro</option>
+                            </select>
+                            <p class="help-text">Poluentes podem calcular IQAr, meteorológicos não</p>
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo de Média</label>
+                            <select id="paramTipoMedia">
+                                <option value="horaria">Horária</option>
+                                <option value="8horas">8 horas (móvel)</option>
+                                <option value="24horas">24 horas</option>
+                            </select>
+                            <p class="help-text">Período de média para cálculo CONAMA</p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="paramCalculaIqar" checked>
+                            <label for="paramCalculaIqar">Este parâmetro entra no cálculo de IQAr</label>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section" id="secaoLimites">
+                        <h4><i class="fas fa-chart-bar"></i> Limites para Cálculo de IQAr (CONAMA)</h4>
+                        <div class="limits-grid">
+                            <div class="form-group">
+                                <label>Bom</label>
+                                <input type="number" id="paramLimiteBom" step="0.01" placeholder="0-50">
+                            </div>
+                            <div class="form-group">
+                                <label>Moderado</label>
+                                <input type="number" id="paramLimiteModerado" step="0.01" placeholder="51-100">
+                            </div>
+                            <div class="form-group">
+                                <label>Ruim</label>
+                                <input type="number" id="paramLimiteRuim" step="0.01" placeholder="101-150">
+                            </div>
+                            <div class="form-group">
+                                <label>Muito Ruim</label>
+                                <input type="number" id="paramLimiteMuitoRuim" step="0.01" placeholder="151-200">
+                            </div>
+                            <div class="form-group">
+                                <label>Péssimo</label>
+                                <input type="number" id="paramLimitePessimo" step="0.01" placeholder=">200">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h4><i class="fas fa-ruler"></i> Limites Físicos (Validação)</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Valor Mínimo</label>
+                                <input type="number" id="paramValorMinimo" step="0.01" value="0">
+                                <p class="help-text">Valores abaixo serão considerados inválidos</p>
+                            </div>
+                            <div class="form-group">
+                                <label>Valor Máximo</label>
+                                <input type="number" id="paramValorMaximo" step="0.01" value="9999">
+                                <p class="help-text">Valores acima serão considerados inválidos</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Descrição</label>
+                        <textarea id="paramDescricao" rows="3" placeholder="Descrição detalhada do parâmetro..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="fecharModal()">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="salvarParametro()">
+                    <i class="fas fa-save"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        let parametros = [];
+        let filtroAtual = 'todos';
+
+        // Verificar autenticação
+        document.addEventListener('DOMContentLoaded', async function() {
+            const token = localStorage.getItem('accessToken');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Carregar dados do usuário
+            const user = JSON.parse(localStorage.getItem('userData') || '{}');
+            if (user.nome) {
+                document.getElementById('userName').textContent = user.nome;
+                const roles = { 'admin': 'Administrador', 'supervisor': 'Supervisor', 'analista': 'Analista', 'operador': 'Operador' };
+                document.getElementById('userRole').textContent = roles[user.perfil] || user.perfil;
+            }
+
+            // Verificar se é admin
+            if (user.perfil !== 'admin' && user.perfil !== 'supervisor') {
+                alert('Acesso restrito a administradores e supervisores');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            await carregarParametros();
+            setupFilterTabs();
+        });
+
+        // Configurar tabs de filtro
+        function setupFilterTabs() {
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    filtroAtual = this.dataset.filter;
+                    renderizarTabela();
+                });
+            });
+        }
+
+        // Carregar parâmetros da API
+        async function carregarParametros() {
+            try {
+                const token = localStorage.getItem('accessToken');
+                const response = await fetch(`${API_URL}/parametros`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const data = await response.json();
+                if (data.sucesso) {
+                    parametros = data.dados;
+                    atualizarEstatisticas();
+                    renderizarTabela();
+                }
+            } catch (error) {
+                console.error('Erro ao carregar parâmetros:', error);
+                alert('Erro ao carregar parâmetros');
+            }
+        }
+
+        // Atualizar estatísticas
+        function atualizarEstatisticas() {
+            const poluentes = parametros.filter(p => p.tipo === 'poluente').length;
+            const meteorologicos = parametros.filter(p => p.tipo === 'meteorologico').length;
+            const calculamIqar = parametros.filter(p => p.calcula_iqar).length;
+            
+            document.getElementById('totalPoluentes').textContent = poluentes;
+            document.getElementById('totalMeteorologicos').textContent = meteorologicos;
+            document.getElementById('totalCalculamIqar').textContent = calculamIqar;
+        }
+
+        // Renderizar tabela
+        function renderizarTabela() {
+            let dados = [...parametros];
+            
+            // Aplicar filtro
+            if (filtroAtual === 'poluente') {
+                dados = dados.filter(p => p.tipo === 'poluente');
+            } else if (filtroAtual === 'meteorologico') {
+                dados = dados.filter(p => p.tipo === 'meteorologico');
+            } else if (filtroAtual === 'iqar') {
+                dados = dados.filter(p => p.calcula_iqar);
+            }
+
+            const tbody = document.getElementById('parametrosTableBody');
+            tbody.innerHTML = dados.map(p => `
+                <tr>
+                    <td><span class="param-code">${p.codigo}</span></td>
+                    <td>${p.nome}</td>
+                    <td><span class="param-type ${p.tipo}">
+                        <i class="fas fa-${p.tipo === 'poluente' ? 'smog' : p.tipo === 'meteorologico' ? 'cloud-sun' : 'question'}"></i>
+                        ${p.tipo === 'poluente' ? 'Poluente' : p.tipo === 'meteorologico' ? 'Meteorológico' : 'Outro'}
+                    </span></td>
+                    <td>${p.unidade_medida}</td>
+                    <td><span class="iqar-badge ${p.calcula_iqar ? 'sim' : 'nao'}">
+                        <i class="fas fa-${p.calcula_iqar ? 'check' : 'times'}"></i>
+                        ${p.calcula_iqar ? 'Sim' : 'Não'}
+                    </span></td>
+                    <td>${p.tipo_media || '-'}</td>
+                    <td>${p.calcula_iqar ? `${p.limite_bom || '-'} / ${p.limite_moderado || '-'} / ${p.limite_ruim || '-'}` : '-'}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-icon edit" onclick="editarParametro(${p.id})" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-icon delete" onclick="excluirParametro(${p.id})" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Abrir modal para novo parâmetro
+        function abrirModalNovo() {
+            document.getElementById('modalTitle').textContent = 'Novo Parâmetro';
+            document.getElementById('formParametro').reset();
+            document.getElementById('paramId').value = '';
+            document.getElementById('paramCalculaIqar').checked = true;
+            atualizarFormulario();
+            document.getElementById('modalParametro').classList.add('active');
+        }
+
+        // Editar parâmetro
+        function editarParametro(id) {
+            const param = parametros.find(p => p.id === id);
+            if (!param) return;
+
+            document.getElementById('modalTitle').textContent = 'Editar Parâmetro';
+            document.getElementById('paramId').value = param.id;
+            document.getElementById('paramCodigo').value = param.codigo;
+            document.getElementById('paramNome').value = param.nome;
+            document.getElementById('paramNomeCientifico').value = param.nome_cientifico || '';
+            document.getElementById('paramUnidade').value = param.unidade_medida;
+            document.getElementById('paramTipo').value = param.tipo || 'poluente';
+            document.getElementById('paramTipoMedia').value = param.tipo_media || 'horaria';
+            document.getElementById('paramCalculaIqar').checked = param.calcula_iqar;
+            document.getElementById('paramLimiteBom').value = param.limite_bom || '';
+            document.getElementById('paramLimiteModerado').value = param.limite_moderado || '';
+            document.getElementById('paramLimiteRuim').value = param.limite_ruim || '';
+            document.getElementById('paramLimiteMuitoRuim').value = param.limite_muito_ruim || '';
+            document.getElementById('paramLimitePessimo').value = param.limite_pessimo || '';
+            document.getElementById('paramValorMinimo').value = param.valor_minimo || 0;
+            document.getElementById('paramValorMaximo').value = param.valor_maximo || 9999;
+            document.getElementById('paramDescricao').value = param.descricao || '';
+            
+            atualizarFormulario();
+            document.getElementById('modalParametro').classList.add('active');
+        }
+
+        // Atualizar formulário baseado no tipo
+        function atualizarFormulario() {
+            const tipo = document.getElementById('paramTipo').value;
+            const secaoLimites = document.getElementById('secaoLimites');
+            const checkboxIqar = document.getElementById('paramCalculaIqar');
+            
+            if (tipo === 'meteorologico') {
+                secaoLimites.style.display = 'none';
+                checkboxIqar.checked = false;
+                checkboxIqar.disabled = true;
+            } else {
+                secaoLimites.style.display = 'block';
+                checkboxIqar.disabled = false;
+            }
+        }
+
+        // Fechar modal
+        function fecharModal() {
+            document.getElementById('modalParametro').classList.remove('active');
+        }
+
+        // Salvar parâmetro
+        async function salvarParametro() {
+            const id = document.getElementById('paramId').value;
+            const dados = {
+                codigo: document.getElementById('paramCodigo').value,
+                nome: document.getElementById('paramNome').value,
+                nome_cientifico: document.getElementById('paramNomeCientifico').value || null,
+                unidade_medida: document.getElementById('paramUnidade').value,
+                tipo: document.getElementById('paramTipo').value,
+                tipo_media: document.getElementById('paramTipoMedia').value,
+                calcula_iqar: document.getElementById('paramCalculaIqar').checked,
+                limite_bom: parseFloat(document.getElementById('paramLimiteBom').value) || null,
+                limite_moderado: parseFloat(document.getElementById('paramLimiteModerado').value) || null,
+                limite_ruim: parseFloat(document.getElementById('paramLimiteRuim').value) || null,
+                limite_muito_ruim: parseFloat(document.getElementById('paramLimiteMuitoRuim').value) || null,
+                limite_pessimo: parseFloat(document.getElementById('paramLimitePessimo').value) || null,
+                valor_minimo: parseFloat(document.getElementById('paramValorMinimo').value) || 0,
+                valor_maximo: parseFloat(document.getElementById('paramValorMaximo').value) || 9999,
+                descricao: document.getElementById('paramDescricao').value || null
+            };
+
+            try {
+                const token = localStorage.getItem('accessToken');
+                const url = id ? `${API_URL}/parametros/${id}` : `${API_URL}/parametros`;
+                const method = id ? 'PUT' : 'POST';
+                
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dados)
+                });
+
+                const result = await response.json();
+                if (result.sucesso) {
+                    alert(id ? 'Parâmetro atualizado com sucesso!' : 'Parâmetro criado com sucesso!');
+                    fecharModal();
+                    await carregarParametros();
+                } else {
+                    alert('Erro: ' + result.mensagem);
+                }
+            } catch (error) {
+                console.error('Erro ao salvar:', error);
+                alert('Erro ao salvar parâmetro');
+            }
+        }
+
+        // Excluir parâmetro
+        async function excluirParametro(id) {
+            const param = parametros.find(p => p.id === id);
+            if (!confirm(`Deseja realmente excluir o parâmetro "${param.nome}"?`)) return;
+
+            try {
+                const token = localStorage.getItem('accessToken');
+                const response = await fetch(`${API_URL}/parametros/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const result = await response.json();
+                if (result.sucesso) {
+                    alert('Parâmetro excluído com sucesso!');
+                    await carregarParametros();
+                } else {
+                    alert('Erro: ' + result.mensagem);
+                }
+            } catch (error) {
+                console.error('Erro ao excluir:', error);
+                alert('Erro ao excluir parâmetro');
+            }
+        }
+
+        // Logout
+        function logout() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('userData');
+            window.location.href = 'login.html';
+        }
+
+        // Fechar modal ao clicar fora
+        document.getElementById('modalParametro').addEventListener('click', function(e) {
+            if (e.target === this) fecharModal();
+        });
+    </script>
+</body>
+</html>

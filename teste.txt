@@ -1,0 +1,39 @@
+# Terminal 1 - Backend
+cd c:\Users\marcos.melo\Desktop\prototipo-qualidade-ar\backend; node src/server.js
+
+# Terminal 2 - Frontend (abrir novo terminal)
+cd c:\Users\marcos.melo\Desktop\prototipo-qualidade-ar\frontend; npx http-server -p 8080 --cors
+
+
+
+npx serve .
+
+python -m http.server 3000
+
+npx live-server --port=3000
+
+http://localhost:5000
+
+
+
+
+# 1. Criar o banco de dados no SQL Server Management Studio:
+CREATE DATABASE qualidade_ar;
+
+# 2. Editar o arquivo .env com suas credenciais:
+DB_HOST=localhost
+DB_USER=sa
+DB_PASSWORD=SuaSenhaAqui
+
+# 3. Criar as tabelas:
+cd backend
+npm run db:sync
+
+# 4. Popular com dados iniciais (estações, parâmetros, etc.):
+npm run db:seed
+
+# 5. Iniciar o servidor:
+npm run dev
+
+abrir o sistema 
+npx serve -p 8080

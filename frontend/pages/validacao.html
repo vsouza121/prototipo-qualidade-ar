@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validação de Dados - Acoem Brasil</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .validation-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            height: calc(100vh - var(--header-height) - 120px);
+        }
+        
+        .filter-panel {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            height: fit-content;
+        }
+        
+        .filter-section {
+            margin-bottom: 20px;
+        }
+        
+        .filter-section h4 {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .filter-group {
+            margin-bottom: 16px;
+        }
+        
+        .filter-group label {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+        
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .validation-table-container {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .validation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .validation-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .validation-table {
+            flex: 1;
+            overflow: auto;
+        }
+        
+        .validation-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .validation-table th,
+        .validation-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+        
+        .validation-table th {
+            background: var(--bg-primary);
+            font-weight: 600;
+            color: var(--text-secondary);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .validation-table tr:hover {
+            background: var(--bg-primary);
+        }
+        
+        .validation-table tr.selected {
+            background: var(--primary-light);
+        }
+        
+        .validation-table .checkbox-cell {
+            width: 40px;
+        }
+        
+        .flag-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .flag-badge.valid {
+            background: #d1fae5;
+            color: #059669;
+        }
+        
+        .flag-badge.invalid {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .flag-badge.pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        
+        .flag-badge.auto-invalid {
+            background: #fce7f3;
+            color: #db2777;
+        }
+        
+        .value-highlight {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .value-highlight.warning i {
+            color: var(--warning);
+        }
+        
+        .value-highlight.danger i {
+            color: var(--danger);
+        }
+        
+        .action-btns {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .action-btn {
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .action-btn.validate {
+            background: #d1fae5;
+            color: #059669;
+        }
+        
+        .action-btn.validate:hover {
+            background: #059669;
+            color: #fff;
+        }
+        
+        .action-btn.invalidate {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .action-btn.invalidate:hover {
+            background: #dc2626;
+            color: #fff;
+        }
+        
+        .validation-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-primary);
+        }
+        
+        .selected-count {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .selected-count strong {
+            color: var(--primary);
+        }
+        
+        .batch-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        /* Modal de Invalidação */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-overlay.active {
+            display: flex;
+        }
+        
+        .modal {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            width: 480px;
+            max-width: 90%;
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 18px;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-body label {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        
+        .modal-body select,
+        .modal-body textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+        
+        .modal-body textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar (mesmo do index.html) -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <!-- Logo Acoem com fallback em texto -->
+                <img src="../img/logo-acoem.png" alt="Acoem Brasil" class="logo-img">
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <span class="nav-section-title">PRINCIPAL</span>
+                <a href="index.html" class="nav-item">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="supervisorio.html" class="nav-item">
+                    <i class="fas fa-desktop"></i>
+                    <span>Supervisório</span>
+                </a>
+                <a href="mapa.html" class="nav-item">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>Mapa Georreferenciado</span>
+                </a>
+                <a href="evolucao-temporal.html" class="nav-item">
+                    <i class="fas fa-chart-area"></i>
+                    <span>Evolução Temporal</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">DADOS</span>
+                <a href="validacao.html" class="nav-item active">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Validação de Dados</span>
+                    <span class="badge">0</span>
+                </a>
+                <a href="importar-dados.html" class="nav-item">
+                    <i class="fas fa-database"></i>
+                    <span>Importar Dados</span>
+                </a>
+                <a href="exportar-dados.html" class="nav-item">
+                    <i class="fas fa-download"></i>
+                    <span>Exportar Dados</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">ANÁLISES</span>
+                <a href="relatorios.html" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Relatórios</span>
+                </a>
+                <a href="estatisticas.html" class="nav-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Estatísticas</span>
+                </a>
+                <a href="rosa-ventos.html" class="nav-item">
+                    <i class="fas fa-wind"></i>
+                    <span>Rosa dos Ventos</span>
+                </a>
+                <a href="iqar.html" class="nav-item">
+                    <i class="fas fa-smog"></i>
+                    <span>Índice IQAr</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">CONFIGURAÇÕES</span>
+                <a href="configuracoes.html" class="nav-item">
+                    <i class="fas fa-broadcast-tower"></i>
+                    <span>Estações</span>
+                </a>
+                <a href="configuracoes.html#usuarios" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Usuários</span>
+                </a>
+                <a href="configuracoes.html#alertas" class="nav-item">
+                    <i class="fas fa-bell"></i>
+                    <span>Alertas</span>
+                </a>
+                <a href="configuracoes.html#sistema" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Sistema</span>
+                </a>
+            </div>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="#" class="nav-item">
+                <i class="fas fa-question-circle"></i>
+                <span>FAQ / Ajuda</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-headset"></i>
+                <span>Suporte Técnico</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Overlay para mobile -->
+    <div class="sidebar-overlay"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <button class="menu-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Buscar dados...">
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <div class="header-actions">
+                    <button class="header-btn" title="Notificações">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </button>
+                </div>
+                
+                <div class="user-menu" id="userMenu" onclick="toggleUserDropdown()">
+                    <div class="user-info">
+                        <span class="user-name">Carregando...</span>
+                        <span class="user-role">-</span>
+                    </div>
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                    
+                    <!-- Dropdown Menu -->
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="index.html" class="dropdown-item">
+                            <i class="fas fa-th-large"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-user-cog"></i>
+                            <span>Meu Perfil</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item logout" onclick="fazerLogout(); return false;">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Sair</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="page-content">
+            <!-- Page Title -->
+            <div class="page-header">
+                <div class="page-title">
+                    <h1>Validação de Dados</h1>
+                    <p>Consistência e validação dos dados monitorados</p>
+                </div>
+            </div>
+
+            <!-- Validation Container -->
+            <div class="validation-container">
+                <!-- Filter Panel -->
+                <div class="filter-panel">
+                    <div class="filter-section">
+                        <h4>Filtros</h4>
+                        
+                        <div class="filter-group">
+                            <label>Unidade</label>
+                            <select id="filtroUnidade">
+                                <option value="">Todas</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label>Estação</label>
+                            <select id="filtroEstacao">
+                                <option value="">Todas</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label>Parâmetro</label>
+                            <select id="filtroParametro">
+                                <option value="">Todos</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label>Período</label>
+                            <input type="date" id="filtroDataInicio">
+                            <input type="date" id="filtroDataFim" style="margin-top: 8px;">
+                        </div>
+                    </div>
+                    
+                    <div class="filter-section">
+                        <h4>Status</h4>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" checked>
+                                <span>Pendentes</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox">
+                                <span>Validados</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox">
+                                <span>Invalidados</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" checked>
+                                <span>Pré-invalidados (auto)</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button class="btn btn-primary" style="width: 100%;">
+                        <i class="fas fa-filter"></i> Aplicar Filtros
+                    </button>
+                </div>
+                
+                <!-- Validation Table -->
+                <div class="validation-table-container">
+                    <div class="validation-header">
+                        <h3><i class="fas fa-table"></i> Dados para Validação</h3>
+                        <div class="validation-actions">
+                            <button class="btn btn-outline btn-small">
+                                <i class="fas fa-download"></i> Exportar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="validation-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th class="checkbox-cell">
+                                        <input type="checkbox" id="selectAll">
+                                    </th>
+                                    <th>Data/Hora</th>
+                                    <th>Estação</th>
+                                    <th>Parâmetro</th>
+                                    <th>Valor</th>
+                                    <th>Unidade</th>
+                                    <th>Flag</th>
+                                    <th>Motivo</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Dados serão carregados via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="validation-footer">
+                        <span class="selected-count"><strong>0</strong> itens selecionados</span>
+                        <div class="batch-actions">
+                            <button class="btn btn-outline btn-small" disabled>
+                                <i class="fas fa-check-double"></i> Validar Selecionados
+                            </button>
+                            <button class="btn btn-outline btn-small" disabled>
+                                <i class="fas fa-times-circle"></i> Invalidar Selecionados
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de Invalidação -->
+    <div class="modal-overlay" id="invalidModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Registrar Invalidação</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <label>Motivo da Invalidação</label>
+                <select id="motivoSelect">
+                    <option value="">Selecione...</option>
+                    <option value="Calibração pendente">Calibração pendente</option>
+                    <option value="Falha no equipamento">Falha no equipamento</option>
+                    <option value="Valor fora do range">Valor fora do range</option>
+                    <option value="Manutenção programada">Manutenção programada</option>
+                    <option value="Interferência externa">Interferência externa</option>
+                    <option value="Valor negativo">Valor negativo</option>
+                    <option value="Outro">Outro</option>
+                </select>
+                
+                <label>Observações (opcional)</label>
+                <textarea id="observacoes" placeholder="Descreva detalhes adicionais sobre a invalidação..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline">Cancelar</button>
+                <button class="btn btn-primary">Confirmar Invalidação</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variáveis globais
+        let paginaAtual = 1;
+        let totalPaginas = 1;
+        let medicoesCarregadas = [];
+        let medicaoParaInvalidar = null;
+
+        // Select all functionality
+        document.getElementById('selectAll').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.validation-table tbody input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = this.checked);
+            updateSelectedCount();
+        });
+        
+        function updateSelectedCount() {
+            const selected = document.querySelectorAll('.validation-table tbody input[type="checkbox"]:checked').length;
+            document.querySelector('.selected-count strong').textContent = selected;
+            
+            const buttons = document.querySelectorAll('.batch-actions button');
+            buttons.forEach(btn => btn.disabled = selected === 0);
+        }
+
+        // Funções de modal
+        function abrirModalInvalidacao(medicaoId = null) {
+            medicaoParaInvalidar = medicaoId;
+            document.getElementById('motivoSelect').value = '';
+            document.getElementById('observacoes').value = '';
+            document.getElementById('invalidModal').classList.add('active');
+        }
+
+        function fecharModal() {
+            document.getElementById('invalidModal').classList.remove('active');
+            medicaoParaInvalidar = null;
+        }
+
+        // Event listeners do modal
+        document.querySelector('.modal-close').addEventListener('click', fecharModal);
+        document.querySelector('.modal-footer .btn-outline').addEventListener('click', fecharModal);
+
+        async function confirmarInvalidacao() {
+            const motivo = document.getElementById('motivoSelect').value;
+            const observacoes = document.getElementById('observacoes').value;
+            
+            let motivoFinal = motivo;
+            if (motivo === 'Outro' && observacoes) {
+                motivoFinal = observacoes;
+            } else if (observacoes) {
+                motivoFinal = `${motivo} - ${observacoes}`;
+            }
+
+            if (!motivoFinal) {
+                alert('Por favor, selecione ou descreva o motivo da invalidação.');
+                return;
+            }
+
+            try {
+                if (medicaoParaInvalidar) {
+                    // Invalidar uma única medição
+                    await validarMedicao(medicaoParaInvalidar, 'invalid', motivoFinal);
+                } else {
+                    // Invalidar em lote
+                    const ids = obterIdsSelecionados();
+                    await validarMedicoesLote(ids, 'invalid', motivoFinal);
+                }
+                fecharModal();
+                carregarDadosValidacao();
+            } catch (error) {
+                alert('Erro ao invalidar: ' + error.message);
+            }
+        }
+
+        document.querySelector('.modal-footer .btn-primary').addEventListener('click', confirmarInvalidacao);
+
+        function obterIdsSelecionados() {
+            const checkboxes = document.querySelectorAll('.validation-table tbody input[type="checkbox"]:checked');
+            const ids = [];
+            checkboxes.forEach(cb => {
+                const id = cb.closest('tr').dataset.id;
+                if (id) ids.push(parseInt(id));
+            });
+            return ids;
+        }
+
+        // Funções de validação
+        async function validarMedicao(id, flag, motivo = null) {
+            const token = AuthService.getToken();
+            const response = await fetch(`http://localhost:3000/api/medicoes/${id}/validar`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ flag, motivo })
+            });
+            
+            const data = await response.json();
+            if (!data.sucesso) throw new Error(data.mensagem);
+            return data;
+        }
+
+        async function validarMedicoesLote(ids, flag, motivo = null) {
+            const token = AuthService.getToken();
+            const response = await fetch('http://localhost:3000/api/medicoes/validar-lote', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ ids, flag, motivo })
+            });
+            
+            const data = await response.json();
+            if (!data.sucesso) throw new Error(data.mensagem);
+            return data;
+        }
+
+        // Event listeners dos botões em lote
+        document.querySelector('.batch-actions button:first-child').addEventListener('click', async () => {
+            const ids = obterIdsSelecionados();
+            if (ids.length === 0) return;
+            
+            if (confirm(`Validar ${ids.length} medições selecionadas?`)) {
+                try {
+                    await validarMedicoesLote(ids, 'valid');
+                    carregarDadosValidacao();
+                } catch (error) {
+                    alert('Erro ao validar: ' + error.message);
+                }
+            }
+        });
+
+        document.querySelector('.batch-actions button:last-child').addEventListener('click', () => {
+            medicaoParaInvalidar = null; // Modo lote
+            abrirModalInvalidacao();
+        });
+
+        // Aplicar filtros
+        document.querySelector('.filter-panel .btn-primary').addEventListener('click', () => {
+            paginaAtual = 1;
+            carregarDadosValidacao();
+        });
+    </script>
+    
+    <!-- API e Autenticação -->
+    <script src="../js/api.js?v=4"></script>
+    
+    <!-- Sidebar Toggle Script -->
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            const isMobile = window.innerWidth <= 992;
+            
+            if (isMobile) {
+                sidebar.classList.toggle('open');
+                if (overlay) overlay.classList.toggle('active');
+            } else {
+                sidebar.classList.toggle('collapsed');
+                document.body.classList.toggle('sidebar-collapsed');
+            }
+        }
+        
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('sidebar-overlay')) {
+                const sidebar = document.querySelector('.sidebar');
+                const overlay = document.querySelector('.sidebar-overlay');
+                sidebar.classList.remove('open');
+                if (overlay) overlay.classList.remove('active');
+            }
+        });
+        
+        window.addEventListener('resize', function() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            const isMobile = window.innerWidth <= 992;
+            
+            if (isMobile) {
+                sidebar.classList.remove('collapsed');
+                document.body.classList.remove('sidebar-collapsed');
+            } else {
+                sidebar.classList.remove('open');
+                if (overlay) overlay.classList.remove('active');
+            }
+        });
+    </script>
+    
+    <script>
+        // Verificar autenticação ao carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!AuthService.isLoggedIn()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Atualizar informações do usuário
+            const usuario = AuthService.getUsuario();
+            if (usuario) {
+                const userNameEl = document.querySelector('.user-name');
+                if (userNameEl) userNameEl.textContent = usuario.nome;
+                
+                const userRoleEl = document.querySelector('.user-role');
+                if (userRoleEl) {
+                    const roles = { 'admin': 'Administrador', 'supervisor': 'Supervisor', 'analista': 'Analista', 'operador': 'Operador' };
+                    userRoleEl.textContent = roles[usuario.role] || usuario.role;
+                }
+            }
+
+            // Carregar filtros
+            carregarFiltros();
+            // Carregar dados de validação da API
+            carregarDadosValidacao();
+        });
+
+        async function carregarFiltros() {
+            const token = AuthService.getToken();
+            
+            try {
+                // Carregar unidades
+                const unidadesResp = await fetch('http://localhost:3000/api/unidades', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const unidades = await unidadesResp.json();
+                if (unidades.sucesso) {
+                    const select = document.getElementById('filtroUnidade');
+                    select.innerHTML = '<option value="">Todas</option>';
+                    unidades.dados.forEach(u => {
+                        select.innerHTML += `<option value="${u.id}">${u.nome}</option>`;
+                    });
+                }
+
+                // Carregar estações
+                const estacoesResp = await fetch('http://localhost:3000/api/estacoes', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const estacoes = await estacoesResp.json();
+                if (estacoes.sucesso) {
+                    const select = document.getElementById('filtroEstacao');
+                    select.innerHTML = '<option value="">Todas</option>';
+                    estacoes.dados.forEach(e => {
+                        select.innerHTML += `<option value="${e.id}">${e.codigo} - ${e.nome}</option>`;
+                    });
+                }
+
+                // Carregar parâmetros
+                const parametrosResp = await fetch('http://localhost:3000/api/parametros', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const parametros = await parametrosResp.json();
+                if (parametros.sucesso) {
+                    const select = document.getElementById('filtroParametro');
+                    select.innerHTML = '<option value="">Todos</option>';
+                    parametros.dados.forEach(p => {
+                        select.innerHTML += `<option value="${p.id}">${p.codigo} - ${p.nome}</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error('Erro ao carregar filtros:', error);
+            }
+        }
+
+        async function carregarDadosValidacao() {
+            try {
+                const token = AuthService.getToken();
+                
+                // Coletar filtros
+                const unidade = document.getElementById('filtroUnidade')?.value || '';
+                const estacao = document.getElementById('filtroEstacao')?.value || '';
+                const parametro = document.getElementById('filtroParametro')?.value || '';
+                const dataInicio = document.getElementById('filtroDataInicio')?.value || '';
+                const dataFim = document.getElementById('filtroDataFim')?.value || '';
+                
+                // Coletar flags selecionados
+                const flags = [];
+                document.querySelectorAll('.checkbox-group input[type="checkbox"]:checked').forEach(cb => {
+                    const label = cb.nextElementSibling?.textContent?.trim();
+                    if (label === 'Pendentes') flags.push('pending');
+                    if (label === 'Validados') flags.push('valid');
+                    if (label === 'Invalidados') flags.push('invalid');
+                    if (label === 'Pré-invalidados (auto)') flags.push('auto_invalid');
+                });
+
+                // Construir URL
+                let url = `http://localhost:3000/api/medicoes/validacao?page=${paginaAtual}&limit=50`;
+                if (unidade) url += `&unidade_id=${unidade}`;
+                if (estacao) url += `&estacao_id=${estacao}`;
+                if (parametro) url += `&parametro_id=${parametro}`;
+                if (dataInicio) url += `&data_inicio=${dataInicio}`;
+                if (dataFim) url += `&data_fim=${dataFim}`;
+                if (flags.length > 0) url += `&flags=${flags.join(',')}`;
+
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+
+                if (data.sucesso) {
+                    medicoesCarregadas = data.dados;
+                    totalPaginas = data.paginacao.totalPaginas;
+                    renderizarTabela(data.dados);
+                    atualizarBadge(data.paginacao.total);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados de validação:', error);
+            }
+        }
+
+        function renderizarTabela(medicoes) {
+            const tbody = document.querySelector('.validation-table tbody');
+            tbody.innerHTML = '';
+
+            if (medicoes.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                            <i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 16px; display: block; opacity: 0.3;"></i>
+                            Nenhuma medição encontrada com os filtros selecionados
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            medicoes.forEach(m => {
+                const dataHora = new Date(m.data_hora).toLocaleString('pt-BR');
+                const flagBadge = getFlagBadge(m.flag);
+                const valorClass = getValorClass(m);
+                
+                const tr = document.createElement('tr');
+                tr.dataset.id = m.id;
+                tr.innerHTML = `
+                    <td class="checkbox-cell"><input type="checkbox" onchange="updateSelectedCount()"></td>
+                    <td>${dataHora}</td>
+                    <td>${m.estacao?.codigo || '-'}</td>
+                    <td>${m.parametro?.codigo || '-'}</td>
+                    <td class="${valorClass.class}">
+                        ${valorClass.icon}${parseFloat(m.valor).toFixed(2)}
+                    </td>
+                    <td>${m.parametro?.unidade_medida || '-'}</td>
+                    <td>${flagBadge}</td>
+                    <td>${m.motivo_flag || '-'}</td>
+                    <td>
+                        <div class="action-btns">
+                            ${m.flag !== 'valid' ? `
+                            <button class="action-btn validate" title="Validar" onclick="validarRapido(${m.id}, 'valid')">
+                                <i class="fas fa-check"></i>
+                            </button>` : ''}
+                            ${m.flag !== 'invalid' ? `
+                            <button class="action-btn invalidate" title="Invalidar" onclick="abrirModalInvalidacao(${m.id})">
+                                <i class="fas fa-times"></i>
+                            </button>` : `
+                            <button class="action-btn validate" title="Revalidar" onclick="validarRapido(${m.id}, 'valid')">
+                                <i class="fas fa-undo"></i>
+                            </button>`}
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function getFlagBadge(flag) {
+            const badges = {
+                'valid': '<span class="flag-badge valid"><i class="fas fa-check-circle"></i> Validado</span>',
+                'pending': '<span class="flag-badge pending"><i class="fas fa-clock"></i> Pendente</span>',
+                'invalid': '<span class="flag-badge invalid"><i class="fas fa-times-circle"></i> Invalidado</span>',
+                'auto_invalid': '<span class="flag-badge auto-invalid"><i class="fas fa-robot"></i> Pré-invalidado</span>'
+            };
+            return badges[flag] || badges['pending'];
+        }
+
+        function getValorClass(medicao) {
+            // Adicionar lógica para destacar valores problemáticos
+            const valor = parseFloat(medicao.valor);
+            if (valor < 0) {
+                return { class: 'value-highlight warning', icon: '<i class="fas fa-exclamation-circle"></i> ' };
+            }
+            if (medicao.flag === 'auto_invalid') {
+                return { class: 'value-highlight danger', icon: '<i class="fas fa-exclamation-triangle"></i> ' };
+            }
+            return { class: '', icon: '' };
+        }
+
+        function atualizarBadge(total) {
+            const badge = document.querySelector('.nav-item.active .badge');
+            if (badge) badge.textContent = total;
+        }
+
+        async function validarRapido(id, flag) {
+            try {
+                await validarMedicao(id, flag);
+                carregarDadosValidacao();
+            } catch (error) {
+                alert('Erro ao validar: ' + error.message);
+            }
+        }
+
+        function fazerLogout() {
+            AuthService.logout();
+        }
+
+        function toggleUserDropdown() {
+            document.getElementById('userDropdown').classList.toggle('active');
+        }
+
+        document.addEventListener('click', function(event) {
+            const userMenu = document.getElementById('userMenu');
+            const dropdown = document.getElementById('userDropdown');
+            if (userMenu && !userMenu.contains(event.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

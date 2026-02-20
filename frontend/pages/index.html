@@ -1,0 +1,1805 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestão de Qualidade do Ar - Acoem Brasil</title>
+    <link rel="stylesheet" href="../css/styles.css?v=5">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS para o mapa -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        .loading-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 40px;
+            color: #64748b;
+            font-size: 14px;
+            grid-column: 1 / -1;
+        }
+        .loading-placeholder i {
+            color: #00A19A;
+        }
+        .no-data-message {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: #64748b;
+            font-size: 14px;
+            grid-column: 1 / -1;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        
+        /* Estilos para Disponibilidade Compacta */
+        .availability-section.compact {
+            min-height: auto;
+        }
+        .availability-section.compact .card-header {
+            padding: 10px 15px;
+        }
+        .availability-section.compact .card-header h3 {
+            font-size: 14px;
+            margin: 0;
+        }
+        .availability-section.compact .card-header .badge {
+            background: #00A19A;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+        .availability-section.compact .card-body {
+            padding: 10px 15px;
+        }
+        .availability-list.compact {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .availability-item-compact {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+        .availability-item-compact .station-code {
+            width: 70px;
+            font-weight: 500;
+            color: #334155;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .availability-item-compact .availability-bar {
+            flex: 1;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .availability-item-compact .bar-fill {
+            display: block;
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+        .availability-item-compact .bar-fill.success { background: #10b981; }
+        .availability-item-compact .bar-fill.warning { background: #f59e0b; }
+        .availability-item-compact .bar-fill.danger { background: #ef4444; }
+        .availability-item-compact .availability-value {
+            width: 35px;
+            text-align: right;
+            color: #64748b;
+            font-size: 11px;
+        }
+        .more-stations {
+            text-align: center;
+            font-size: 11px;
+            color: #94a3b8;
+            padding-top: 5px;
+            border-top: 1px dashed #e5e7eb;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <img src="../img/logo-acoem.png" alt="Acoem Brasil" class="logo-img">
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <span class="nav-section-title">PRINCIPAL</span>
+                <a href="index.html" class="nav-item active">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="supervisorio.html" class="nav-item">
+                    <i class="fas fa-desktop"></i>
+                    <span>Supervisório</span>
+                </a>
+                <a href="mapa.html" class="nav-item">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>Mapa Georreferenciado</span>
+                </a>
+                <a href="evolucao-temporal.html" class="nav-item">
+                    <i class="fas fa-chart-area"></i>
+                    <span>Evolução Temporal</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">DADOS</span>
+                <a href="validacao.html" class="nav-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Validação de Dados</span>
+                </a>
+                <a href="importar-dados.html" class="nav-item">
+                    <i class="fas fa-database"></i>
+                    <span>Importar Dados</span>
+                </a>
+                <a href="exportar-dados.html" class="nav-item">
+                    <i class="fas fa-download"></i>
+                    <span>Exportar Dados</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">ANÁLISES</span>
+                <a href="relatorios.html" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Relatórios</span>
+                </a>
+                <a href="estatisticas.html" class="nav-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Estatísticas</span>
+                </a>
+                <a href="rosa-ventos.html" class="nav-item">
+                    <i class="fas fa-wind"></i>
+                    <span>Rosa dos Ventos</span>
+                </a>
+                <a href="iqar.html" class="nav-item">
+                    <i class="fas fa-smog"></i>
+                    <span>Índice IQAr</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">CONFIGURAÇÕES</span>
+                <a href="configuracoes.html" class="nav-item">
+                    <i class="fas fa-broadcast-tower"></i>
+                    <span>Estações</span>
+                </a>
+                <a href="configuracoes.html#usuarios" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Usuários</span>
+                </a>
+                <a href="configuracoes.html#alertas" class="nav-item">
+                    <i class="fas fa-bell"></i>
+                    <span>Alertas</span>
+                </a>
+                <a href="configuracoes.html#sistema" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Sistema</span>
+                </a>
+            </div>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="#" class="nav-item">
+                <i class="fas fa-question-circle"></i>
+                <span>FAQ / Ajuda</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-headset"></i>
+                <span>Suporte Técnico</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Overlay para mobile -->
+    <div class="sidebar-overlay"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <button class="menu-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Buscar estação, parâmetro...">
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <div class="header-actions">
+                    <button class="header-btn" title="Notificações">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </button>
+                    <button class="header-btn" title="Mensagens">
+                        <i class="fas fa-envelope"></i>
+                    </button>
+                    <button class="header-btn" title="Tela Cheia">
+                        <i class="fas fa-expand"></i>
+                    </button>
+                </div>
+                
+                <div class="user-menu" id="userMenu" onclick="toggleUserDropdown()">
+                    <div class="user-info">
+                        <span class="user-name">Carregando...</span>
+                        <span class="user-role">-</span>
+                    </div>
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                    
+                    <!-- Dropdown Menu -->
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-user-cog"></i>
+                            <span>Meu Perfil</span>
+                        </a>
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-cog"></i>
+                            <span>Configurações</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item logout" onclick="fazerLogout(); return false;">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Sair</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="page-content">
+            <!-- Page Title -->
+            <div class="page-header">
+                <div class="page-title">
+                    <h1>Dashboard</h1>
+                    <p>Monitoramento em tempo real da qualidade do ar</p>
+                </div>
+                <div class="page-actions">
+                    <select class="select-unit" id="filtroUnidade" onchange="filtrarPorUnidade()">
+                        <option value="">Todas as Unidades</option>
+                    </select>
+                    <select class="select-unit" id="filtroPeriodo" onchange="filtrarPorPeriodo()">
+                        <option value="24h">Últimas 24h</option>
+                        <option value="7d">Últimos 7 dias</option>
+                        <option value="30d">Últimos 30 dias</option>
+                        <option value="90d">Últimos 90 dias</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="atualizarDashboard()">
+                        <i class="fas fa-sync-alt"></i>
+                        Atualizar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Alert Banner -->
+            <div class="alert-banner" id="alertBanner" style="display: none;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span id="alertMessage"><strong>Atenção:</strong> Carregando alertas...</span>
+                <a href="validacao.html">Ver detalhes</a>
+                <button class="alert-close" onclick="fecharAlerta()"><i class="fas fa-times"></i></button>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card" id="cardEstacoes">
+                    <div class="stat-icon green">
+                        <i class="fas fa-broadcast-tower"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="statEstacoes">--</span>
+                        <span class="stat-label">Estações Ativas</span>
+                    </div>
+                    <div class="stat-trend" id="trendEstacoes">
+                        <i class="fas fa-minus"></i> --
+                    </div>
+                </div>
+                
+                <div class="stat-card" id="cardMedicoes">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-cloud"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="statMedicoes">--</span>
+                        <span class="stat-label">Dados Coletados Hoje</span>
+                    </div>
+                    <div class="stat-trend" id="trendMedicoes">
+                        <i class="fas fa-minus"></i> --
+                    </div>
+                </div>
+                
+                <div class="stat-card" id="cardDisponibilidade">
+                    <div class="stat-icon yellow">
+                        <i class="fas fa-check-double"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="statDisponibilidade">--%</span>
+                        <span class="stat-label">Disponibilidade</span>
+                    </div>
+                    <div class="stat-trend" id="trendDisponibilidade">
+                        <i class="fas fa-minus"></i> --
+                    </div>
+                </div>
+                
+                <div class="stat-card" id="cardAlertas">
+                    <div class="stat-icon red">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="statAlertas">--</span>
+                        <span class="stat-label">Alertas Ativos</span>
+                    </div>
+                    <div class="stat-trend" id="trendAlertas">
+                        <i class="fas fa-minus"></i> --
+                    </div>
+                </div>
+            </div>
+
+           <!-- <!-- <!-- <!-- <!--  <!-- Main Grid -->
+            <div class="dashboard-grid">
+                <!-- IQAr Cards -->
+                <div class="card iqar-section">
+                    <div class="card-header">
+                        <h3><i class="fas fa-lungs"></i> Índice de Qualidade do Ar (IQAr)</h3>
+                        <button class="btn-icon"><i class="fas fa-ellipsis-v"></i></button>
+                    </div>
+                    <div class="card-body">
+                        <div class="iqar-grid">
+                            <!-- Cards serão carregados dinamicamente -->
+                            <div class="loading-placeholder">
+                                <i class="fas fa-spinner fa-spin"></i> Carregando dados de IQAr...
+                            </div>
+                        </div> 
+                        <div class="iqar-legend">
+                            <span class="legend-item"><span class="dot good"></span> Bom (0-40)</span>
+                            <span class="legend-item"><span class="dot moderate"></span> Moderado (41-80)</span>
+                            <span class="legend-item"><span class="dot unhealthy-sensitive"></span> Ruim (81-120)</span>
+                            <span class="legend-item"><span class="dot unhealthy"></span> Muito Ruim (121-200)</span>
+                            <span class="legend-item"><span class="dot very-unhealthy"></span> Péssima (>200)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Map -->
+                <div class="card map-section" id="mapSection">
+                    <div class="card-header">
+                        <h3><i class="fas fa-map-marked-alt"></i> Mapa Georreferenciado</h3>
+                        <div class="card-actions">
+                            <button class="btn-icon" title="Expandir" onclick="toggleExpandMap()"><i class="fas fa-expand" id="expandMapIcon"></i></button>
+                            <button class="btn-icon"><i class="fas fa-ellipsis-v"></i></button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div id="map" class="map-container"></div>
+                        <div class="map-legend">
+                            <span><i class="fas fa-circle" style="color: #10b981;"></i> Online</span>
+                            <span><i class="fas fa-circle" style="color: #6b7280;"></i> Offline</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Evolução Temporal -->
+                <div class="card chart-section">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-area"></i> Evolução Temporal</h3>
+                        <div class="chart-controls">
+                            <div class="multi-select-wrapper compact" id="estacaoWrapperChart">
+                                <button class="multi-select-btn compact" onclick="toggleEstacaoPanelChart(event)">
+                                    <span id="estacaoBtnTextChart">Estações...</span>
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                                <div class="multi-select-panel" id="estacaoPanelChart">
+                                    <div class="multi-select-search">
+                                        <input type="text" placeholder="Buscar..." id="searchEstacaoChart" oninput="filtrarEstacoesChart()">
+                                    </div>
+                                    <div class="multi-select-list" id="estacaoListChart">
+                                        <!-- Estações serão carregadas aqui -->
+                                    </div>
+                                    <div class="multi-select-footer">
+                                        <button class="btn-limpar" onclick="limparEstacoesChart()">Limpar</button>
+                                        <button class="btn-aplicar" onclick="aplicarEstacoesChart()">Aplicar</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <select class="select-small" id="selectParametro">
+                                <option value="">Carregando parâmetros...</option>
+                            </select>
+                            <select class="select-small" id="selectPeriodoChart">
+                                <option value="24h">24h</option>
+                                <option value="7d">7 dias</option>
+                                <option value="30d">30 dias</option>
+                            </select>
+                            <a href="evolucao-temporal.html" class="btn-link-small" title="Ver detalhes">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="evolutionChart" data-dynamic="true"></canvas>
+                    </div>
+                </div>
+
+                <!-- Rosa dos Ventos -->
+                <div class="card wind-section">
+                    <div class="card-header">
+                        <h3><i class="fas fa-compass"></i> Rosa dos Ventos</h3>
+                        <select class="select-small" id="selectEstacaoVento" onchange="atualizarRosaVentos()">
+                            <option value="">Selecione uma estação...</option>
+                        </select>
+                    </div>
+                    <div class="card-body">
+                        <div class="wind-rose">
+                            <svg viewBox="0 0 200 200" class="wind-rose-svg">
+                                <!-- Círculos de referência -->
+                                <circle cx="100" cy="100" r="80" fill="none" stroke="#e5e7eb" stroke-width="1"/>
+                                <circle cx="100" cy="100" r="60" fill="none" stroke="#e5e7eb" stroke-width="1"/>
+                                <circle cx="100" cy="100" r="40" fill="none" stroke="#e5e7eb" stroke-width="1"/>
+                                <circle cx="100" cy="100" r="20" fill="none" stroke="#e5e7eb" stroke-width="1"/>
+                                
+                                <!-- Direções -->
+                                <text x="100" y="12" text-anchor="middle" class="wind-label">N</text>
+                                <text x="188" y="104" text-anchor="middle" class="wind-label">L</text>
+                                <text x="100" y="196" text-anchor="middle" class="wind-label">S</text>
+                                <text x="12" y="104" text-anchor="middle" class="wind-label">O</text>
+                                
+                                <!-- Pétalas da rosa (simuladas) -->
+                                <polygon points="100,100 95,30 100,20 105,30" fill="#00A19A" opacity="0.7"/>
+                                <polygon points="100,100 130,40 140,50 120,60" fill="#00A19A" opacity="0.5"/>
+                                <polygon points="100,100 170,95 180,100 170,105" fill="#00A19A" opacity="0.3"/>
+                                <polygon points="100,100 160,130 150,140 140,120" fill="#00A19A" opacity="0.4"/>
+                                <polygon points="100,100 105,170 100,180 95,170" fill="#00A19A" opacity="0.2"/>
+                                <polygon points="100,100 60,150 50,140 70,130" fill="#00A19A" opacity="0.3"/>
+                                <polygon points="100,100 30,105 20,100 30,95" fill="#00A19A" opacity="0.4"/>
+                                <polygon points="100,100 40,60 50,50 60,70" fill="#00A19A" opacity="0.6"/>
+                            </svg>
+                        </div>
+                        <div class="wind-stats">
+                            <div class="wind-stat">
+                                <span class="wind-stat-label">Vel. Média</span>
+                                <span class="wind-stat-value">3.2 m/s</span>
+                            </div>
+                            <div class="wind-stat">
+                                <span class="wind-stat-label">Dir. Predominante</span>
+                                <span class="wind-stat-value">NE</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela de Medições (Full Width) -->
+                <div class="card table-section">
+                    <div class="card-header">
+                        <h3><i class="fas fa-table"></i> Medições em Tempo Real</h3>
+                        <div class="card-actions">
+                            <select class="select-small" id="selectEstacaoMedicoes" onchange="atualizarTabelaMedicoesTempoReal()">
+                                <option value="">Todas as estações</option>
+                            </select>
+                            <select class="select-small" id="selectPeriodoMedicoes" onchange="atualizarTabelaMedicoesTempoReal()">
+                                <option value="1h">Última hora</option>
+                                <option value="6h">Últimas 6h</option>
+                                <option value="24h" selected>Últimas 24h</option>
+                                <option value="7d">Últimos 7 dias</option>
+                            </select>
+                            <div class="dropdown" id="dropdownParametros">
+                                <button class="btn btn-outline btn-small" onclick="toggleDropdownParametros()">
+                                    <i class="fas fa-filter"></i> Parâmetros
+                                </button>
+                                <div class="dropdown-menu" id="menuParametros" style="display:none; position:absolute; background:#fff; border:1px solid #ddd; border-radius:8px; padding:10px; min-width:200px; z-index:1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-height:300px; overflow-y:auto;">
+                                    <div style="margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid #eee;">
+                                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600;">
+                                            <input type="checkbox" id="chkPoluentes" checked onchange="toggleTipoParametro('poluente')"> 
+                                            <span>Poluentes</span>
+                                        </label>
+                                    </div>
+                                    <div style="margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid #eee;">
+                                        <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600;">
+                                            <input type="checkbox" id="chkMeteorologicos" onchange="toggleTipoParametro('meteorologico')"> 
+                                            <span>Meteorológicos</span>
+                                        </label>
+                                    </div>
+                                    <div id="listaParametrosIndividuais" style="font-size:12px;"></div>
+                                </div>
+                            </div>
+                            <button class="btn btn-outline btn-small" onclick="exportarMedicoes()">
+                                <i class="fas fa-download"></i> Exportar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="data-table" id="tabelaMedicoes">
+                                <thead id="medicoesTableHead">
+                                    <tr>
+                                        <th>Estação</th>
+                                        <th>Status</th>
+                                        <th>Última Atualização</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="medicoesTableBody">
+                                    <tr><td colspan="3" class="text-center">Carregando...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alertas Recentes -->
+                <div class="card alerts-section">
+                    <div class="card-header">
+                        <h3><i class="fas fa-bell"></i> Alertas Recentes</h3>
+                        <a href="#" class="view-all">Ver todos</a>
+                    </div>
+                    <div class="card-body">
+                        <div class="alerts-list">
+                            <div class="alert-item critical">
+                                <div class="alert-icon">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="alert-content">
+                                    <div class="alert-title">Ultrapassagem de Limite - SO₂</div>
+                                    <div class="alert-description">REFAP-01: Concentração de SO₂ acima do limite (180.2 µg/m³)</div>
+                                    <div class="alert-time">Há 5 minutos</div>
+                                </div>
+                            </div>
+                            <div class="alert-item warning">
+                                <div class="alert-icon">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                </div>
+                                <div class="alert-content">
+                                    <div class="alert-title">Dados Pendentes de Validação</div>
+                                    <div class="alert-description">REPLAN-02: 48 registros aguardando validação</div>
+                                    <div class="alert-time">Há 15 minutos</div>
+                                </div>
+                            </div>
+                            <div class="alert-item info">
+                                <div class="alert-icon">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                                <div class="alert-content">
+                                    <div class="alert-title">Manutenção Programada</div>
+                                    <div class="alert-description">RLAM-02: Calibração agendada para 06/02/2026</div>
+                                    <div class="alert-time">Há 1 hora</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Disponibilidade (Compacto) -->
+                <div class="card availability-section compact">
+                    <div class="card-header compact">
+                        <h3><i class="fas fa-chart-pie"></i> Disponibilidade</h3>
+                        <span class="badge" id="availabilityCount">0</span>
+                    </div>
+                    <div class="card-body compact">
+                        <div class="availability-list compact" id="availabilityList">
+                            <div class="text-center text-muted">Carregando...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Assistente IA - Botão Flutuante -->
+    <button class="ai-assistant-btn" id="aiAssistantBtn" title="Assistente IA - Qualidade do Ar">
+        <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+            <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2M7.5 13A2.5 2.5 0 0 0 5 15.5A2.5 2.5 0 0 0 7.5 18a2.5 2.5 0 0 0 2.5-2.5A2.5 2.5 0 0 0 7.5 13m9 0a2.5 2.5 0 0 0-2.5 2.5a2.5 2.5 0 0 0 2.5 2.5a2.5 2.5 0 0 0 2.5-2.5a2.5 2.5 0 0 0-2.5-2.5z"/>
+        </svg>
+        <span class="ai-pulse"></span>
+    </button>
+
+    <!-- Modal Chat IA -->
+    <div class="ai-chat-modal" id="aiChatModal">
+        <div class="ai-chat-container">
+            <div class="ai-chat-header">
+                <div class="ai-chat-title">
+                    <div class="ai-avatar">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+                            <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4>Assistente IA - Qualidade do Ar</h4>
+                        <span class="ai-status"><span class="status-dot"></span> Online</span>
+                    </div>
+                </div>
+                <button class="ai-chat-close" id="aiChatClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="ai-chat-messages" id="aiChatMessages">
+                <div class="ai-message bot">
+                    <div class="ai-message-avatar">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                            <path d="M12 2a2 2 0 0 1 2 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 0 1 7 7h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v1a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-1H2a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1a7 7 0 0 1 7-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 0 1 2-2z"/>
+                        </svg>
+                    </div>
+                    <div class="ai-message-content">
+                        <p>Olá! Sou o assistente de IA do Sistema de Qualidade do Ar da Acoem. Posso ajudá-lo com:</p>
+                        <ul>
+                            <li>📊 Análise de dados de poluentes</li>
+                            <li>🌡️ Interpretação de índices IQAr</li>
+                            <li>⚠️ Alertas e limites legais</li>
+                            <li>📈 Tendências e padrões</li>
+                            <li>❓ Dúvidas sobre o sistema</li>
+                        </ul>
+                        <p>Como posso ajudá-lo hoje?</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="ai-chat-suggestions">
+                <button class="ai-suggestion" data-message="Qual o status atual da qualidade do ar?">Status atual</button>
+                <button class="ai-suggestion" data-message="Explique os níveis de IQAr">Níveis IQAr</button>
+                <button class="ai-suggestion" data-message="Quais alertas estão ativos?">Alertas ativos</button>
+                <button class="ai-suggestion" data-message="Analise os dados de PM2.5">Análise PM2.5</button>
+            </div>
+            
+            <div class="ai-chat-input-container">
+                <div class="ai-chat-input-wrapper">
+                    <input type="text" class="ai-chat-input" id="aiChatInput" placeholder="Digite sua pergunta..." />
+                    <button class="ai-send-btn" id="aiSendBtn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <span class="ai-powered-by">Powered by Google Gemini</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="../js/api.js?v=5"></script>
+    <script src="../js/script.js?v=3"></script>
+    
+    <!-- Sidebar Toggle Script -->
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            const isMobile = window.innerWidth <= 992;
+            
+            if (isMobile) {
+                // No mobile, usar classe 'open'
+                sidebar.classList.toggle('open');
+                if (overlay) overlay.classList.toggle('active');
+            } else {
+                // No desktop, usar classe 'collapsed'
+                sidebar.classList.toggle('collapsed');
+                document.body.classList.toggle('sidebar-collapsed');
+            }
+        }
+        
+        // Fechar sidebar ao clicar no overlay (mobile)
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('sidebar-overlay')) {
+                const sidebar = document.querySelector('.sidebar');
+                const overlay = document.querySelector('.sidebar-overlay');
+                sidebar.classList.remove('open');
+                if (overlay) overlay.classList.remove('active');
+            }
+        });
+        
+        // Ajustar comportamento ao redimensionar
+        window.addEventListener('resize', function() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            const isMobile = window.innerWidth <= 992;
+            
+            if (isMobile) {
+                // Remover classes de desktop
+                sidebar.classList.remove('collapsed');
+                document.body.classList.remove('sidebar-collapsed');
+            } else {
+                // Remover classes de mobile
+                sidebar.classList.remove('open');
+                if (overlay) overlay.classList.remove('active');
+            }
+        });
+        
+        // Função para expandir/retrair o mapa
+        function toggleExpandMap() {
+            const mapSection = document.getElementById('mapSection');
+            const expandIcon = document.getElementById('expandMapIcon');
+            
+            mapSection.classList.toggle('expanded');
+            
+            if (mapSection.classList.contains('expanded')) {
+                expandIcon.classList.remove('fa-expand');
+                expandIcon.classList.add('fa-compress');
+                document.body.style.overflow = 'hidden';
+            } else {
+                expandIcon.classList.remove('fa-compress');
+                expandIcon.classList.add('fa-expand');
+                document.body.style.overflow = '';
+            }
+            
+            // Recalcular tamanho do mapa após expansão
+            setTimeout(() => {
+                if (window.map) {
+                    window.map.invalidateSize();
+                }
+            }, 300);
+        }
+        
+        // Fechar mapa expandido com ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const mapSection = document.getElementById('mapSection');
+                if (mapSection && mapSection.classList.contains('expanded')) {
+                    toggleExpandMap();
+                }
+            }
+        });
+    </script>
+    
+    <!-- Verificação de Autenticação e Carregamento de Dados -->
+    <script>
+        // Verificar autenticação ao carregar a página
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Verificar se está logado
+            if (!AuthService.isLoggedIn()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Atualizar informações do usuário na interface
+            const usuario = AuthService.getUsuario();
+            if (usuario) {
+                // Atualizar nome do usuário no header
+                const userNameEl = document.querySelector('.user-name');
+                if (userNameEl) {
+                    userNameEl.textContent = usuario.nome;
+                }
+                
+                // Atualizar role do usuário
+                const userRoleEl = document.querySelector('.user-role');
+                if (userRoleEl) {
+                    const roles = {
+                        'admin': 'Administrador',
+                        'supervisor': 'Supervisor',
+                        'analista': 'Analista',
+                        'operador': 'Operador'
+                    };
+                    userRoleEl.textContent = roles[usuario.role] || usuario.role;
+                }
+            }
+
+            // Carregar dados do dashboard e filtros
+            try {
+                await carregarParametrosSelect();  // Carregar parâmetros primeiro
+                await carregarDadosDashboard();
+                await carregarUnidadesFiltro();
+                await carregarEstacoesSelects();
+                await inicializarMedicoesTempoReal();  // Inicializar medições em tempo real
+                
+                // Adicionar event listeners explícitos para os selects do gráfico
+                const selectParametro = document.getElementById('selectParametro');
+                const selectPeriodoChart = document.getElementById('selectPeriodoChart');
+                
+                if (selectParametro) {
+                    selectParametro.addEventListener('change', function() {
+                        console.log('Select parâmetro mudou para:', this.value);
+                        window.atualizarGrafico();
+                    });
+                }
+                if (selectPeriodoChart) {
+                    selectPeriodoChart.addEventListener('change', function() {
+                        console.log('Select período mudou para:', this.value);
+                        window.atualizarGrafico();
+                    });
+                }
+                
+                await atualizarTodosComponentes();
+                
+                // Carregar estações no mapa após inicialização
+                setTimeout(() => {
+                    carregarMapaEstacoes();
+                }, 500); // Aguarda o mapa ser completamente inicializado
+            } catch (error) {
+                console.error('Erro ao carregar dashboard:', error);
+            }
+        });
+
+        // Função de logout
+        function fazerLogout() {
+            AuthService.logout();
+        }
+
+        // Toggle dropdown do usuário
+        function toggleUserDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        // Fechar dropdown ao clicar fora
+        document.addEventListener('click', function(event) {
+            const userMenu = document.getElementById('userMenu');
+            const dropdown = document.getElementById('userDropdown');
+            
+            if (userMenu && !userMenu.contains(event.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+
+        // Carregar parâmetros do banco para o select de Evolução Temporal
+        async function carregarParametrosSelect() {
+            try {
+                const response = await ApiClient.get('/parametros');
+                const select = document.getElementById('selectParametro');
+                
+                if (!select) return;
+                
+                if (response && response.sucesso && response.dados) {
+                    const parametros = response.dados;
+                    
+                    // Limpar select
+                    select.innerHTML = '';
+                    
+                    // Adicionar opção padrão
+                    const optDefault = document.createElement('option');
+                    optDefault.value = '';
+                    optDefault.textContent = 'Selecione um parâmetro';
+                    select.appendChild(optDefault);
+                    
+                    // Popular com parâmetros do banco (ordenados por ordem_exibicao)
+                    parametros
+                        .sort((a, b) => (a.ordem_exibicao || 999) - (b.ordem_exibicao || 999))
+                        .forEach(param => {
+                            const opt = document.createElement('option');
+                            opt.value = param.codigo;
+                            opt.textContent = param.nome;
+                            select.appendChild(opt);
+                        });
+                    
+                    // Selecionar PM2.5 como padrão se existir
+                    const pm25Option = select.querySelector('option[value="PM2.5"], option[value="MP2,5"]');
+                    if (pm25Option) {
+                        pm25Option.selected = true;
+                    } else if (select.options.length > 1) {
+                        select.options[1].selected = true;
+                    }
+                    
+                    console.log(`${parametros.length} parâmetros carregados no select`);
+                } else {
+                    // Fallback - opções padrão
+                    select.innerHTML = `
+                        <option value="PM2.5">PM2.5</option>
+                        <option value="PM10">PM10</option>
+                        <option value="O3">O₃</option>
+                        <option value="NO2">NO₂</option>
+                        <option value="SO2">SO₂</option>
+                        <option value="CO">CO</option>
+                    `;
+                    console.warn('Usando parâmetros padrão');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar parâmetros:', error);
+                // Fallback em caso de erro
+                const select = document.getElementById('selectParametro');
+                if (select) {
+                    select.innerHTML = `
+                        <option value="PM2.5">PM2.5</option>
+                        <option value="PM10">PM10</option>
+                        <option value="O3">O₃</option>
+                    `;
+                }
+            }
+        }
+
+        // Carregar dados do dashboard
+        async function carregarDadosDashboard() {
+            try {
+                const response = await DashboardService.getResumo();
+                
+                if (response && response.sucesso) {
+                    const dados = response.dados;
+                    
+                    // Atualizar cards de resumo usando IDs
+                    const statEstacoes = document.getElementById('statEstacoes');
+                    const statMedicoes = document.getElementById('statMedicoes');
+                    const statDisponibilidade = document.getElementById('statDisponibilidade');
+                    const statAlertas = document.getElementById('statAlertas');
+                    
+                    if (dados.cards) {
+                        if (statEstacoes) {
+                            statEstacoes.textContent = `${dados.cards.estacoes_ativas}/${dados.cards.total_estacoes}`;
+                        }
+                        if (statMedicoes) {
+                            const medicoes = dados.cards.dados_coletados_hoje || 0;
+                            statMedicoes.textContent = medicoes.toLocaleString('pt-BR');
+                        }
+                        if (statDisponibilidade) {
+                            statDisponibilidade.textContent = (dados.cards.disponibilidade || 0) + '%';
+                        }
+                        if (statAlertas) {
+                            statAlertas.textContent = dados.cards.alertas_ativos || '0';
+                        }
+                    }
+                    
+                    // Atualizar cards de IQAr das estações
+                    if (dados.iqar && dados.iqar.length > 0) {
+                        atualizarCardsIQAr(dados.iqar);
+                    }
+                    
+                    // Atualizar lista de alertas
+                    if (dados.alertas) {
+                        atualizarListaAlertas(dados.alertas);
+                    }
+                    
+                    console.log('Dashboard carregado com sucesso:', dados);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados do dashboard:', error);
+            }
+        }
+        
+        function atualizarCardsIQAr(iqarData) {
+            const container = document.querySelector('.iqar-grid');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            // Tratar caso sem dados
+            if (!iqarData || iqarData.length === 0) {
+                container.innerHTML = '<div class="no-data-message">Nenhum dado de IQAr disponível no momento</div>';
+                return;
+            }
+            
+            iqarData.forEach(item => {
+                // Determinar classe CSS baseada no IQAr
+                let classeIqar = 'good';
+                const iqarValor = item.iqar || 0;
+                if (iqarValor > 200) classeIqar = 'very-unhealthy';
+                else if (iqarValor > 120) classeIqar = 'unhealthy';
+                else if (iqarValor > 80) classeIqar = 'unhealthy-sensitive';
+                else if (iqarValor > 40) classeIqar = 'moderate';
+                
+                const card = document.createElement('div');
+                card.className = `iqar-card ${classeIqar}`;
+                card.innerHTML = `
+                    <div class="iqar-station">${item.nome || item.estacao}</div>
+                    <div class="iqar-value">${iqarValor}</div>
+                    <div class="iqar-label">${item.classificacao?.toUpperCase() || 'N/A'}</div>
+                    <div class="iqar-param">Poluente: ${item.poluente || '-'}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+        
+        function atualizarListaAlertas(alertas) {
+            const container = document.querySelector('.alerts-list');
+            if (!container) return;
+            
+            if (alertas.length === 0) {
+                container.innerHTML = '<p class="no-alerts">Nenhum alerta ativo</p>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            alertas.slice(0, 5).forEach(alerta => {
+                const item = document.createElement('div');
+                item.className = `alert-item ${alerta.nivel}`;
+                item.innerHTML = `
+                    <div class="alert-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div class="alert-content">
+                        <div class="alert-title">${alerta.titulo}</div>
+                        <div class="alert-meta">${alerta.estacao} - ${new Date(alerta.criado_em).toLocaleString('pt-BR')}</div>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // Carregar mapa com estações da API
+        async function carregarMapaEstacoes() {
+            try {
+                const response = await EstacoesService.getMapa();
+                console.log('Resposta do mapa:', response);
+                
+                if (response && response.sucesso && window.map) {
+                    const estacoes = response.dados;
+                    const bounds = [];
+                    
+                    estacoes.forEach(estacao => {
+                        const lat = estacao.latitude;
+                        const lng = estacao.longitude;
+                        
+                        console.log(`Adicionando estação ${estacao.nome}: [${lat}, ${lng}]`);
+                        
+                        bounds.push([lat, lng]);
+                        
+                        // Determinar status: ativo = online (verde), inativo = offline (cinza)
+                        const statusMarcador = estacao.ativo ? 'ativo' : 'offline';
+                        
+                        const marker = L.marker([lat, lng], {
+                            icon: window.getIcon(statusMarcador)
+                        }).addTo(window.map);
+                        
+                        // Determinar classe de IQAr
+                        let iqarClass = 'Bom';
+                        if (estacao.iqar > 200) iqarClass = 'Muito Ruim';
+                        else if (estacao.iqar > 120) iqarClass = 'Ruim';
+                        else if (estacao.iqar > 80) iqarClass = 'Regular';
+                        else if (estacao.iqar > 40) iqarClass = 'Moderado';
+                        
+                        const statusTexto = estacao.ativo ? 'Online' : 'Offline';
+                        
+                        marker.bindPopup(`
+                            <div style="min-width: 220px;">
+                                <h4 style="margin: 0 0 8px 0; color: #00263A;">${estacao.nome}</h4>
+                                <p style="margin: 0; font-size: 13px; color: #64748b;">
+                                    <strong>Código:</strong> ${estacao.codigo}<br>
+                                    <strong>Unidade:</strong> ${estacao.unidade || 'N/A'}<br>
+                                    <strong>IQAr:</strong> ${estacao.iqar || '-'} (${iqarClass})<br>
+                                    <strong>Status:</strong> ${statusTexto}
+                                </p>
+                                <a href="supervisorio.html?estacao=${estacao.id}" style="display: inline-block; margin-top: 8px; color: #00A19A; font-size: 13px;">Ver detalhes →</a>
+                            </div>
+                        `);
+                    });
+                    
+                    // Centralizar o mapa nas estações
+                    if (bounds.length > 0) {
+                        window.map.fitBounds(bounds, { padding: [50, 50], maxZoom: 10 });
+                        console.log(`Mapa centralizado em ${bounds.length} estações`);
+                    }
+                } else {
+                    console.warn('Nenhum dado de estação retornado ou mapa não inicializado');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar mapa de estações:', error);
+            }
+        }
+
+        // ===== FILTROS DO DASHBOARD =====
+        // Variáveis globais
+        var unidadesFiltro = [];
+        var estacoesFiltro = [];
+        var unidadeSelecionada = '';
+        var periodoSelecionado = '24h';
+        var evolutionChart = null;
+        var estacoesSelecionadasChart = []; // Array de IDs das estações selecionadas no gráfico
+
+        // Carregar unidades no filtro
+        async function carregarUnidadesFiltro() {
+            try {
+                const response = await ApiClient.get('/unidades');
+                if (response && response.sucesso && response.dados) {
+                    unidadesFiltro = response.dados;
+                    const select = document.getElementById('filtroUnidade');
+                    if (select) {
+                        select.innerHTML = '<option value="">Todas as Unidades</option>';
+                        response.dados.forEach(unidade => {
+                            select.innerHTML += `<option value="${unidade.id}">${unidade.nome}</option>`;
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao carregar unidades:', error);
+            }
+        }
+
+        // Carregar estações nos selects
+        async function carregarEstacoesSelects() {
+            try {
+                let url = '/estacoes';
+                if (unidadeSelecionada) {
+                    url += `?unidadeId=${unidadeSelecionada}`;
+                }
+                console.log('Carregando estações de:', url);
+                const response = await ApiClient.get(url);
+                
+                console.log('Resposta estações:', response);
+                
+                if (response && response.sucesso) {
+                    estacoesFiltro = response.dados;
+                    console.log('Estações carregadas:', estacoesFiltro.length);
+                    
+                    // Atualizar multi-select do gráfico
+                    const estacaoListChart = document.getElementById('estacaoListChart');
+                    console.log('Elemento estacaoListChart encontrado:', !!estacaoListChart);
+                    
+                    if (estacaoListChart) {
+                        estacaoListChart.innerHTML = '';
+                        estacoesFiltro.forEach(est => {
+                            const isChecked = estacoesSelecionadasChart.includes(est.id);
+                            estacaoListChart.innerHTML += `
+                                <label class="multi-select-item">
+                                    <input type="checkbox" value="${est.id}" ${isChecked ? 'checked' : ''}>
+                                    <span>${est.codigo}</span>
+                                </label>
+                            `;
+                        });
+                        
+                        console.log('Estações adicionadas ao painel:', estacaoListChart.innerHTML.length, 'caracteres');
+                        
+                        // Se nenhuma estação selecionada, selecionar a primeira
+                        if (estacoesSelecionadasChart.length === 0 && estacoesFiltro.length > 0) {
+                            estacoesSelecionadasChart = [estacoesFiltro[0].id];
+                            const firstCheckbox = estacaoListChart.querySelector('input[type="checkbox"]');
+                            if (firstCheckbox) firstCheckbox.checked = true;
+                        }
+                        
+                        // Atualizar texto do botão
+                        atualizarBotaoEstacaoChart();
+                    }
+                    
+                    // Atualizar select da rosa dos ventos
+                    const selectVento = document.getElementById('selectEstacaoVento');
+                    if (selectVento) {
+                        selectVento.innerHTML = '<option value="">Selecione uma estação...</option>';
+                        estacoesFiltro.forEach(est => {
+                            selectVento.innerHTML += `<option value="${est.id}">${est.codigo} - ${est.nome}</option>`;
+                        });
+                        
+                        // Selecionar primeira estação automaticamente
+                        if (estacoesFiltro.length > 0) {
+                            selectVento.value = estacoesFiltro[0].id;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao carregar estações:', error);
+            }
+        }
+
+        // ===== FUNÇÕES DO MULTI-SELECT DO GRÁFICO =====
+        
+        // Toggle do painel de seleção
+        function toggleEstacaoPanelChart(event) {
+            event.stopPropagation();
+            const panel = document.getElementById('estacaoPanelChart');
+            console.log('Toggle painel - encontrado:', !!panel);
+            if (panel) {
+                panel.classList.toggle('active');
+                console.log('Painel active:', panel.classList.contains('active'));
+                console.log('Conteúdo da lista:', document.getElementById('estacaoListChart')?.innerHTML?.length);
+            }
+        }
+        
+        // Filtrar estações na busca
+        function filtrarEstacoesChart() {
+            const termo = document.getElementById('searchEstacaoChart').value.toLowerCase();
+            const items = document.querySelectorAll('#estacaoListChart .multi-select-item');
+            items.forEach(item => {
+                const texto = item.textContent.toLowerCase();
+                item.style.display = texto.includes(termo) ? '' : 'none';
+            });
+        }
+        
+        // Limpar seleção
+        function limparEstacoesChart() {
+            estacoesSelecionadasChart = [];
+            document.querySelectorAll('#estacaoListChart input[type="checkbox"]').forEach(cb => cb.checked = false);
+            atualizarBotaoEstacaoChart();
+        }
+        
+        // Aplicar seleção e atualizar gráfico
+        function aplicarEstacoesChart() {
+            estacoesSelecionadasChart = [];
+            document.querySelectorAll('#estacaoListChart input[type="checkbox"]:checked').forEach(cb => {
+                estacoesSelecionadasChart.push(parseInt(cb.value));
+            });
+            atualizarBotaoEstacaoChart();
+            document.getElementById('estacaoPanelChart').classList.remove('active');
+            window.atualizarGrafico();
+        }
+        
+        // Atualizar texto do botão
+        function atualizarBotaoEstacaoChart() {
+            const btn = document.getElementById('estacaoBtnTextChart');
+            if (estacoesSelecionadasChart.length === 0) {
+                btn.textContent = 'Estações...';
+            } else if (estacoesSelecionadasChart.length === 1) {
+                const est = estacoesFiltro.find(e => e.id === estacoesSelecionadasChart[0]);
+                btn.textContent = est ? est.codigo : '1 estação';
+            } else {
+                btn.textContent = `${estacoesSelecionadasChart.length} estações`;
+            }
+        }
+        
+        // Fechar painel ao clicar fora
+        document.addEventListener('click', function(event) {
+            const wrapper = document.getElementById('estacaoWrapperChart');
+            const panel = document.getElementById('estacaoPanelChart');
+            if (wrapper && panel && !wrapper.contains(event.target)) {
+                panel.classList.remove('active');
+            }
+        });
+
+        // Filtrar por unidade - ATUALIZA TODOS OS COMPONENTES
+        async function filtrarPorUnidade() {
+            unidadeSelecionada = document.getElementById('filtroUnidade').value;
+            
+            // Carregar estações da unidade selecionada
+            await carregarEstacoesSelects();
+            
+            // Atualizar todos os componentes
+            await atualizarTodosComponentes();
+        }
+
+        // Filtrar por período
+        async function filtrarPorPeriodo() {
+            periodoSelecionado = document.getElementById('filtroPeriodo').value;
+            await atualizarTodosComponentes();
+        }
+
+        // Atualizar todos os componentes do dashboard
+        async function atualizarTodosComponentes() {
+            await Promise.all([
+                atualizarGrafico(),
+                atualizarRosaVentos(),
+                atualizarDisponibilidade(),
+                atualizarTabelaMedicoesTempoReal(),
+                carregarAlertas()
+            ]);
+        }
+
+        // Atualizar gráfico de evolução temporal - FUNÇÃO GLOBAL (suporta múltiplas estações)
+        window.atualizarGrafico = async function() {
+            const selectParam = document.getElementById('selectParametro');
+            const selectPeriodo = document.getElementById('selectPeriodoChart');
+            
+            const parametro = selectParam?.value || 'PM2.5';
+            const periodo = selectPeriodo?.value || '24h';
+            
+            console.log('=== ATUALIZANDO GRÁFICO ===');
+            console.log('Estações selecionadas:', estacoesSelecionadasChart);
+            console.log('Parâmetro:', parametro);
+            console.log('Período:', periodo);
+            
+            if (estacoesSelecionadasChart.length === 0) {
+                console.log('Nenhuma estação selecionada - mostrando gráfico vazio');
+                renderizarGraficoVazio();
+                return;
+            }
+
+            const horasMap = { '24h': 24, '7d': 168, '30d': 720 };
+            const horas = horasMap[periodo] || 24;
+            
+            const cores = ['#00A19A', '#00263A', '#ef4444', '#f59e0b', '#8b5cf6', '#06b6d4', '#84cc16', '#ec4899'];
+
+            try {
+                // Buscar dados de todas as estações selecionadas
+                const promessas = estacoesSelecionadasChart.map(id => 
+                    ApiClient.get(`/medicoes/estacao/${id}?horas=${horas}&parametro=${parametro}`)
+                );
+                
+                const respostas = await Promise.all(promessas);
+                const datasets = [];
+                
+                respostas.forEach((response, index) => {
+                    if (response && response.sucesso && response.dados.length > 0) {
+                        const estId = estacoesSelecionadasChart[index];
+                        const estacao = estacoesFiltro.find(e => e.id === estId);
+                        const medicoes = response.dados;
+                        
+                        datasets.push({
+                            label: estacao ? estacao.codigo : `Estação ${index + 1}`,
+                            data: medicoes.map(m => parseFloat(m.valor) || 0),
+                            borderColor: cores[index % cores.length],
+                            backgroundColor: cores[index % cores.length] + '20',
+                            fill: index === 0,
+                            tension: 0.4,
+                            pointRadius: 2,
+                            borderWidth: 2
+                        });
+                    }
+                });
+                
+                if (datasets.length > 0) {
+                    // Usar labels da primeira estação
+                    const primeiraResposta = respostas.find(r => r && r.sucesso && r.dados.length > 0);
+                    const labels = primeiraResposta.dados.map(m => {
+                        const date = new Date(m.data_hora);
+                        return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                    });
+
+                    if (evolutionChart) {
+                        evolutionChart.destroy();
+                        evolutionChart = null;
+                    }
+
+                    const ctx = document.getElementById('evolutionChart');
+                    if (!ctx) {
+                        console.error('Canvas evolutionChart não encontrado');
+                        return;
+                    }
+
+                    console.log('Renderizando gráfico com', datasets.length, 'estações');
+
+                    evolutionChart = new Chart(ctx, {
+                        type: 'line',
+                        data: { labels, datasets },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { 
+                                    display: true,
+                                    position: 'top',
+                                    labels: { 
+                                        font: { size: 11 },
+                                        usePointStyle: true,
+                                        padding: 15
+                                    }
+                                },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false
+                                }
+                            },
+                            scales: {
+                                y: { 
+                                    beginAtZero: true,
+                                    title: { display: true, text: `${parametro} (µg/m³)`, font: { size: 10 } }
+                                },
+                                x: { ticks: { maxTicksLimit: 8 } }
+                            },
+                            interaction: { intersect: false, mode: 'index' }
+                        }
+                    });
+                } else {
+                    console.log('Sem dados, renderizando gráfico vazio');
+                    renderizarGraficoVazio();
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar gráfico:', error);
+                renderizarGraficoVazio();
+            }
+        }
+
+        // Renderizar gráfico vazio
+        function renderizarGraficoVazio() {
+            const ctx = document.getElementById('evolutionChart');
+            if (!ctx) return;
+
+            if (evolutionChart) evolutionChart.destroy();
+
+            evolutionChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Sem dados'],
+                    datasets: [{
+                        label: 'Selecione uma estação',
+                        data: [0],
+                        borderColor: '#ccc',
+                        backgroundColor: 'rgba(200, 200, 200, 0.1)',
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // Atualizar rosa dos ventos (dados simulados - backend não possui dados de vento)
+        async function atualizarRosaVentos() {
+            const estacaoId = document.getElementById('selectEstacaoVento')?.value;
+            
+            if (!estacaoId) return;
+
+            // Simular dados de vento (em produção, viriam de sensores de vento)
+            const velocidades = [2.1, 3.5, 4.2, 2.8, 3.1, 2.9, 3.8, 4.0];
+            const direcoes = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+            
+            const velMedia = velocidades[Math.floor(Math.random() * velocidades.length)].toFixed(1);
+            const dirPredominante = direcoes[Math.floor(Math.random() * direcoes.length)];
+            
+            // Atualizar UI
+            const windStats = document.querySelectorAll('.wind-stat-value');
+            if (windStats[0]) windStats[0].textContent = velMedia + ' m/s';
+            if (windStats[1]) windStats[1].textContent = dirPredominante;
+        }
+
+        // Atualizar lista de disponibilidade (compacta)
+        async function atualizarDisponibilidade() {
+            try {
+                let url = '/estacoes';
+                if (unidadeSelecionada) {
+                    url += `?unidadeId=${unidadeSelecionada}`;
+                }
+                const response = await ApiClient.get(url);
+                
+                if (response && response.sucesso) {
+                    const estacoes = response.dados;
+                    const container = document.getElementById('availabilityList');
+                    const countBadge = document.getElementById('availabilityCount');
+                    
+                    // Atualizar badge de contagem
+                    if (countBadge) {
+                        countBadge.textContent = estacoes.length;
+                    }
+                    
+                    if (container) {
+                        if (estacoes.length === 0) {
+                            container.innerHTML = '<div class="text-center text-muted" style="font-size: 12px;">Nenhuma estação</div>';
+                            return;
+                        }
+
+                        // Mostrar apenas as primeiras 8 estações de forma compacta
+                        const estacoesExibir = estacoes.slice(0, 8);
+                        
+                        container.innerHTML = estacoesExibir.map(est => {
+                            // Calcular disponibilidade (simulado)
+                            const disponibilidade = est.ativo ? (85 + Math.random() * 15).toFixed(0) : 0;
+                            const colorClass = disponibilidade >= 95 ? 'success' : (disponibilidade >= 80 ? 'warning' : 'danger');
+                            
+                            return `
+                                <div class="availability-item-compact">
+                                    <span class="station-code">${est.codigo}</span>
+                                    <span class="availability-bar">
+                                        <span class="bar-fill ${colorClass}" style="width: ${disponibilidade}%"></span>
+                                    </span>
+                                    <span class="availability-value">${disponibilidade}%</span>
+                                </div>
+                            `;
+                        }).join('');
+                        
+                        // Adicionar indicador se houver mais estações
+                        if (estacoes.length > 8) {
+                            container.innerHTML += `<div class="more-stations">+${estacoes.length - 8} mais</div>`;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao atualizar disponibilidade:', error);
+            }
+        }
+
+        // =====================================================
+        // MEDIÇÕES EM TEMPO REAL - CÓDIGO NOVO V4
+        // =====================================================
+        
+        // Estado do módulo de medições
+        const MedicoesTempoReal = {
+            todosParametros: [],           // Todos os parâmetros do banco
+            parametrosSelecionados: [],    // Parâmetros atualmente exibidos
+            mostrarPoluentes: true,        // Checkbox poluentes
+            mostrarMeteorologicos: false,  // Checkbox meteorológicos
+            medicoes: []                   // Dados das medições
+        };
+
+        // Inicializar módulo de medições
+        async function inicializarMedicoesTempoReal() {
+            try {
+                // Carregar todos os parâmetros
+                const res = await ApiClient.get('/parametros');
+                if (res && res.sucesso) {
+                    MedicoesTempoReal.todosParametros = res.dados.sort((a, b) => 
+                        (a.ordem_exibicao || 999) - (b.ordem_exibicao || 999)
+                    );
+                    
+                    // Inicialmente mostrar apenas poluentes
+                    atualizarParametrosSelecionados();
+                    renderizarListaParametros();
+                }
+                
+                // Carregar estações no select
+                await carregarEstacoesSelectMedicoes();
+                
+                // Carregar dados
+                await atualizarTabelaMedicoesTempoReal();
+            } catch (error) {
+                console.error('Erro ao inicializar medições:', error);
+            }
+        }
+
+        // Atualizar lista de parâmetros selecionados baseado nos checkboxes
+        function atualizarParametrosSelecionados() {
+            MedicoesTempoReal.parametrosSelecionados = MedicoesTempoReal.todosParametros.filter(p => {
+                if (p.tipo === 'poluente' && MedicoesTempoReal.mostrarPoluentes) return true;
+                if (p.tipo === 'meteorologico' && MedicoesTempoReal.mostrarMeteorologicos) return true;
+                return false;
+            });
+        }
+
+        // Renderizar lista de parâmetros no dropdown
+        function renderizarListaParametros() {
+            const container = document.getElementById('listaParametrosIndividuais');
+            if (!container) return;
+            
+            const poluentes = MedicoesTempoReal.todosParametros.filter(p => p.tipo === 'poluente');
+            const meteorologicos = MedicoesTempoReal.todosParametros.filter(p => p.tipo === 'meteorologico');
+            
+            let html = '';
+            
+            if (poluentes.length > 0) {
+                html += '<div style="margin-bottom:5px; color:#666; font-weight:500;">Poluentes:</div>';
+                poluentes.forEach(p => {
+                    const checked = MedicoesTempoReal.parametrosSelecionados.some(ps => ps.id === p.id);
+                    html += `<label style="display:block; padding:2px 0; cursor:pointer;">
+                        <input type="checkbox" ${checked ? 'checked' : ''} 
+                            onchange="toggleParametroIndividual(${p.id})"> ${p.codigo}
+                    </label>`;
+                });
+            }
+            
+            if (meteorologicos.length > 0) {
+                html += '<div style="margin-top:8px; margin-bottom:5px; color:#666; font-weight:500;">Meteorológicos:</div>';
+                meteorologicos.forEach(p => {
+                    const checked = MedicoesTempoReal.parametrosSelecionados.some(ps => ps.id === p.id);
+                    html += `<label style="display:block; padding:2px 0; cursor:pointer;">
+                        <input type="checkbox" ${checked ? 'checked' : ''} 
+                            onchange="toggleParametroIndividual(${p.id})"> ${p.codigo}
+                    </label>`;
+                });
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // Toggle dropdown de parâmetros
+        function toggleDropdownParametros() {
+            const menu = document.getElementById('menuParametros');
+            if (menu) {
+                menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        // Fechar dropdown ao clicar fora
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('dropdownParametros');
+            const menu = document.getElementById('menuParametros');
+            if (dropdown && menu && !dropdown.contains(e.target)) {
+                menu.style.display = 'none';
+            }
+        });
+
+        // Toggle tipo de parâmetro (poluente/meteorológico)
+        function toggleTipoParametro(tipo) {
+            if (tipo === 'poluente') {
+                MedicoesTempoReal.mostrarPoluentes = document.getElementById('chkPoluentes').checked;
+            } else if (tipo === 'meteorologico') {
+                MedicoesTempoReal.mostrarMeteorologicos = document.getElementById('chkMeteorologicos').checked;
+            }
+            
+            atualizarParametrosSelecionados();
+            renderizarListaParametros();
+            atualizarTabelaMedicoesTempoReal();
+        }
+
+        // Toggle parâmetro individual
+        function toggleParametroIndividual(parametroId) {
+            const param = MedicoesTempoReal.todosParametros.find(p => p.id === parametroId);
+            if (!param) return;
+            
+            const idx = MedicoesTempoReal.parametrosSelecionados.findIndex(p => p.id === parametroId);
+            if (idx >= 0) {
+                MedicoesTempoReal.parametrosSelecionados.splice(idx, 1);
+            } else {
+                // Adicionar na ordem correta
+                MedicoesTempoReal.parametrosSelecionados.push(param);
+                MedicoesTempoReal.parametrosSelecionados.sort((a, b) => 
+                    (a.ordem_exibicao || 999) - (b.ordem_exibicao || 999)
+                );
+            }
+            
+            atualizarTabelaMedicoesTempoReal();
+        }
+
+        // Atualizar tabela de medições
+        async function atualizarTabelaMedicoesTempoReal() {
+            const thead = document.getElementById('medicoesTableHead');
+            const tbody = document.getElementById('medicoesTableBody');
+            
+            if (!thead || !tbody) return;
+            
+            // Obter filtros
+            const estacaoId = document.getElementById('selectEstacaoMedicoes')?.value || '';
+            const periodo = document.getElementById('selectPeriodoMedicoes')?.value || '24h';
+            
+            // Renderizar cabeçalho
+            const parametros = MedicoesTempoReal.parametrosSelecionados;
+            const headersParametros = parametros.map(p => 
+                `<th>${p.codigo} (${p.unidade_medida || 'µg/m³'})</th>`
+            ).join('');
+            
+            thead.innerHTML = `<tr>
+                <th>Estação</th>
+                <th>Status</th>
+                <th>Última Atualização</th>
+                ${headersParametros}
+            </tr>`;
+            
+            // Mostrar loading
+            tbody.innerHTML = `<tr><td colspan="${3 + parametros.length}" class="text-center">
+                <i class="fas fa-spinner fa-spin"></i> Carregando...
+            </td></tr>`;
+            
+            try {
+                // Buscar medições
+                let url = '/medicoes/tempo-real';
+                const params = [];
+                if (estacaoId) params.push(`estacaoId=${estacaoId}`);
+                if (periodo) params.push(`periodo=${periodo}`);
+                if (params.length > 0) url += '?' + params.join('&');
+                
+                const response = await ApiClient.get(url);
+                
+                if (!response || !response.sucesso || !response.dados) {
+                    tbody.innerHTML = `<tr><td colspan="${3 + parametros.length}" class="text-center text-muted">
+                        Nenhuma medição encontrada
+                    </td></tr>`;
+                    return;
+                }
+                
+                let medicoes = response.dados;
+                
+                // Filtrar por estação específica se selecionada
+                if (estacaoId) {
+                    medicoes = medicoes.filter(m => m.estacao.id == estacaoId);
+                }
+                
+                // Filtrar por unidade se selecionada
+                if (unidadeSelecionada && estacoesFiltro.length > 0) {
+                    const estacaoIds = estacoesFiltro.map(e => e.id);
+                    medicoes = medicoes.filter(m => estacaoIds.includes(m.estacao.id));
+                }
+                
+                // Ordenar por data mais recente
+                medicoes.sort((a, b) => {
+                    const getDataMaisRecente = (m) => {
+                        let maxDate = new Date(0);
+                        for (const key in m.medicoes) {
+                            if (m.medicoes[key]?.data_hora) {
+                                const d = new Date(m.medicoes[key].data_hora);
+                                if (d > maxDate) maxDate = d;
+                            }
+                        }
+                        return maxDate;
+                    };
+                    return getDataMaisRecente(b) - getDataMaisRecente(a);
+                });
+                
+                if (medicoes.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="${3 + parametros.length}" class="text-center text-muted">
+                        Nenhuma medição encontrada
+                    </td></tr>`;
+                    return;
+                }
+                
+                // Renderizar linhas
+                tbody.innerHTML = medicoes.map(m => {
+                    // Status
+                    const statusClass = m.classificacao === 'Boa' ? 'valid' : 
+                                       (m.classificacao === 'Regular' ? 'pending' : 'invalid');
+                    
+                    // Data/hora mais recente
+                    let dataHora = null;
+                    for (const key in m.medicoes) {
+                        if (m.medicoes[key]?.data_hora) {
+                            const d = new Date(m.medicoes[key].data_hora);
+                            if (!dataHora || d > dataHora) dataHora = d;
+                        }
+                    }
+                    const dataFormatada = dataHora ? dataHora.toLocaleString('pt-BR') : '-';
+                    
+                    // Células dos parâmetros
+                    const celulasParametros = parametros.map(p => {
+                        const medicao = m.medicoes[p.codigo];
+                        if (medicao && typeof medicao.valor === 'number' && !isNaN(medicao.valor)) {
+                            const decimais = (p.codigo === 'CO' || p.codigo === 'CH4') ? 2 : 1;
+                            return `<td>${medicao.valor.toFixed(decimais)}</td>`;
+                        }
+                        return '<td class="text-muted">-</td>';
+                    }).join('');
+                    
+                    return `<tr>
+                        <td><strong>${m.estacao.codigo}</strong></td>
+                        <td><span class="status-badge ${statusClass}">${m.classificacao || 'N/A'}</span></td>
+                        <td>${dataFormatada}</td>
+                        ${celulasParametros}
+                    </tr>`;
+                }).join('');
+                
+            } catch (error) {
+                console.error('Erro ao carregar medições:', error);
+                tbody.innerHTML = `<tr><td colspan="${3 + parametros.length}" class="text-center text-danger">
+                    Erro ao carregar medições
+                </td></tr>`;
+            }
+        }
+
+        // Função para exportar medições
+        function exportarMedicoes() {
+            alert('Funcionalidade de exportação será implementada em breve.');
+        }
+
+        // Carregar estações no select de medições
+        async function carregarEstacoesSelectMedicoes() {
+            try {
+                const response = await EstacoesService.listar();
+                const select = document.getElementById('selectEstacaoMedicoes');
+                
+                if (!select) return;
+                
+                if (response && response.sucesso && response.dados) {
+                    select.innerHTML = '<option value="">Todas as estações</option>';
+                    
+                    response.dados.forEach(estacao => {
+                        const opt = document.createElement('option');
+                        opt.value = estacao.id;
+                        opt.textContent = `${estacao.codigo} - ${estacao.nome}`;
+                        select.appendChild(opt);
+                    });
+                }
+            } catch (error) {
+                console.error('Erro ao carregar estações para medições:', error);
+            }
+        }
+
+        // Atualizar dashboard completo
+        async function atualizarDashboard() {
+            const btnAtualizar = document.querySelector('.btn-primary');
+            if (btnAtualizar) {
+                btnAtualizar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Atualizando...';
+                btnAtualizar.disabled = true;
+            }
+
+            try {
+                await carregarDadosDashboard();
+                await atualizarTodosComponentes();
+            } finally {
+                if (btnAtualizar) {
+                    btnAtualizar.innerHTML = '<i class="fas fa-sync-alt"></i> Atualizar';
+                    btnAtualizar.disabled = false;
+                }
+            }
+        }
+
+        // Carregar alertas
+        async function carregarAlertas() {
+            try {
+                const response = await AlertasService.getAtivos();
+                if (response && response.sucesso) {
+                    const alertas = response.dados;
+                    const alertBanner = document.getElementById('alertBanner');
+                    const alertMessage = document.getElementById('alertMessage');
+                    
+                    if (alertas && alertas.length > 0) {
+                        alertBanner.style.display = 'flex';
+                        alertMessage.innerHTML = `<strong>Atenção:</strong> ${alertas.length} alerta(s) ativo(s). ${alertas[0].mensagem || ''}`;
+                    } else {
+                        alertBanner.style.display = 'none';
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao carregar alertas:', error);
+            }
+        }
+
+        // Fechar alerta
+        function fecharAlerta() {
+            document.getElementById('alertBanner').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

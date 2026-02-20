@@ -1,0 +1,2472 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurações - Sistema de Gestão de Qualidade do Ar</title>
+    <link rel="stylesheet" href="../css/styles.css?v=5">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ========================================
+           ESTILOS DA PÁGINA DE CONFIGURAÇÕES
+           ======================================== */
+        
+        .config-container {
+            padding: 0;
+            max-width: 100%;
+        }
+
+        /* Abas de navegação */
+        .config-tabs {
+            display: flex;
+            gap: 4px;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .config-tab {
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .config-tab:hover {
+            color: #334155;
+            background: rgba(255,255,255,0.5);
+        }
+
+        .config-tab.active {
+            background: white;
+            color: #00A19A;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .config-tab .badge {
+            background: #e2e8f0;
+            color: #64748b;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+
+        .config-tab.active .badge {
+            background: #00A19A;
+            color: white;
+        }
+
+        /* Painéis de conteúdo */
+        .config-panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .config-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Card base */
+        .config-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .config-card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .config-card-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .config-card-body {
+            padding: 20px;
+        }
+
+        /* Toolbar */
+        .config-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .config-toolbar .search-box {
+            flex: 1;
+            max-width: 300px;
+            position: relative;
+        }
+
+        .config-toolbar .search-box input {
+            width: 100%;
+            padding: 10px 10px 10px 38px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .config-toolbar .search-box input:focus {
+            outline: none;
+            border-color: #00A19A;
+        }
+
+        .config-toolbar .search-box i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+
+        .config-toolbar .filter-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .config-toolbar select {
+            padding: 10px 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #334155;
+            background: white;
+            cursor: pointer;
+        }
+
+        /* Tabela */
+        .config-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .config-table th,
+        .config-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .config-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .config-table tr:hover {
+            background: #f8fafc;
+        }
+
+        .config-table td {
+            font-size: 14px;
+            color: #334155;
+        }
+
+        /* Status badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-badge.online {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-badge.offline {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .status-badge.manutencao {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-badge.ativo {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-badge.inativo {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .status-badge i {
+            font-size: 8px;
+        }
+
+        /* Perfil badges */
+        .perfil-badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .perfil-badge.admin {
+            background: #fae8ff;
+            color: #a21caf;
+        }
+
+        .perfil-badge.supervisor {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .perfil-badge.analista {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .perfil-badge.operador {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        /* Ações */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .btn-action.edit {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .btn-action.edit:hover {
+            background: #1d4ed8;
+            color: white;
+        }
+
+        .btn-action.delete {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .btn-action.delete:hover {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-action.view {
+            background: #e0e7ff;
+            color: #4f46e5;
+        }
+
+        .btn-action.view:hover {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .btn-action.status {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .btn-action.status:hover {
+            background: #d97706;
+            color: white;
+        }
+
+        /* Botões primários */
+        .btn-primary {
+            padding: 10px 20px;
+            background: #00A19A;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #008f89;
+        }
+
+        .btn-secondary {
+            padding: 10px 20px;
+            background: #f1f5f9;
+            color: #334155;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #f1f5f9;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: #e5e7eb;
+            color: #334155;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* Formulário */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #334155;
+            margin-bottom: 6px;
+        }
+
+        .form-group label .required {
+            color: #dc2626;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #00A19A;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        /* Alertas lista */
+        .alert-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 16px;
+            border-bottom: 1px solid #e5e7eb;
+            transition: background 0.2s;
+        }
+
+        .alert-item:hover {
+            background: #f8fafc;
+        }
+
+        .alert-item:last-child {
+            border-bottom: none;
+        }
+
+        .alert-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .alert-icon.critical {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .alert-icon.warning {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .alert-icon.info {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .alert-message {
+            font-size: 13px;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        .alert-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .alert-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .alert-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Grid de configurações do sistema */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .setting-info h4 {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .setting-info p {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        /* Toggle switch */
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #e5e7eb;
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: #00A19A;
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        /* Paginação */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #334155;
+            transition: all 0.2s;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #00A19A;
+            color: white;
+            border-color: #00A19A;
+        }
+
+        .pagination button.active {
+            background: #00A19A;
+            color: white;
+            border-color: #00A19A;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            color: #64748b;
+            margin: 0 16px;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            color: #cbd5e1;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            color: #334155;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        /* Loading */
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .loading-spinner i {
+            font-size: 24px;
+            color: #00A19A;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            padding: 14px 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .toast.success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .toast.error {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .toast.warning {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .toast.info {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .config-tabs {
+                flex-wrap: wrap;
+            }
+
+            .config-tab {
+                flex: 1 1 auto;
+                justify-content: center;
+            }
+
+            .config-toolbar {
+                flex-direction: column;
+            }
+
+            .config-toolbar .search-box {
+                max-width: 100%;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .config-table {
+                display: block;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <img src="../img/logo-acoem.png" alt="Acoem Brasil" class="logo-img">
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <span class="nav-section-title">PRINCIPAL</span>
+                <a href="index.html" class="nav-item">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="supervisorio.html" class="nav-item">
+                    <i class="fas fa-desktop"></i>
+                    <span>Supervisório</span>
+                </a>
+                <a href="mapa.html" class="nav-item">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>Mapa Georreferenciado</span>
+                </a>
+                <a href="evolucao-temporal.html" class="nav-item">
+                    <i class="fas fa-chart-area"></i>
+                    <span>Evolução Temporal</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">DADOS</span>
+                <a href="validacao.html" class="nav-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Validação de Dados</span>
+                </a>
+                <a href="importar-dados.html" class="nav-item">
+                    <i class="fas fa-database"></i>
+                    <span>Importar Dados</span>
+                </a>
+                <a href="exportar-dados.html" class="nav-item">
+                    <i class="fas fa-download"></i>
+                    <span>Exportar Dados</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">ANÁLISES</span>
+                <a href="relatorios.html" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Relatórios</span>
+                </a>
+                <a href="estatisticas.html" class="nav-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Estatísticas</span>
+                </a>
+                <a href="rosa-ventos.html" class="nav-item">
+                    <i class="fas fa-wind"></i>
+                    <span>Rosa dos Ventos</span>
+                </a>
+                <a href="iqar.html" class="nav-item">
+                    <i class="fas fa-smog"></i>
+                    <span>Índice IQAr</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">CONFIGURAÇÕES</span>
+                <a href="configuracoes.html" class="nav-item active">
+                    <i class="fas fa-broadcast-tower"></i>
+                    <span>Estações</span>
+                </a>
+                <a href="configuracoes.html#usuarios" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Usuários</span>
+                </a>
+                <a href="configuracoes.html#alertas" class="nav-item">
+                    <i class="fas fa-bell"></i>
+                    <span>Alertas</span>
+                </a>
+                <a href="configuracoes.html#sistema" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Sistema</span>
+                </a>
+            </div>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="#" class="nav-item">
+                <i class="fas fa-question-circle"></i>
+                <span>FAQ / Ajuda</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-headset"></i>
+                <span>Suporte Técnico</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Overlay para mobile -->
+    <div class="sidebar-overlay"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Buscar..." id="searchGlobal">
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <div class="header-actions">
+                    <button class="header-btn" title="Notificações">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" id="notificationCount">0</span>
+                    </button>
+                </div>
+                
+                <div class="user-menu" id="userMenu" onclick="toggleUserDropdown()">
+                    <div class="user-info">
+                        <span class="user-name" id="userName">Carregando...</span>
+                        <span class="user-role" id="userRole">-</span>
+                    </div>
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                    
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="index.html" class="dropdown-item">
+                            <i class="fas fa-th-large"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-user-cog"></i>
+                            <span>Meu Perfil</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item logout" onclick="logout(); return false;">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Sair</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="page-content">
+            <!-- Page Title -->
+            <div class="page-header">
+                <div class="page-title">
+                    <h1>Configurações</h1>
+                    <p>Gerencie estações, usuários e configurações do sistema</p>
+                </div>
+                <div class="page-actions">
+                    <span class="current-time" id="currentTime"></span>
+                </div>
+            </div>
+
+            <div class="config-container">
+            <!-- Abas de navegação -->
+            <div class="config-tabs">
+                <button type="button" class="config-tab active" data-tab="estacoes">
+                    <i class="fas fa-broadcast-tower"></i>
+                    <span>Estações</span>
+                    <span class="badge" id="badge-estacoes">0</span>
+                </button>
+                <button type="button" class="config-tab" data-tab="usuarios" id="tab-usuarios">
+                    <i class="fas fa-users"></i>
+                    <span>Usuários</span>
+                    <span class="badge" id="badge-usuarios">0</span>
+                </button>
+                <button type="button" class="config-tab" data-tab="alertas">
+                    <i class="fas fa-bell"></i>
+                    <span>Alertas</span>
+                    <span class="badge" id="badge-alertas">0</span>
+                </button>
+                <button type="button" class="config-tab" data-tab="sistema">
+                    <i class="fas fa-sliders-h"></i>
+                    <span>Sistema</span>
+                </button>
+            </div>
+
+            <!-- ========================================
+                 PAINEL: ESTAÇÕES
+                 ======================================== -->
+            <div class="config-panel active" id="panel-estacoes">
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <h3><i class="fas fa-broadcast-tower"></i> Gerenciamento de Estações</h3>
+                        <button class="btn-primary" onclick="abrirModalEstacao()">
+                            <i class="fas fa-plus"></i> Nova Estação
+                        </button>
+                    </div>
+                    <div class="config-card-body">
+                        <div class="config-toolbar">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="busca-estacao" placeholder="Buscar estação..." oninput="filtrarEstacoes()">
+                            </div>
+                            <div class="filter-group">
+                                <select id="filtro-status-estacao" onchange="filtrarEstacoes()">
+                                    <option value="">Todos os status</option>
+                                    <option value="online">Online</option>
+                                    <option value="offline">Offline</option>
+                                    <option value="manutencao">Manutenção</option>
+                                </select>
+                                <select id="filtro-unidade-estacao" onchange="filtrarEstacoes()">
+                                    <option value="">Todas as unidades</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="table-container">
+                            <table class="config-table" id="tabela-estacoes">
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Nome</th>
+                                        <th>Unidade</th>
+                                        <th>Status</th>
+                                        <th>Última Comunicação</th>
+                                        <th>Ativo</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-estacoes">
+                                    <tr>
+                                        <td colspan="7">
+                                            <div class="loading-spinner">
+                                                <i class="fas fa-spinner fa-spin"></i>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="pagination" id="pagination-estacoes"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================
+                 PAINEL: USUÁRIOS
+                 ======================================== -->
+            <div class="config-panel" id="panel-usuarios">
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <h3><i class="fas fa-users"></i> Gerenciamento de Usuários</h3>
+                        <button class="btn-primary" onclick="abrirModalUsuario()" id="btn-novo-usuario">
+                            <i class="fas fa-plus"></i> Novo Usuário
+                        </button>
+                    </div>
+                    <div class="config-card-body">
+                        <div class="config-toolbar">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="busca-usuario" placeholder="Buscar usuário..." oninput="filtrarUsuarios()">
+                            </div>
+                            <div class="filter-group">
+                                <select id="filtro-perfil" onchange="filtrarUsuarios()">
+                                    <option value="">Todos os perfis</option>
+                                    <option value="admin">Administrador</option>
+                                    <option value="supervisor">Supervisor</option>
+                                    <option value="analista">Analista</option>
+                                    <option value="operador">Operador</option>
+                                </select>
+                                <select id="filtro-status-usuario" onchange="filtrarUsuarios()">
+                                    <option value="">Todos</option>
+                                    <option value="1">Ativos</option>
+                                    <option value="0">Inativos</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="table-container">
+                            <table class="config-table" id="tabela-usuarios">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Email</th>
+                                        <th>Perfil</th>
+                                        <th>Último Acesso</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-usuarios">
+                                    <tr>
+                                        <td colspan="6">
+                                            <div class="loading-spinner">
+                                                <i class="fas fa-spinner fa-spin"></i>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="pagination" id="pagination-usuarios"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================
+                 PAINEL: ALERTAS
+                 ======================================== -->
+            <div class="config-panel" id="panel-alertas">
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <h3><i class="fas fa-bell"></i> Central de Alertas</h3>
+                        <div class="filter-group">
+                            <select id="filtro-tipo-alerta" onchange="filtrarAlertas()">
+                                <option value="">Todos os tipos</option>
+                                <option value="ULTRAPASSAGEM_LIMITE">Ultrapassagem de Limite</option>
+                                <option value="FALHA_COMUNICACAO">Falha de Comunicação</option>
+                                <option value="DADOS_PENDENTES">Dados Pendentes</option>
+                                <option value="MANUTENCAO">Manutenção</option>
+                            </select>
+                            <select id="filtro-nivel-alerta" onchange="filtrarAlertas()">
+                                <option value="">Todos os níveis</option>
+                                <option value="critical">Crítico</option>
+                                <option value="warning">Atenção</option>
+                                <option value="info">Informativo</option>
+                            </select>
+                            <button class="btn-secondary" onclick="marcarTodosLidos()">
+                                <i class="fas fa-check-double"></i> Marcar todos como lidos
+                            </button>
+                        </div>
+                    </div>
+                    <div class="config-card-body" style="padding: 0;">
+                        <div id="lista-alertas">
+                            <div class="loading-spinner">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estatísticas de Alertas -->
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 20px;">
+                    <div class="config-card">
+                        <div class="config-card-body" style="text-align: center;">
+                            <div style="font-size: 32px; font-weight: 700; color: #dc2626;" id="stat-criticos">0</div>
+                            <div style="font-size: 14px; color: #64748b;">Críticos</div>
+                        </div>
+                    </div>
+                    <div class="config-card">
+                        <div class="config-card-body" style="text-align: center;">
+                            <div style="font-size: 32px; font-weight: 700; color: #d97706;" id="stat-atencao">0</div>
+                            <div style="font-size: 14px; color: #64748b;">Atenção</div>
+                        </div>
+                    </div>
+                    <div class="config-card">
+                        <div class="config-card-body" style="text-align: center;">
+                            <div style="font-size: 32px; font-weight: 700; color: #2563eb;" id="stat-info">0</div>
+                            <div style="font-size: 14px; color: #64748b;">Informativos</div>
+                        </div>
+                    </div>
+                    <div class="config-card">
+                        <div class="config-card-body" style="text-align: center;">
+                            <div style="font-size: 32px; font-weight: 700; color: #10b981;" id="stat-resolvidos">0</div>
+                            <div style="font-size: 14px; color: #64748b;">Resolvidos Hoje</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ========================================
+                 PAINEL: SISTEMA
+                 ======================================== -->
+            <div class="config-panel" id="panel-sistema">
+                <!-- Configurações Gerais -->
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <h3><i class="fas fa-cog"></i> Configurações Gerais</h3>
+                    </div>
+                    <div class="config-card-body">
+                        <div class="settings-grid">
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <h4>Atualização Automática</h4>
+                                    <p>Atualizar dados em tempo real</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="config-auto-refresh" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <h4>Notificações Push</h4>
+                                    <p>Receber alertas no navegador</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="config-push-notifications">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <h4>Modo Escuro</h4>
+                                    <p>Tema escuro do sistema</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="config-dark-mode">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <h4>Sons de Alerta</h4>
+                                    <p>Reproduzir sons para alertas críticos</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="config-alert-sounds" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Configurações de Coleta -->
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <h3><i class="fas fa-clock"></i> Intervalos de Coleta</h3>
+                    </div>
+                    <div class="config-card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Intervalo de Atualização (segundos)</label>
+                                <input type="number" id="config-refresh-interval" value="30" min="10" max="300">
+                                <span class="form-hint">Tempo entre atualizações automáticas</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Timeout de Conexão (segundos)</label>
+                                <input type="number" id="config-timeout" value="30" min="5" max="120">
+                                <span class="form-hint">Tempo máximo para aguardar resposta</span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Retenção de Dados (dias)</label>
+                                <input type="number" id="config-data-retention" value="365" min="30" max="3650">
+                                <span class="form-hint">Período de armazenamento dos dados</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Limite de Registros por Página</label>
+                                <select id="config-page-size">
+                                    <option value="10">10 registros</option>
+                                    <option value="25" selected>25 registros</option>
+                                    <option value="50">50 registros</option>
+                                    <option value="100">100 registros</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Configurações de Alertas -->
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Configurações de Alertas</h3>
+                    </div>
+                    <div class="config-card-body">
+                        <div class="settings-grid">
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <h4>Alerta de Ultrapassagem</h4>
+                                    <p>Avisar quando limites forem excedidos</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="config-alert-threshold" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <h4>Alerta de Falha de Comunicação</h4>
+                                    <p>Avisar quando estação ficar offline</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="config-alert-offline" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <h4>Alerta de Dados Pendentes</h4>
+                                    <p>Avisar sobre dados aguardando validação</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="config-alert-pending" checked>
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="setting-item">
+                                <div class="setting-info">
+                                    <h4>Email para Alertas Críticos</h4>
+                                    <p>Enviar email quando crítico</p>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="config-alert-email">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Informações do Sistema -->
+                <div class="config-card">
+                    <div class="config-card-header">
+                        <h3><i class="fas fa-info-circle"></i> Informações do Sistema</h3>
+                    </div>
+                    <div class="config-card-body">
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                            <div>
+                                <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">Versão do Sistema</div>
+                                <div style="font-size: 16px; font-weight: 600; color: #1e293b;">v2.0.0</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">Última Atualização</div>
+                                <div style="font-size: 16px; font-weight: 600; color: #1e293b;" id="sys-last-update">-</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">Status do Servidor</div>
+                                <div style="font-size: 16px; font-weight: 600; color: #10b981;" id="sys-status">Online</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">Total de Estações</div>
+                                <div style="font-size: 16px; font-weight: 600; color: #1e293b;" id="sys-estacoes">-</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">Total de Medições</div>
+                                <div style="font-size: 16px; font-weight: 600; color: #1e293b;" id="sys-medicoes">-</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">Espaço Utilizado</div>
+                                <div style="font-size: 16px; font-weight: 600; color: #1e293b;" id="sys-storage">-</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align: right; margin-top: 20px;">
+                    <button class="btn-primary" onclick="salvarConfiguracoes()">
+                        <i class="fas fa-save"></i> Salvar Configurações
+                    </button>
+                </div>
+            </div>
+            </div><!-- /config-container -->
+        </div><!-- /page-content -->
+    </main>
+
+    <!-- Modal: Estação -->
+    <div class="modal-overlay" id="modal-estacao">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modal-estacao-titulo">Nova Estação</h2>
+                <button class="modal-close" onclick="fecharModalEstacao()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="form-estacao">
+                    <input type="hidden" id="estacao-id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Código <span class="required">*</span></label>
+                            <input type="text" id="estacao-codigo" required placeholder="Ex: REPLAN-01">
+                        </div>
+                        <div class="form-group">
+                            <label>Nome <span class="required">*</span></label>
+                            <input type="text" id="estacao-nome" required placeholder="Ex: Estação Norte">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Unidade <span class="required">*</span></label>
+                            <select id="estacao-unidade" required>
+                                <option value="">Selecione...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="estacao-status">
+                                <option value="online">Online</option>
+                                <option value="offline">Offline</option>
+                                <option value="manutencao">Manutenção</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Latitude</label>
+                            <input type="number" id="estacao-latitude" step="0.0001" placeholder="-22.7569">
+                        </div>
+                        <div class="form-group">
+                            <label>Longitude</label>
+                            <input type="number" id="estacao-longitude" step="0.0001" placeholder="-47.1329">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Altitude (m)</label>
+                            <input type="number" id="estacao-altitude" placeholder="580">
+                        </div>
+                        <div class="form-group">
+                            <label>Intervalo de Coleta (min)</label>
+                            <input type="number" id="estacao-intervalo" value="5" min="1" max="60">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Endereço</label>
+                        <input type="text" id="estacao-endereco" placeholder="Ex: Rodovia SP-332, Km 132">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Bairro</label>
+                            <input type="text" id="estacao-bairro" placeholder="Ex: Área Industrial">
+                        </div>
+                        <div class="form-group">
+                            <label>Classificação</label>
+                            <select id="estacao-classificacao">
+                                <option value="urbana">Urbana</option>
+                                <option value="industrial">Industrial</option>
+                                <option value="rural">Rural</option>
+                                <option value="costeira">Costeira</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Descrição</label>
+                        <textarea id="estacao-descricao" placeholder="Descrição da estação..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Parâmetros Monitorados</label>
+                        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px;">
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="checkbox" name="parametros" value="PM25" checked> PM2.5
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="checkbox" name="parametros" value="PM10" checked> PM10
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="checkbox" name="parametros" value="O3" checked> O₃
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="checkbox" name="parametros" value="NO2" checked> NO₂
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="checkbox" name="parametros" value="SO2" checked> SO₂
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                                <input type="checkbox" name="parametros" value="CO" checked> CO
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="fecharModalEstacao()">Cancelar</button>
+                <button class="btn-primary" onclick="salvarEstacao()">
+                    <i class="fas fa-save"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Usuário -->
+    <div class="modal-overlay" id="modal-usuario">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modal-usuario-titulo">Novo Usuário</h2>
+                <button class="modal-close" onclick="fecharModalUsuario()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="form-usuario">
+                    <input type="hidden" id="usuario-id">
+                    <div class="form-group">
+                        <label>Nome Completo <span class="required">*</span></label>
+                        <input type="text" id="usuario-nome" required placeholder="Ex: João da Silva">
+                    </div>
+                    <div class="form-group">
+                        <label>Email <span class="required">*</span></label>
+                        <input type="email" id="usuario-email" required placeholder="joao.silva@empresa.com">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Perfil <span class="required">*</span></label>
+                            <select id="usuario-perfil" required>
+                                <option value="">Selecione...</option>
+                                <option value="admin">Administrador</option>
+                                <option value="supervisor">Supervisor</option>
+                                <option value="analista">Analista</option>
+                                <option value="operador">Operador</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="usuario-ativo">
+                                <option value="1">Ativo</option>
+                                <option value="0">Inativo</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" id="grupo-senha">
+                        <label>Senha <span class="required">*</span></label>
+                        <input type="password" id="usuario-senha" placeholder="Mínimo 6 caracteres">
+                        <span class="form-hint">Deixe em branco para manter a senha atual (ao editar)</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Unidades com Acesso</label>
+                        <div id="usuario-unidades" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px;">
+                            <!-- Preenchido dinamicamente -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="fecharModalUsuario()">Cancelar</button>
+                <button class="btn-primary" onclick="salvarUsuario()">
+                    <i class="fas fa-save"></i> Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Confirmação -->
+    <div class="modal-overlay" id="modal-confirmacao">
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 id="modal-confirmacao-titulo">Confirmar Ação</h2>
+                <button class="modal-close" onclick="fecharModalConfirmacao()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p id="modal-confirmacao-mensagem">Tem certeza que deseja realizar esta ação?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="fecharModalConfirmacao()">Cancelar</button>
+                <button class="btn-primary" id="btn-confirmar" style="background: #dc2626;">
+                    <i class="fas fa-check"></i> Confirmar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="../js/api.js"></script>
+    <script>
+        // ========================================
+        // VARIÁVEIS GLOBAIS
+        // ========================================
+        let estacoesData = [];
+        let usuariosData = [];
+        let alertasData = [];
+        let unidadesData = [];
+        let usuarioAtual = null;
+        let paginaAtualEstacoes = 1;
+        let paginaAtualUsuarios = 1;
+        const itensPorPagina = 10;
+
+        // ========================================
+        // INICIALIZAÇÃO
+        // ========================================
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Configurar abas PRIMEIRO (antes de qualquer operação assíncrona)
+            configurarAbas();
+
+            // Atualizar relógio
+            atualizarRelogio();
+            setInterval(atualizarRelogio, 1000);
+
+            // Menu toggle
+            const menuToggle = document.getElementById('menuToggle');
+            if (menuToggle) {
+                menuToggle.addEventListener('click', toggleSidebar);
+            }
+
+            // Sidebar overlay click
+            const overlay = document.querySelector('.sidebar-overlay');
+            if (overlay) {
+                overlay.addEventListener('click', toggleSidebar);
+            }
+
+            // Verificar hash da URL para abrir aba específica
+            const hash = window.location.hash.replace('#', '');
+            if (hash) {
+                const tab = document.querySelector(`.config-tab[data-tab="${hash}"]`);
+                if (tab) tab.click();
+            }
+
+            // Listener para mudança de hash (quando clica no menu lateral)
+            window.addEventListener('hashchange', () => {
+                const newHash = window.location.hash.replace('#', '');
+                if (newHash) {
+                    const tab = document.querySelector(`.config-tab[data-tab="${newHash}"]`);
+                    if (tab) tab.click();
+                }
+            });
+
+            // Interceptar cliques nos links do menu de configurações
+            document.querySelectorAll('.sidebar-nav a[href*="configuracoes.html#"]').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    const href = link.getAttribute('href');
+                    const hash = href.split('#')[1];
+                    if (hash && window.location.pathname.includes('configuracoes.html')) {
+                        e.preventDefault();
+                        window.location.hash = hash;
+                        const tab = document.querySelector(`.config-tab[data-tab="${hash}"]`);
+                        if (tab) tab.click();
+                    }
+                });
+            });
+
+            // Verificar autenticação
+            const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Carregar dados do usuário
+            try {
+                await carregarUsuarioAtual();
+            } catch (error) {
+                console.error('Erro ao carregar usuário:', error);
+            }
+
+            // Carregar dados iniciais
+            try {
+                await carregarUnidades();
+                await carregarEstacoes();
+                await carregarAlertas();
+                carregarInformacoesSistema();
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                mostrarToast('Erro ao carregar alguns dados', 'error');
+            }
+        });
+
+        // ========================================
+        // AUTENTICAÇÃO E USUÁRIO
+        // ========================================
+        async function carregarUsuarioAtual() {
+            try {
+                const response = await api.get('/auth/me');
+                usuarioAtual = response;
+                
+                document.getElementById('userName').textContent = response.nome;
+                document.getElementById('userRole').textContent = traduzirPerfil(response.perfil);
+
+                // Verificar se é admin para mostrar aba de usuários
+                if (response.perfil !== 'admin') {
+                    document.getElementById('tab-usuarios').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar usuário:', error);
+                window.location.href = 'login.html';
+            }
+        }
+
+        function traduzirPerfil(perfil) {
+            const perfis = {
+                'admin': 'Administrador',
+                'supervisor': 'Supervisor',
+                'analista': 'Analista',
+                'operador': 'Operador'
+            };
+            return perfis[perfil] || perfil;
+        }
+
+        function logout() {
+            if (typeof AuthService !== 'undefined') {
+                AuthService.logout();
+            } else {
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                sessionStorage.removeItem('accessToken');
+                sessionStorage.removeItem('refreshToken');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // ========================================
+        // FUNÇÕES DE NAVEGAÇÃO
+        // ========================================
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
+
+        function toggleUserDropdown() {
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('show');
+        }
+
+        // Fechar dropdown ao clicar fora
+        document.addEventListener('click', function(event) {
+            const userMenu = document.getElementById('userMenu');
+            const dropdown = document.getElementById('userDropdown');
+            if (userMenu && !userMenu.contains(event.target)) {
+                dropdown.classList.remove('show');
+            }
+        });
+
+        // ========================================
+        // NAVEGAÇÃO POR ABAS
+        // ========================================
+        function configurarAbas() {
+            const tabs = document.querySelectorAll('.config-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    // Remover active de todas as abas
+                    tabs.forEach(t => t.classList.remove('active'));
+                    // Adicionar active na aba clicada
+                    tab.classList.add('active');
+
+                    // Esconder todos os painéis
+                    document.querySelectorAll('.config-panel').forEach(p => p.classList.remove('active'));
+                    // Mostrar painel correspondente
+                    const panelId = 'panel-' + tab.dataset.tab;
+                    const panel = document.getElementById(panelId);
+                    if (panel) {
+                        panel.classList.add('active');
+                    }
+
+                    // Carregar dados específicos da aba
+                    if (tab.dataset.tab === 'usuarios' && usuariosData.length === 0) {
+                        carregarUsuarios();
+                    }
+                });
+            });
+        }
+
+        // ========================================
+        // ESTAÇÕES
+        // ========================================
+        async function carregarEstacoes() {
+            try {
+                const response = await api.get('/estacoes');
+                estacoesData = response.dados || response.data || response || [];
+                document.getElementById('badge-estacoes').textContent = estacoesData.length;
+                renderizarEstacoes();
+            } catch (error) {
+                console.error('Erro ao carregar estações:', error);
+                mostrarToast('Erro ao carregar estações', 'error');
+            }
+        }
+
+        async function carregarUnidades() {
+            try {
+                const response = await api.get('/unidades');
+                unidadesData = response.dados || response.data || response || [];
+                
+                // Preencher select de unidades no filtro
+                const selectFiltro = document.getElementById('filtro-unidade-estacao');
+                const selectForm = document.getElementById('estacao-unidade');
+                
+                unidadesData.forEach(u => {
+                    selectFiltro.innerHTML += `<option value="${u.id}">${u.nome}</option>`;
+                    selectForm.innerHTML += `<option value="${u.id}">${u.nome}</option>`;
+                });
+            } catch (error) {
+                console.error('Erro ao carregar unidades:', error);
+            }
+        }
+
+        function renderizarEstacoes() {
+            const tbody = document.getElementById('tbody-estacoes');
+            const filtradas = filtrarEstacoesDados();
+            
+            if (filtradas.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <i class="fas fa-broadcast-tower"></i>
+                                <h3>Nenhuma estação encontrada</h3>
+                                <p>Não há estações que correspondam aos filtros aplicados</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Paginação
+            const inicio = (paginaAtualEstacoes - 1) * itensPorPagina;
+            const fim = inicio + itensPorPagina;
+            const paginadas = filtradas.slice(inicio, fim);
+
+            tbody.innerHTML = paginadas.map(e => `
+                <tr>
+                    <td><strong>${e.codigo}</strong></td>
+                    <td>${e.nome}</td>
+                    <td>${e.unidade?.nome || e.Unidade?.nome || '-'}</td>
+                    <td>
+                        <span class="status-badge ${e.status}">
+                            <i class="fas fa-circle"></i>
+                            ${traduzirStatus(e.status)}
+                        </span>
+                    </td>
+                    <td>${e.ultima_comunicacao ? formatarData(e.ultima_comunicacao) : 'Nunca'}</td>
+                    <td>
+                        <span class="status-badge ${e.ativo ? 'ativo' : 'inativo'}">
+                            ${e.ativo ? 'Ativo' : 'Inativo'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-action edit" onclick="editarEstacao(${e.id})" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-action status" onclick="alterarStatusEstacao(${e.id})" title="Alterar Status">
+                                <i class="fas fa-toggle-on"></i>
+                            </button>
+                            <button class="btn-action delete" onclick="confirmarDesativarEstacao(${e.id})" title="Desativar">
+                                <i class="fas fa-power-off"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Renderizar paginação
+            renderizarPaginacao('pagination-estacoes', filtradas.length, paginaAtualEstacoes, (p) => {
+                paginaAtualEstacoes = p;
+                renderizarEstacoes();
+            });
+        }
+
+        function filtrarEstacoesDados() {
+            const busca = document.getElementById('busca-estacao').value.toLowerCase();
+            const status = document.getElementById('filtro-status-estacao').value;
+            const unidade = document.getElementById('filtro-unidade-estacao').value;
+
+            return estacoesData.filter(e => {
+                const matchBusca = e.codigo.toLowerCase().includes(busca) || 
+                                   e.nome.toLowerCase().includes(busca);
+                const matchStatus = !status || e.status === status;
+                const matchUnidade = !unidade || e.unidade_id == unidade;
+                return matchBusca && matchStatus && matchUnidade;
+            });
+        }
+
+        function filtrarEstacoes() {
+            paginaAtualEstacoes = 1;
+            renderizarEstacoes();
+        }
+
+        function abrirModalEstacao(estacao = null) {
+            const modal = document.getElementById('modal-estacao');
+            const titulo = document.getElementById('modal-estacao-titulo');
+            
+            if (estacao) {
+                titulo.textContent = 'Editar Estação';
+                document.getElementById('estacao-id').value = estacao.id;
+                document.getElementById('estacao-codigo').value = estacao.codigo;
+                document.getElementById('estacao-nome').value = estacao.nome;
+                document.getElementById('estacao-unidade').value = estacao.unidade_id || '';
+                document.getElementById('estacao-status').value = estacao.status || 'online';
+                document.getElementById('estacao-latitude').value = estacao.latitude || '';
+                document.getElementById('estacao-longitude').value = estacao.longitude || '';
+                document.getElementById('estacao-altitude').value = estacao.altitude || '';
+                document.getElementById('estacao-intervalo').value = estacao.intervalo_coleta || 5;
+                document.getElementById('estacao-endereco').value = estacao.endereco || '';
+                document.getElementById('estacao-bairro').value = estacao.bairro || '';
+                document.getElementById('estacao-classificacao').value = estacao.classificacao || 'urbana';
+                document.getElementById('estacao-descricao').value = estacao.descricao || '';
+                
+                // Parâmetros
+                const params = estacao.parametros_monitorados ? estacao.parametros_monitorados.split(',') : [];
+                document.querySelectorAll('input[name="parametros"]').forEach(cb => {
+                    cb.checked = params.includes(cb.value);
+                });
+            } else {
+                titulo.textContent = 'Nova Estação';
+                document.getElementById('form-estacao').reset();
+                document.getElementById('estacao-id').value = '';
+                document.querySelectorAll('input[name="parametros"]').forEach(cb => cb.checked = true);
+            }
+
+            modal.classList.add('active');
+        }
+
+        function fecharModalEstacao() {
+            document.getElementById('modal-estacao').classList.remove('active');
+        }
+
+        async function editarEstacao(id) {
+            const estacao = estacoesData.find(e => e.id === id);
+            if (estacao) {
+                abrirModalEstacao(estacao);
+            }
+        }
+
+        async function salvarEstacao() {
+            const id = document.getElementById('estacao-id').value;
+            const parametros = Array.from(document.querySelectorAll('input[name="parametros"]:checked'))
+                                    .map(cb => cb.value).join(',');
+
+            const dados = {
+                codigo: document.getElementById('estacao-codigo').value,
+                nome: document.getElementById('estacao-nome').value,
+                unidade_id: document.getElementById('estacao-unidade').value || null,
+                status: document.getElementById('estacao-status').value,
+                latitude: parseFloat(document.getElementById('estacao-latitude').value) || null,
+                longitude: parseFloat(document.getElementById('estacao-longitude').value) || null,
+                altitude: parseFloat(document.getElementById('estacao-altitude').value) || null,
+                intervalo_coleta: parseInt(document.getElementById('estacao-intervalo').value) || 5,
+                endereco: document.getElementById('estacao-endereco').value || null,
+                bairro: document.getElementById('estacao-bairro').value || null,
+                classificacao: document.getElementById('estacao-classificacao').value,
+                descricao: document.getElementById('estacao-descricao').value || null,
+                parametros_monitorados: parametros
+            };
+
+            try {
+                if (id) {
+                    await api.put(`/estacoes/${id}`, dados);
+                    mostrarToast('Estação atualizada com sucesso!', 'success');
+                } else {
+                    await api.post('/estacoes', dados);
+                    mostrarToast('Estação criada com sucesso!', 'success');
+                }
+                fecharModalEstacao();
+                await carregarEstacoes();
+            } catch (error) {
+                console.error('Erro ao salvar estação:', error);
+                mostrarToast('Erro ao salvar estação: ' + (error.message || 'Erro desconhecido'), 'error');
+            }
+        }
+
+        async function alterarStatusEstacao(id) {
+            const estacao = estacoesData.find(e => e.id === id);
+            if (!estacao) return;
+
+            const novoStatus = estacao.status === 'online' ? 'manutencao' : 
+                               estacao.status === 'manutencao' ? 'offline' : 'online';
+
+            try {
+                await api.put(`/estacoes/${id}`, { status: novoStatus });
+                mostrarToast(`Status alterado para ${traduzirStatus(novoStatus)}`, 'success');
+                await carregarEstacoes();
+            } catch (error) {
+                mostrarToast('Erro ao alterar status', 'error');
+            }
+        }
+
+        function confirmarDesativarEstacao(id) {
+            const estacao = estacoesData.find(e => e.id === id);
+            abrirModalConfirmacao(
+                'Desativar Estação',
+                `Tem certeza que deseja desativar a estação "${estacao?.nome}"?`,
+                async () => {
+                    try {
+                        await api.delete(`/estacoes/${id}`);
+                        mostrarToast('Estação desativada com sucesso!', 'success');
+                        await carregarEstacoes();
+                    } catch (error) {
+                        mostrarToast('Erro ao desativar estação', 'error');
+                    }
+                }
+            );
+        }
+
+        // ========================================
+        // USUÁRIOS
+        // ========================================
+        async function carregarUsuarios() {
+            try {
+                const response = await api.get('/usuarios');
+                usuariosData = response.dados || response.data || response || [];
+                document.getElementById('badge-usuarios').textContent = usuariosData.length;
+                renderizarUsuarios();
+                
+                // Carregar unidades para o formulário
+                const divUnidades = document.getElementById('usuario-unidades');
+                divUnidades.innerHTML = unidadesData.map(u => `
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" name="usuario-unidades" value="${u.id}"> ${u.nome}
+                    </label>
+                `).join('');
+            } catch (error) {
+                console.error('Erro ao carregar usuários:', error);
+                mostrarToast('Erro ao carregar usuários', 'error');
+            }
+        }
+
+        function renderizarUsuarios() {
+            const tbody = document.getElementById('tbody-usuarios');
+            const filtrados = filtrarUsuariosDados();
+            
+            if (filtrados.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6">
+                            <div class="empty-state">
+                                <i class="fas fa-users"></i>
+                                <h3>Nenhum usuário encontrado</h3>
+                                <p>Não há usuários que correspondam aos filtros aplicados</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            // Paginação
+            const inicio = (paginaAtualUsuarios - 1) * itensPorPagina;
+            const fim = inicio + itensPorPagina;
+            const paginados = filtrados.slice(inicio, fim);
+
+            tbody.innerHTML = paginados.map(u => `
+                <tr>
+                    <td><strong>${u.nome}</strong></td>
+                    <td>${u.email}</td>
+                    <td><span class="perfil-badge ${u.perfil}">${traduzirPerfil(u.perfil)}</span></td>
+                    <td>${u.ultimo_acesso ? formatarData(u.ultimo_acesso) : 'Nunca'}</td>
+                    <td>
+                        <span class="status-badge ${u.ativo ? 'ativo' : 'inativo'}">
+                            ${u.ativo ? 'Ativo' : 'Inativo'}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-action edit" onclick="editarUsuario(${u.id})" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            ${u.ativo ? `
+                                <button class="btn-action delete" onclick="confirmarDesativarUsuario(${u.id})" title="Desativar">
+                                    <i class="fas fa-user-slash"></i>
+                                </button>
+                            ` : `
+                                <button class="btn-action view" onclick="reativarUsuario(${u.id})" title="Reativar">
+                                    <i class="fas fa-user-check"></i>
+                                </button>
+                            `}
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            renderizarPaginacao('pagination-usuarios', filtrados.length, paginaAtualUsuarios, (p) => {
+                paginaAtualUsuarios = p;
+                renderizarUsuarios();
+            });
+        }
+
+        function filtrarUsuariosDados() {
+            const busca = document.getElementById('busca-usuario').value.toLowerCase();
+            const perfil = document.getElementById('filtro-perfil').value;
+            const status = document.getElementById('filtro-status-usuario').value;
+
+            return usuariosData.filter(u => {
+                const matchBusca = u.nome.toLowerCase().includes(busca) || 
+                                   u.email.toLowerCase().includes(busca);
+                const matchPerfil = !perfil || u.perfil === perfil;
+                const matchStatus = status === '' || u.ativo == status;
+                return matchBusca && matchPerfil && matchStatus;
+            });
+        }
+
+        function filtrarUsuarios() {
+            paginaAtualUsuarios = 1;
+            renderizarUsuarios();
+        }
+
+        function abrirModalUsuario(usuario = null) {
+            const modal = document.getElementById('modal-usuario');
+            const titulo = document.getElementById('modal-usuario-titulo');
+            
+            if (usuario) {
+                titulo.textContent = 'Editar Usuário';
+                document.getElementById('usuario-id').value = usuario.id;
+                document.getElementById('usuario-nome').value = usuario.nome;
+                document.getElementById('usuario-email').value = usuario.email;
+                document.getElementById('usuario-perfil').value = usuario.perfil;
+                document.getElementById('usuario-ativo').value = usuario.ativo ? '1' : '0';
+                document.getElementById('usuario-senha').required = false;
+            } else {
+                titulo.textContent = 'Novo Usuário';
+                document.getElementById('form-usuario').reset();
+                document.getElementById('usuario-id').value = '';
+                document.getElementById('usuario-senha').required = true;
+            }
+
+            modal.classList.add('active');
+        }
+
+        function fecharModalUsuario() {
+            document.getElementById('modal-usuario').classList.remove('active');
+        }
+
+        async function editarUsuario(id) {
+            const usuario = usuariosData.find(u => u.id === id);
+            if (usuario) {
+                abrirModalUsuario(usuario);
+            }
+        }
+
+        async function salvarUsuario() {
+            const id = document.getElementById('usuario-id').value;
+            
+            const dados = {
+                nome: document.getElementById('usuario-nome').value,
+                email: document.getElementById('usuario-email').value,
+                perfil: document.getElementById('usuario-perfil').value,
+                ativo: document.getElementById('usuario-ativo').value === '1'
+            };
+
+            const senha = document.getElementById('usuario-senha').value;
+            if (senha) {
+                dados.senha = senha;
+            }
+
+            try {
+                if (id) {
+                    await api.put(`/usuarios/${id}`, dados);
+                    mostrarToast('Usuário atualizado com sucesso!', 'success');
+                } else {
+                    await api.post('/usuarios', dados);
+                    mostrarToast('Usuário criado com sucesso!', 'success');
+                }
+                fecharModalUsuario();
+                await carregarUsuarios();
+            } catch (error) {
+                console.error('Erro ao salvar usuário:', error);
+                mostrarToast('Erro ao salvar usuário: ' + (error.message || 'Erro desconhecido'), 'error');
+            }
+        }
+
+        function confirmarDesativarUsuario(id) {
+            const usuario = usuariosData.find(u => u.id === id);
+            abrirModalConfirmacao(
+                'Desativar Usuário',
+                `Tem certeza que deseja desativar o usuário "${usuario?.nome}"?`,
+                async () => {
+                    try {
+                        await api.delete(`/usuarios/${id}`);
+                        mostrarToast('Usuário desativado com sucesso!', 'success');
+                        await carregarUsuarios();
+                    } catch (error) {
+                        mostrarToast('Erro ao desativar usuário', 'error');
+                    }
+                }
+            );
+        }
+
+        async function reativarUsuario(id) {
+            try {
+                await api.put(`/usuarios/${id}/reativar`);
+                mostrarToast('Usuário reativado com sucesso!', 'success');
+                await carregarUsuarios();
+            } catch (error) {
+                mostrarToast('Erro ao reativar usuário', 'error');
+            }
+        }
+
+        // ========================================
+        // ALERTAS
+        // ========================================
+        async function carregarAlertas() {
+            try {
+                const response = await api.get('/alertas');
+                alertasData = response.dados || response.data || response || [];
+                
+                // Contar alertas ativos (não resolvidos)
+                const ativos = alertasData.filter(a => !a.resolvido_em);
+                document.getElementById('badge-alertas').textContent = ativos.length;
+                
+                // Estatísticas
+                const criticos = alertasData.filter(a => a.nivel === 'critical' && !a.resolvido_em).length;
+                const atencao = alertasData.filter(a => a.nivel === 'warning' && !a.resolvido_em).length;
+                const info = alertasData.filter(a => a.nivel === 'info' && !a.resolvido_em).length;
+                const resolvidos = alertasData.filter(a => {
+                    if (!a.resolvido_em) return false;
+                    const hoje = new Date().toDateString();
+                    return new Date(a.resolvido_em).toDateString() === hoje;
+                }).length;
+
+                document.getElementById('stat-criticos').textContent = criticos;
+                document.getElementById('stat-atencao').textContent = atencao;
+                document.getElementById('stat-info').textContent = info;
+                document.getElementById('stat-resolvidos').textContent = resolvidos;
+
+                renderizarAlertas();
+            } catch (error) {
+                console.error('Erro ao carregar alertas:', error);
+            }
+        }
+
+        function renderizarAlertas() {
+            const container = document.getElementById('lista-alertas');
+            const tipo = document.getElementById('filtro-tipo-alerta').value;
+            const nivel = document.getElementById('filtro-nivel-alerta').value;
+
+            let filtrados = alertasData.filter(a => !a.resolvido_em);
+            if (tipo) filtrados = filtrados.filter(a => a.tipo === tipo);
+            if (nivel) filtrados = filtrados.filter(a => a.nivel === nivel);
+
+            if (filtrados.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-bell-slash"></i>
+                        <h3>Nenhum alerta encontrado</h3>
+                        <p>Não há alertas ativos no momento</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filtrados.map(a => `
+                <div class="alert-item">
+                    <div class="alert-icon ${a.nivel}">
+                        <i class="fas ${getIconeAlerta(a.tipo)}"></i>
+                    </div>
+                    <div class="alert-content">
+                        <div class="alert-title">${a.titulo}</div>
+                        <div class="alert-message">${a.mensagem}</div>
+                        <div class="alert-meta">
+                            <span><i class="fas fa-clock"></i> ${formatarDataRelativa(a.criado_em)}</span>
+                            ${a.estacao || a.Estacao ? `<span><i class="fas fa-broadcast-tower"></i> ${a.estacao?.nome || a.Estacao?.nome}</span>` : ''}
+                            <span><i class="fas fa-tag"></i> ${traduzirTipoAlerta(a.tipo)}</span>
+                        </div>
+                    </div>
+                    <div class="alert-actions">
+                        <button class="btn-action view" onclick="marcarAlertaLido(${a.id})" title="Marcar como lido">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <button class="btn-action edit" onclick="resolverAlerta(${a.id})" title="Resolver">
+                            <i class="fas fa-check-double"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filtrarAlertas() {
+            renderizarAlertas();
+        }
+
+        async function marcarAlertaLido(id) {
+            try {
+                await api.put(`/alertas/${id}/ler`);
+                mostrarToast('Alerta marcado como lido', 'success');
+            } catch (error) {
+                mostrarToast('Erro ao marcar alerta', 'error');
+            }
+        }
+
+        async function resolverAlerta(id) {
+            try {
+                await api.put(`/alertas/${id}/resolver`);
+                mostrarToast('Alerta resolvido!', 'success');
+                await carregarAlertas();
+            } catch (error) {
+                mostrarToast('Erro ao resolver alerta', 'error');
+            }
+        }
+
+        async function marcarTodosLidos() {
+            try {
+                await api.put('/alertas/ler-todos');
+                mostrarToast('Todos os alertas marcados como lidos', 'success');
+            } catch (error) {
+                mostrarToast('Erro ao marcar alertas', 'error');
+            }
+        }
+
+        function getIconeAlerta(tipo) {
+            const icones = {
+                'ULTRAPASSAGEM_LIMITE': 'fa-exclamation-triangle',
+                'FALHA_COMUNICACAO': 'fa-wifi',
+                'DADOS_PENDENTES': 'fa-clock',
+                'MANUTENCAO': 'fa-tools'
+            };
+            return icones[tipo] || 'fa-bell';
+        }
+
+        function traduzirTipoAlerta(tipo) {
+            const tipos = {
+                'ULTRAPASSAGEM_LIMITE': 'Ultrapassagem',
+                'FALHA_COMUNICACAO': 'Falha de Comunicação',
+                'DADOS_PENDENTES': 'Dados Pendentes',
+                'MANUTENCAO': 'Manutenção'
+            };
+            return tipos[tipo] || tipo;
+        }
+
+        // ========================================
+        // SISTEMA
+        // ========================================
+        async function carregarInformacoesSistema() {
+            document.getElementById('sys-last-update').textContent = formatarData(new Date());
+            document.getElementById('sys-estacoes').textContent = estacoesData.length;
+            
+            try {
+                const stats = await api.get('/dashboard/resumo');
+                document.getElementById('sys-medicoes').textContent = formatarNumero(stats.totalMedicoes || 0);
+            } catch (e) {
+                document.getElementById('sys-medicoes').textContent = '-';
+            }
+            
+            document.getElementById('sys-storage').textContent = '~2.5 GB';
+        }
+
+        function salvarConfiguracoes() {
+            // Salvar no localStorage
+            const configs = {
+                autoRefresh: document.getElementById('config-auto-refresh').checked,
+                pushNotifications: document.getElementById('config-push-notifications').checked,
+                darkMode: document.getElementById('config-dark-mode').checked,
+                alertSounds: document.getElementById('config-alert-sounds').checked,
+                refreshInterval: document.getElementById('config-refresh-interval').value,
+                timeout: document.getElementById('config-timeout').value,
+                dataRetention: document.getElementById('config-data-retention').value,
+                pageSize: document.getElementById('config-page-size').value,
+                alertThreshold: document.getElementById('config-alert-threshold').checked,
+                alertOffline: document.getElementById('config-alert-offline').checked,
+                alertPending: document.getElementById('config-alert-pending').checked,
+                alertEmail: document.getElementById('config-alert-email').checked
+            };
+
+            localStorage.setItem('sistemaConfigs', JSON.stringify(configs));
+            mostrarToast('Configurações salvas com sucesso!', 'success');
+        }
+
+        // ========================================
+        // UTILITÁRIOS
+        // ========================================
+        function traduzirStatus(status) {
+            const statuses = {
+                'online': 'Online',
+                'offline': 'Offline',
+                'manutencao': 'Manutenção'
+            };
+            return statuses[status] || status;
+        }
+
+        function formatarData(data) {
+            if (!data) return '-';
+            return new Date(data).toLocaleString('pt-BR');
+        }
+
+        function formatarDataRelativa(data) {
+            const agora = new Date();
+            const dataAlvo = new Date(data);
+            const diff = agora - dataAlvo;
+            
+            const minutos = Math.floor(diff / 60000);
+            const horas = Math.floor(diff / 3600000);
+            const dias = Math.floor(diff / 86400000);
+
+            if (minutos < 1) return 'Agora';
+            if (minutos < 60) return `${minutos}min atrás`;
+            if (horas < 24) return `${horas}h atrás`;
+            return `${dias}d atrás`;
+        }
+
+        function formatarNumero(num) {
+            return num.toLocaleString('pt-BR');
+        }
+
+        function atualizarRelogio() {
+            document.getElementById('currentTime').textContent = new Date().toLocaleString('pt-BR');
+        }
+
+        function renderizarPaginacao(containerId, total, paginaAtual, callback) {
+            const container = document.getElementById(containerId);
+            const totalPaginas = Math.ceil(total / itensPorPagina);
+            
+            if (totalPaginas <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let html = `
+                <button onclick="(${callback.toString()})(${paginaAtual - 1})" ${paginaAtual === 1 ? 'disabled' : ''}>
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            `;
+
+            for (let i = 1; i <= totalPaginas; i++) {
+                if (i === 1 || i === totalPaginas || (i >= paginaAtual - 1 && i <= paginaAtual + 1)) {
+                    html += `<button class="${i === paginaAtual ? 'active' : ''}" onclick="(${callback.toString()})(${i})">${i}</button>`;
+                } else if (i === paginaAtual - 2 || i === paginaAtual + 2) {
+                    html += `<span>...</span>`;
+                }
+            }
+
+            html += `
+                <button onclick="(${callback.toString()})(${paginaAtual + 1})" ${paginaAtual === totalPaginas ? 'disabled' : ''}>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // Modal de confirmação
+        let confirmCallback = null;
+
+        function abrirModalConfirmacao(titulo, mensagem, callback) {
+            document.getElementById('modal-confirmacao-titulo').textContent = titulo;
+            document.getElementById('modal-confirmacao-mensagem').textContent = mensagem;
+            confirmCallback = callback;
+            document.getElementById('modal-confirmacao').classList.add('active');
+            
+            document.getElementById('btn-confirmar').onclick = async () => {
+                if (confirmCallback) await confirmCallback();
+                fecharModalConfirmacao();
+            };
+        }
+
+        function fecharModalConfirmacao() {
+            document.getElementById('modal-confirmacao').classList.remove('active');
+            confirmCallback = null;
+        }
+
+        // Toast notifications
+        function mostrarToast(mensagem, tipo = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${tipo}`;
+            toast.innerHTML = `
+                <i class="fas fa-${tipo === 'success' ? 'check-circle' : tipo === 'error' ? 'times-circle' : tipo === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                <span>${mensagem}</span>
+            `;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+    </script>
+</body>
+</html>

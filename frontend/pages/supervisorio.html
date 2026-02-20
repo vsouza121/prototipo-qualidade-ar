@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supervisório - Acoem Brasil</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Supervisório Styles */
+        .supervisory-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 16px 20px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+        }
+
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .live-dot {
+            width: 10px;
+            height: 10px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .supervisory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 20px;
+        }
+
+        .station-card {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .station-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .station-card.status-normal { border-top: 4px solid #10b981; }
+        .station-card.status-warning { border-top: 4px solid #f59e0b; }
+        .station-card.status-critical { border-top: 4px solid #ef4444; }
+        .station-card.status-offline { border-top: 4px solid #6b7280; }
+
+        .station-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .station-info h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .station-info span {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .station-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .station-status.normal { background: #d1fae5; color: #059669; }
+        .station-status.warning { background: #fef3c7; color: #d97706; }
+        .station-status.critical { background: #fee2e2; color: #dc2626; }
+        .station-status.offline { background: #f3f4f6; color: #6b7280; }
+
+        .station-body {
+            padding: 16px 20px;
+        }
+
+        .parameters-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .parameter-item {
+            background: var(--bg-primary);
+            border-radius: var(--radius);
+            padding: 12px;
+            text-align: center;
+        }
+
+        .parameter-item .param-name {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .parameter-item .param-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .parameter-item .param-unit {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .parameter-item.alert .param-value {
+            color: #ef4444;
+        }
+
+        .parameter-item.warning .param-value {
+            color: #f59e0b;
+        }
+
+        .station-chart {
+            height: 100px;
+            margin-top: 12px;
+        }
+
+        .station-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: var(--bg-primary);
+            border-top: 1px solid var(--border);
+        }
+
+        .last-update {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .station-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .station-actions button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-details {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-details:hover {
+            background: #001d2e;
+        }
+
+        .btn-history {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-history:hover {
+            background: var(--bg-primary);
+        }
+
+        /* IQAr Badge */
+        .iqar-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .iqar-badge.bom { background: #d1fae5; color: #059669; }
+        .iqar-badge.moderado { background: #fef3c7; color: #d97706; }
+        .iqar-badge.ruim { background: #fed7aa; color: #ea580c; }
+        .iqar-badge.muito-ruim { background: #fee2e2; color: #dc2626; }
+        .iqar-badge.pessimo { background: #fecaca; color: #991b1b; }
+
+        /* View Toggle */
+        .view-toggle {
+            display: flex;
+            background: var(--bg-primary);
+            border-radius: var(--radius);
+            padding: 4px;
+        }
+
+        .view-toggle button {
+            padding: 8px 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: var(--radius);
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .view-toggle button.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Summary Cards */
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .summary-card .label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .summary-card .value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .summary-card .value.green { color: #10b981; }
+        .summary-card .value.yellow { color: #f59e0b; }
+        .summary-card .value.red { color: #ef4444; }
+
+        @media (max-width: 768px) {
+            .supervisory-grid {
+                grid-template-columns: 1fr;
+            }
+            .summary-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .parameters-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <img src="../img/logo-acoem.png" alt="Acoem Brasil" class="logo-img">
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <span class="nav-section-title">PRINCIPAL</span>
+                <a href="index.html" class="nav-item">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="supervisorio.html" class="nav-item active">
+                    <i class="fas fa-desktop"></i>
+                    <span>Supervisório</span>
+                </a>
+                <a href="mapa.html" class="nav-item">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>Mapa Georreferenciado</span>
+                </a>
+                <a href="evolucao-temporal.html" class="nav-item">
+                    <i class="fas fa-chart-area"></i>
+                    <span>Evolução Temporal</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">DADOS</span>
+                <a href="validacao.html" class="nav-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Validação de Dados</span>
+                </a>
+                <a href="importar-dados.html" class="nav-item">
+                    <i class="fas fa-database"></i>
+                    <span>Importar Dados</span>
+                </a>
+                <a href="exportar-dados.html" class="nav-item">
+                    <i class="fas fa-download"></i>
+                    <span>Exportar Dados</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">ANÁLISES</span>
+                <a href="relatorios.html" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Relatórios</span>
+                </a>
+                <a href="estatisticas.html" class="nav-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Estatísticas</span>
+                </a>
+                <a href="rosa-ventos.html" class="nav-item">
+                    <i class="fas fa-wind"></i>
+                    <span>Rosa dos Ventos</span>
+                </a>
+                <a href="iqar.html" class="nav-item">
+                    <i class="fas fa-smog"></i>
+                    <span>Índice IQAr</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">CONFIGURAÇÕES</span>
+                <a href="configuracoes.html" class="nav-item">
+                    <i class="fas fa-broadcast-tower"></i>
+                    <span>Estações</span>
+                </a>
+                <a href="configuracoes.html#usuarios" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Usuários</span>
+                </a>
+                <a href="configuracoes.html#alertas" class="nav-item">
+                    <i class="fas fa-bell"></i>
+                    <span>Alertas</span>
+                </a>
+                <a href="configuracoes.html#sistema" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Sistema</span>
+                </a>
+            </div>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="#" class="nav-item">
+                <i class="fas fa-question-circle"></i>
+                <span>FAQ / Ajuda</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-headset"></i>
+                <span>Suporte Técnico</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Overlay para mobile -->
+    <div class="sidebar-overlay"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <button class="menu-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Buscar estação..." id="searchStation">
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <div class="header-actions">
+                    <button class="header-btn" title="Notificações">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge" id="notificationCount">0</span>
+                    </button>
+                </div>
+                
+                <div class="user-menu" id="userMenu" onclick="toggleUserDropdown()">
+                    <div class="user-info">
+                        <span class="user-name">Carregando...</span>
+                        <span class="user-role">-</span>
+                    </div>
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                    
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="index.html" class="dropdown-item">
+                            <i class="fas fa-th-large"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-user-cog"></i>
+                            <span>Meu Perfil</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item logout" onclick="fazerLogout(); return false;">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Sair</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="page-content">
+            <!-- Page Title -->
+            <div class="page-header">
+                <div class="page-title">
+                    <h1>Supervisório</h1>
+                    <p>Monitoramento em tempo real das estações de qualidade do ar</p>
+                </div>
+                <div class="page-actions">
+                    <select class="select-unit" id="filtroUnidade" onchange="filtrarEstacoes()">
+                        <option value="">Todas as Unidades</option>
+                    </select>
+                    <div class="view-toggle">
+                        <button class="active" onclick="setView('cards')"><i class="fas fa-th-large"></i></button>
+                        <button onclick="setView('list')"><i class="fas fa-list"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Supervisory Header -->
+            <div class="supervisory-header">
+                <div class="live-indicator">
+                    <span class="live-dot"></span>
+                    <span>MONITORAMENTO AO VIVO</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <span style="font-size: 13px; color: var(--text-secondary);">Última atualização: <strong id="lastUpdate">--:--:--</strong></span>
+                    <button class="btn btn-primary btn-sm" onclick="atualizarDados()">
+                        <i class="fas fa-sync-alt"></i> Atualizar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="summary-cards">
+                <div class="summary-card">
+                    <div class="label">Estações Online</div>
+                    <div class="value green" id="stationsOnline">0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Em Alerta</div>
+                    <div class="value yellow" id="stationsWarning">0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Críticas</div>
+                    <div class="value red" id="stationsCritical">0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="label">Offline</div>
+                    <div class="value" id="stationsOffline">0</div>
+                </div>
+            </div>
+
+            <!-- Stations Grid -->
+            <div class="supervisory-grid" id="stationsGrid">
+                <!-- Stations will be loaded dynamically -->
+                <div style="grid-column: 1 / -1; text-align: center; padding: 60px;">
+                    <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--text-secondary);"></i>
+                    <p style="margin-top: 16px; color: var(--text-secondary);">Carregando estações...</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="../js/api.js"></script>
+    
+    <!-- Sidebar Toggle Script -->
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            const isMobile = window.innerWidth <= 992;
+            
+            if (isMobile) {
+                sidebar.classList.toggle('open');
+                if (overlay) overlay.classList.toggle('active');
+            } else {
+                sidebar.classList.toggle('collapsed');
+                document.body.classList.toggle('sidebar-collapsed');
+            }
+        }
+        
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('sidebar-overlay')) {
+                const sidebar = document.querySelector('.sidebar');
+                const overlay = document.querySelector('.sidebar-overlay');
+                sidebar.classList.remove('open');
+                if (overlay) overlay.classList.remove('active');
+            }
+        });
+        
+        window.addEventListener('resize', function() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            const isMobile = window.innerWidth <= 992;
+            
+            if (isMobile) {
+                sidebar.classList.remove('collapsed');
+                document.body.classList.remove('sidebar-collapsed');
+            } else {
+                sidebar.classList.remove('open');
+                if (overlay) overlay.classList.remove('active');
+            }
+        });
+    </script>
+    
+    <script>
+        // Dados das estações (simulados - serão carregados da API)
+        let estacoes = [];
+        let estacoesExibidas = [];
+
+        // Verificar autenticação
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (!AuthService.isLoggedIn()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Atualizar informações do usuário
+            const usuario = AuthService.getUsuario();
+            if (usuario) {
+                document.querySelector('.user-name').textContent = usuario.nome;
+                const roles = { 'admin': 'Administrador', 'supervisor': 'Supervisor', 'analista': 'Analista', 'operador': 'Operador' };
+                document.querySelector('.user-role').textContent = roles[usuario.role] || usuario.role;
+            }
+
+            // Carregar dados
+            await carregarUnidades();
+            await carregarEstacoes();
+
+            // Atualizar a cada 30 segundos
+            setInterval(atualizarDados, 30000);
+        });
+
+        // Carregar unidades no filtro
+        async function carregarUnidades() {
+            try {
+                const response = await ApiClient.get('/dashboard');
+                if (response && response.sucesso && response.dados.unidades) {
+                    const select = document.getElementById('filtroUnidade');
+                    response.dados.unidades.forEach(unidade => {
+                        select.innerHTML += `<option value="${unidade.id}">${unidade.nome}</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error('Erro ao carregar unidades:', error);
+            }
+        }
+
+        // Carregar estações
+        async function carregarEstacoes() {
+            try {
+                const response = await EstacoesService.listar();
+                if (response && response.sucesso) {
+                    estacoes = response.dados.map(est => ({
+                        id: est.id,
+                        nome: est.nome,
+                        codigo: est.codigo,
+                        unidade: est.Unidade ? est.Unidade.nome : 'N/A',
+                        unidadeId: est.unidadeId,
+                        status: est.ativo ? 'normal' : 'offline',
+                        iqar: Math.floor(Math.random() * 150) + 10, // Simulado
+                        parametros: gerarParametrosSimulados()
+                    }));
+
+                    // Simular alguns alertas
+                    if (estacoes.length > 2) {
+                        estacoes[1].status = 'warning';
+                        estacoes[1].parametros.SO2.valor = 145;
+                        estacoes[1].parametros.SO2.alerta = true;
+                    }
+                    if (estacoes.length > 4) {
+                        estacoes[3].status = 'critical';
+                        estacoes[3].parametros.PM25.valor = 89;
+                        estacoes[3].parametros.PM25.alerta = true;
+                        estacoes[3].iqar = 165;
+                    }
+
+                    renderizarEstacoes();
+                    atualizarContadores();
+                    atualizarHora();
+                }
+            } catch (error) {
+                console.error('Erro ao carregar estações:', error);
+                document.getElementById('stationsGrid').innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 60px;">
+                        <i class="fas fa-exclamation-triangle fa-3x" style="color: #ef4444;"></i>
+                        <p style="margin-top: 16px; color: var(--text-secondary);">Erro ao carregar estações. Verifique a conexão.</p>
+                        <button class="btn btn-primary" style="margin-top: 16px;" onclick="carregarEstacoes()">Tentar Novamente</button>
+                    </div>
+                `;
+            }
+        }
+
+        // Gerar parâmetros simulados
+        function gerarParametrosSimulados() {
+            return {
+                PM25: { valor: (Math.random() * 40 + 5).toFixed(1), unidade: 'µg/m³', alerta: false },
+                PM10: { valor: (Math.random() * 80 + 10).toFixed(1), unidade: 'µg/m³', alerta: false },
+                O3: { valor: (Math.random() * 100 + 20).toFixed(1), unidade: 'µg/m³', alerta: false },
+                NO2: { valor: (Math.random() * 60 + 5).toFixed(1), unidade: 'µg/m³', alerta: false },
+                SO2: { valor: (Math.random() * 50 + 5).toFixed(1), unidade: 'µg/m³', alerta: false },
+                CO: { valor: (Math.random() * 5 + 0.5).toFixed(2), unidade: 'ppm', alerta: false }
+            };
+        }
+
+        // Renderizar estações
+        function renderizarEstacoes() {
+            const filtro = document.getElementById('filtroUnidade').value;
+            estacoesExibidas = filtro 
+                ? estacoes.filter(e => e.unidadeId == filtro)
+                : estacoes;
+
+            const grid = document.getElementById('stationsGrid');
+            
+            if (estacoesExibidas.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 60px;">
+                        <i class="fas fa-broadcast-tower fa-3x" style="color: var(--text-secondary);"></i>
+                        <p style="margin-top: 16px; color: var(--text-secondary);">Nenhuma estação encontrada.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = estacoesExibidas.map(estacao => `
+                <div class="station-card status-${estacao.status}">
+                    <div class="station-header">
+                        <div class="station-info">
+                            <h3>${estacao.nome}</h3>
+                            <span>${estacao.unidade} • ${estacao.codigo}</span>
+                        </div>
+                        <div class="station-status ${estacao.status}">
+                            <i class="fas fa-${estacao.status === 'normal' ? 'check-circle' : estacao.status === 'warning' ? 'exclamation-triangle' : estacao.status === 'critical' ? 'times-circle' : 'power-off'}"></i>
+                            ${estacao.status === 'normal' ? 'Normal' : estacao.status === 'warning' ? 'Alerta' : estacao.status === 'critical' ? 'Crítico' : 'Offline'}
+                        </div>
+                    </div>
+                    <div class="station-body">
+                        <div class="parameters-grid">
+                            ${Object.entries(estacao.parametros).map(([nome, param]) => `
+                                <div class="parameter-item ${param.alerta ? 'alert' : ''}">
+                                    <div class="param-name">${nome}</div>
+                                    <div class="param-value">${param.valor}</div>
+                                    <div class="param-unit">${param.unidade}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+                            <span class="iqar-badge ${getIqarClass(estacao.iqar)}">
+                                <i class="fas fa-leaf"></i>
+                                IQAr: ${estacao.iqar} - ${getIqarLabel(estacao.iqar)}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="station-footer">
+                        <div class="last-update">
+                            <i class="fas fa-clock"></i> ${new Date().toLocaleTimeString('pt-BR')}
+                        </div>
+                        <div class="station-actions">
+                            <button class="btn-history" onclick="verHistorico(${estacao.id})">
+                                <i class="fas fa-history"></i> Histórico
+                            </button>
+                            <button class="btn-details" onclick="verDetalhes(${estacao.id})">
+                                <i class="fas fa-eye"></i> Detalhes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Classificação IQAr
+        function getIqarClass(valor) {
+            if (valor <= 40) return 'bom';
+            if (valor <= 80) return 'moderado';
+            if (valor <= 120) return 'ruim';
+            if (valor <= 200) return 'muito-ruim';
+            return 'pessimo';
+        }
+
+        function getIqarLabel(valor) {
+            if (valor <= 40) return 'Bom';
+            if (valor <= 80) return 'Moderado';
+            if (valor <= 120) return 'Ruim';
+            if (valor <= 200) return 'Muito Ruim';
+            return 'Péssimo';
+        }
+
+        // Atualizar contadores
+        function atualizarContadores() {
+            const online = estacoes.filter(e => e.status !== 'offline').length;
+            const warning = estacoes.filter(e => e.status === 'warning').length;
+            const critical = estacoes.filter(e => e.status === 'critical').length;
+            const offline = estacoes.filter(e => e.status === 'offline').length;
+
+            document.getElementById('stationsOnline').textContent = online;
+            document.getElementById('stationsWarning').textContent = warning;
+            document.getElementById('stationsCritical').textContent = critical;
+            document.getElementById('stationsOffline').textContent = offline;
+            document.getElementById('notificationCount').textContent = warning + critical;
+        }
+
+        // Atualizar hora
+        function atualizarHora() {
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('pt-BR');
+        }
+
+        // Atualizar dados
+        async function atualizarDados() {
+            // Simular atualização de valores
+            estacoes.forEach(estacao => {
+                Object.keys(estacao.parametros).forEach(key => {
+                    const variacao = (Math.random() - 0.5) * 5;
+                    estacao.parametros[key].valor = Math.max(0, parseFloat(estacao.parametros[key].valor) + variacao).toFixed(key === 'CO' ? 2 : 1);
+                });
+            });
+
+            renderizarEstacoes();
+            atualizarHora();
+        }
+
+        // Filtrar estações
+        function filtrarEstacoes() {
+            renderizarEstacoes();
+        }
+
+        // Alternar visualização
+        function setView(view) {
+            document.querySelectorAll('.view-toggle button').forEach(btn => btn.classList.remove('active'));
+            event.target.closest('button').classList.add('active');
+            // Implementar lógica de visualização lista vs cards
+        }
+
+        // Ver detalhes da estação
+        function verDetalhes(id) {
+            alert('Abrir detalhes da estação ID: ' + id);
+            // Implementar modal ou página de detalhes
+        }
+
+        // Ver histórico
+        function verHistorico(id) {
+            window.location.href = `relatorios.html?estacao=${id}`;
+        }
+
+        // Buscar estação
+        document.getElementById('searchStation').addEventListener('input', function(e) {
+            const termo = e.target.value.toLowerCase();
+            estacoesExibidas = estacoes.filter(est => 
+                est.nome.toLowerCase().includes(termo) || 
+                est.codigo.toLowerCase().includes(termo) ||
+                est.unidade.toLowerCase().includes(termo)
+            );
+            renderizarEstacoes();
+        });
+
+        // Logout e dropdown
+        function fazerLogout() { AuthService.logout(); }
+        function toggleUserDropdown() { document.getElementById('userDropdown').classList.toggle('active'); }
+        document.addEventListener('click', function(event) {
+            const userMenu = document.getElementById('userMenu');
+            const dropdown = document.getElementById('userDropdown');
+            if (userMenu && !userMenu.contains(event.target)) dropdown.classList.remove('active');
+        });
+    </script>
+</body>
+</html>

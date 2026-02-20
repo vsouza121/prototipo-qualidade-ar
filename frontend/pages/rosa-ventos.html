@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rosa dos Ventos - Acoem Brasil</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .wind-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .wind-card {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            padding: 24px;
+        }
+        
+        .wind-card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-primary);
+        }
+        
+        .wind-card h3 i {
+            color: var(--primary);
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 350px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .stat-card i {
+            font-size: 24px;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .stat-unit {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+
+        .direction-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .direction-table th,
+        .direction-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+
+        .direction-table th {
+            background: var(--bg-primary);
+            font-weight: 600;
+        }
+
+        .direction-table tr:hover {
+            background: var(--bg-primary);
+        }
+
+        .progress-bar {
+            width: 100px;
+            height: 8px;
+            background: var(--bg-primary);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 4px;
+        }
+
+        .filters-bar {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .filter-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 1200px) {
+            .wind-grid {
+                grid-template-columns: 1fr;
+            }
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <img src="../img/logo-acoem.png" alt="Acoem Brasil" class="logo-img">
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <span class="nav-section-title">PRINCIPAL</span>
+                <a href="index.html" class="nav-item">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="supervisorio.html" class="nav-item">
+                    <i class="fas fa-desktop"></i>
+                    <span>Supervisório</span>
+                </a>
+                <a href="mapa.html" class="nav-item">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>Mapa Georreferenciado</span>
+                </a>
+                <a href="evolucao-temporal.html" class="nav-item">
+                    <i class="fas fa-chart-area"></i>
+                    <span>Evolução Temporal</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">DADOS</span>
+                <a href="validacao.html" class="nav-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Validação de Dados</span>
+                </a>
+                <a href="importar-dados.html" class="nav-item">
+                    <i class="fas fa-database"></i>
+                    <span>Importar Dados</span>
+                </a>
+                <a href="exportar-dados.html" class="nav-item">
+                    <i class="fas fa-download"></i>
+                    <span>Exportar Dados</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">ANÁLISES</span>
+                <a href="relatorios.html" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Relatórios</span>
+                </a>
+                <a href="estatisticas.html" class="nav-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Estatísticas</span>
+                </a>
+                <a href="rosa-ventos.html" class="nav-item active">
+                    <i class="fas fa-wind"></i>
+                    <span>Rosa dos Ventos</span>
+                </a>
+                <a href="iqar.html" class="nav-item">
+                    <i class="fas fa-smog"></i>
+                    <span>Índice IQAr</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">CONFIGURAÇÕES</span>
+                <a href="configuracoes.html" class="nav-item">
+                    <i class="fas fa-broadcast-tower"></i>
+                    <span>Estações</span>
+                </a>
+                <a href="configuracoes.html#usuarios" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Usuários</span>
+                </a>
+                <a href="configuracoes.html#alertas" class="nav-item">
+                    <i class="fas fa-bell"></i>
+                    <span>Alertas</span>
+                </a>
+                <a href="configuracoes.html#sistema" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Sistema</span>
+                </a>
+            </div>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="#" class="nav-item">
+                <i class="fas fa-question-circle"></i>
+                <span>FAQ / Ajuda</span>
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-headset"></i>
+                <span>Suporte Técnico</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Overlay para mobile -->
+    <div class="sidebar-overlay"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <button class="menu-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Buscar...">
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <div class="header-actions">
+                    <button class="header-btn" title="Notificações">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </button>
+                </div>
+                
+                <div class="user-menu" id="userMenu" onclick="toggleUserDropdown()">
+                    <div class="user-info">
+                        <span class="user-name">Carregando...</span>
+                        <span class="user-role">-</span>
+                    </div>
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                    
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="index.html" class="dropdown-item">
+                            <i class="fas fa-th-large"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-user-cog"></i>
+                            <span>Meu Perfil</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item logout" onclick="fazerLogout(); return false;">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Sair</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="page-content">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="page-title">
+                    <h1>Rosa dos Ventos</h1>
+                    <p>Análise de direção e velocidade do vento</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-outline" onclick="atualizarDados()">
+                        <i class="fas fa-sync-alt"></i>
+                        Atualizar
+                    </button>
+                    <button class="btn btn-primary" onclick="exportarPDF()">
+                        <i class="fas fa-file-pdf"></i>
+                        Exportar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="filters-bar">
+                <div class="filter-group">
+                    <label>Estação:</label>
+                    <select class="select-small" id="selectEstacao" onchange="atualizarDados()">
+                        <option value="">Selecione uma estação</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Período:</label>
+                    <select class="select-small" id="selectPeriodo" onchange="atualizarDados()">
+                        <option value="7">Últimos 7 dias</option>
+                        <option value="30" selected>Últimos 30 dias</option>
+                        <option value="90">Últimos 90 dias</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <div class="stat-value">3.2<span class="stat-unit"> m/s</span></div>
+                    <div class="stat-label">Velocidade Média</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-arrow-up"></i>
+                    <div class="stat-value">12.8<span class="stat-unit"> m/s</span></div>
+                    <div class="stat-label">Velocidade Máxima</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-location-arrow"></i>
+                    <div class="stat-value">SE</div>
+                    <div class="stat-label">Direção Predominante</div>
+                </div>
+                <div class="stat-card">
+                    <i class="fas fa-wind"></i>
+                    <div class="stat-value">8.4<span class="stat-unit">%</span></div>
+                    <div class="stat-label">Calmaria</div>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="wind-grid">
+                <!-- Rosa dos Ventos -->
+                <div class="wind-card">
+                    <h3><i class="fas fa-compass"></i> Rosa dos Ventos</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="windRoseChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Frequência por Direção -->
+                <div class="wind-card">
+                    <h3><i class="fas fa-chart-bar"></i> Frequência por Direção</h3>
+                    <table class="direction-table">
+                        <thead>
+                            <tr>
+                                <th>Direção</th>
+                                <th>Frequência</th>
+                                <th>Vel. Média</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="directionTableBody">
+                            <!-- Preenchido via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Gráfico Horário -->
+            <div class="wind-card">
+                <h3><i class="fas fa-clock"></i> Velocidade Média por Hora do Dia</h3>
+                <div class="chart-wrapper">
+                    <canvas id="hourlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="../js/api.js"></script>
+    
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            const isMobile = window.innerWidth <= 992;
+            
+            if (isMobile) {
+                sidebar.classList.toggle('open');
+                if (overlay) overlay.classList.toggle('active');
+            } else {
+                sidebar.classList.toggle('collapsed');
+                document.body.classList.toggle('sidebar-collapsed');
+            }
+        }
+        
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('sidebar-overlay')) {
+                document.querySelector('.sidebar').classList.remove('open');
+                document.querySelector('.sidebar-overlay').classList.remove('active');
+            }
+        });
+        
+        window.addEventListener('resize', function() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            if (window.innerWidth <= 992) {
+                sidebar.classList.remove('collapsed');
+                document.body.classList.remove('sidebar-collapsed');
+            } else {
+                sidebar.classList.remove('open');
+                if (overlay) overlay.classList.remove('active');
+            }
+        });
+    </script>
+    
+    <script>
+        let windRoseChart, hourlyChart;
+        
+        // Dados simulados de vento
+        const windData = {
+            directions: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
+            frequencies: [5.2, 12.4, 18.3, 22.5, 15.8, 10.2, 8.5, 7.1],
+            avgSpeeds: [2.8, 3.5, 4.2, 3.8, 3.2, 2.5, 2.1, 2.4]
+        };
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (!AuthService.isLoggedIn()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const usuario = AuthService.getUsuario();
+            if (usuario) {
+                document.querySelector('.user-name').textContent = usuario.nome;
+                const roles = { 'admin': 'Administrador', 'supervisor': 'Supervisor', 'analista': 'Analista', 'operador': 'Operador' };
+                document.querySelector('.user-role').textContent = roles[usuario.role] || usuario.role;
+            }
+            
+            await carregarEstacoes();
+            desenharRosaVentos();
+            desenharGraficoHorario();
+            preencherTabelaDirecoes();
+        });
+
+        async function carregarEstacoes() {
+            try {
+                const response = await ApiClient.get('/estacoes');
+                if (response.sucesso) {
+                    const select = document.getElementById('selectEstacao');
+                    response.dados.forEach(estacao => {
+                        select.innerHTML += `<option value="${estacao.id}">${estacao.nome}</option>`;
+                    });
+                    if (response.dados.length > 0) {
+                        select.value = response.dados[0].id;
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao carregar estações:', error);
+            }
+        }
+
+        function desenharRosaVentos() {
+            const ctx = document.getElementById('windRoseChart').getContext('2d');
+            
+            windRoseChart = new Chart(ctx, {
+                type: 'polarArea',
+                data: {
+                    labels: windData.directions,
+                    datasets: [{
+                        data: windData.frequencies,
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(245, 158, 11, 0.7)',
+                            'rgba(239, 68, 68, 0.7)',
+                            'rgba(139, 92, 246, 0.7)',
+                            'rgba(236, 72, 153, 0.7)',
+                            'rgba(6, 182, 212, 0.7)',
+                            'rgba(132, 204, 22, 0.7)'
+                        ],
+                        borderColor: [
+                            '#3b82f6',
+                            '#10b981',
+                            '#f59e0b',
+                            '#ef4444',
+                            '#8b5cf6',
+                            '#ec4899',
+                            '#06b6d4',
+                            '#84cc16'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw}% das observações`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function desenharGraficoHorario() {
+            const ctx = document.getElementById('hourlyChart').getContext('2d');
+            
+            const hours = [];
+            for (let i = 0; i < 24; i++) {
+                hours.push(`${i.toString().padStart(2, '0')}:00`);
+            }
+            
+            const avgSpeed = [2.1, 1.8, 1.6, 1.5, 1.4, 1.6, 2.2, 3.1, 3.8, 4.2, 4.5, 4.8, 4.6, 4.3, 4.1, 3.9, 3.5, 3.2, 2.9, 2.6, 2.4, 2.3, 2.2, 2.1];
+            
+            hourlyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: hours,
+                    datasets: [{
+                        label: 'Velocidade Média (m/s)',
+                        data: avgSpeed,
+                        backgroundColor: 'rgba(0, 161, 154, 0.7)',
+                        borderColor: '#00A19A',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Velocidade (m/s)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Hora'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function preencherTabelaDirecoes() {
+            const tbody = document.getElementById('directionTableBody');
+            const maxFreq = Math.max(...windData.frequencies);
+            
+            // Ordenar por frequência (maior primeiro)
+            const sorted = windData.directions.map((dir, i) => ({
+                direction: dir,
+                frequency: windData.frequencies[i],
+                avgSpeed: windData.avgSpeeds[i]
+            })).sort((a, b) => b.frequency - a.frequency);
+            
+            tbody.innerHTML = sorted.map(item => `
+                <tr>
+                    <td><strong>${item.direction}</strong></td>
+                    <td>${item.frequency.toFixed(1)}%</td>
+                    <td>${item.avgSpeed.toFixed(1)} m/s</td>
+                    <td>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${(item.frequency / maxFreq * 100)}%"></div>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function atualizarDados() {
+            console.log('Atualizando dados...');
+            // Aqui seria feita a chamada à API com os filtros selecionados
+        }
+
+        function exportarPDF() {
+            alert('Funcionalidade de exportação será implementada');
+        }
+
+        function fazerLogout() {
+            AuthService.logout();
+        }
+
+        function toggleUserDropdown() {
+            document.getElementById('userDropdown').classList.toggle('active');
+        }
+
+        document.addEventListener('click', function(event) {
+            const userMenu = document.getElementById('userMenu');
+            if (userMenu && !userMenu.contains(event.target)) {
+                document.getElementById('userDropdown').classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

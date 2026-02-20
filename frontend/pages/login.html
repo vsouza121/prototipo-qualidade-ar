@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema de Gestão de Qualidade do Ar | Acoem Brasil</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ===== Variables ===== */
+        :root {
+            --primary: #00263A;
+            --primary-dark: #001a28;
+            --primary-light: #003a57;
+            --secondary: #00A19A;
+            --secondary-dark: #008a84;
+            --secondary-light: #00b8b0;
+            
+            --bg-gradient-start: #00263A;
+            --bg-gradient-end: #001a28;
+            
+            --text-light: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.7);
+            --text-dark: #00263A;
+            
+            --border-light: rgba(255, 255, 255, 0.1);
+            --border-input: #e2e8f0;
+            
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.25);
+            --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+            
+            --radius: 8px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+        }
+
+        /* ===== Reset ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ===== Background Pattern ===== */
+        .bg-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(0, 161, 154, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(0, 161, 154, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(0, 161, 154, 0.05) 0%, transparent 30%);
+            pointer-events: none;
+        }
+
+        .bg-shapes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .bg-shapes::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(0, 161, 154, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .bg-shapes::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -10%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(0, 161, 154, 0.08) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        /* ===== Login Container ===== */
+        .login-container {
+            display: flex;
+            width: 100%;
+            max-width: 1100px;
+            min-height: 600px;
+            background: #ffffff;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+            margin: 20px;
+        }
+
+        /* ===== Left Panel - Branding ===== */
+        .login-branding {
+            flex: 1;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-branding::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 30% 70%, rgba(0, 161, 154, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 70% 30%, rgba(0, 161, 154, 0.1) 0%, transparent 40%);
+            pointer-events: none;
+        }
+
+        .branding-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .branding-logo {
+            margin-bottom: 40px;
+        }
+
+        .branding-logo img {
+            height: 50px;
+            width: auto;
+        }
+
+        .branding-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-light);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .branding-title .highlight {
+            color: var(--secondary);
+        }
+
+        .branding-subtitle {
+            font-size: 16px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            max-width: 400px;
+        }
+
+        .branding-features {
+            margin-top: 50px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            color: var(--text-light);
+        }
+
+        .feature-icon {
+            width: 44px;
+            height: 44px;
+            background: rgba(0, 161, 154, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--secondary);
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .feature-text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .branding-footer {
+            position: relative;
+            z-index: 1;
+            padding-top: 40px;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .branding-footer p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* ===== Right Panel - Login Form ===== */
+        .login-form-panel {
+            flex: 1;
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: #ffffff;
+        }
+
+        .form-header {
+            margin-bottom: 40px;
+        }
+
+        .form-header h2 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .form-header p {
+            font-size: 15px;
+            color: #64748b;
+        }
+
+        .login-form {
+            width: 100%;
+            max-width: 380px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 16px;
+            transition: color 0.3s ease;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px 16px 14px 48px;
+            font-size: 15px;
+            font-family: inherit;
+            border: 2px solid var(--border-input);
+            border-radius: var(--radius);
+            background: #f8fafc;
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--secondary);
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(0, 161, 154, 0.1);
+        }
+
+        .form-input:focus + .input-icon,
+        .form-input:not(:placeholder-shown) + .input-icon {
+            color: var(--secondary);
+        }
+
+        .form-input::placeholder {
+            color: #94a3b8;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 4px;
+            transition: color 0.3s ease;
+        }
+
+        .password-toggle:hover {
+            color: var(--secondary);
+        }
+
+        .form-options {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            display: none;
+        }
+
+        .checkbox-custom {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-input);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+
+        .checkbox-wrapper input[type="checkbox"]:checked + .checkbox-custom {
+            background: var(--secondary);
+            border-color: var(--secondary);
+        }
+
+        .checkbox-custom i {
+            color: white;
+            font-size: 11px;
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.2s ease;
+        }
+
+        .checkbox-wrapper input[type="checkbox"]:checked + .checkbox-custom i {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .checkbox-label {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .forgot-password {
+            font-size: 14px;
+            color: var(--secondary);
+            font-weight: 500;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .forgot-password:hover {
+            color: var(--secondary-dark);
+            text-decoration: underline;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 16px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: inherit;
+            color: #ffffff;
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 14px rgba(0, 161, 154, 0.4);
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 161, 154, 0.5);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login i {
+            font-size: 14px;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 32px 0;
+        }
+
+        .divider-line {
+            flex: 1;
+            height: 1px;
+            background: var(--border-input);
+        }
+
+        .divider-text {
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .support-link {
+            text-align: center;
+        }
+
+        .support-link p {
+            font-size: 14px;
+            color: #64748b;
+        }
+
+        .support-link a {
+            color: var(--secondary);
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .support-link a:hover {
+            color: var(--secondary-dark);
+            text-decoration: underline;
+        }
+
+        /* ===== Alert Messages ===== */
+        .alert {
+            padding: 14px 16px;
+            border-radius: var(--radius);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .alert-error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+        }
+
+        .alert-success {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #16a34a;
+        }
+
+        .alert i {
+            font-size: 16px;
+        }
+
+        /* ===== Loading State ===== */
+        .btn-login.loading {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 900px) {
+            .login-container {
+                flex-direction: column;
+                max-width: 500px;
+                min-height: auto;
+            }
+
+            .login-branding {
+                padding: 40px;
+                min-height: auto;
+            }
+
+            .branding-title {
+                font-size: 24px;
+            }
+
+            .branding-features {
+                display: none;
+            }
+
+            .login-form-panel {
+                padding: 40px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                margin: 10px;
+                border-radius: var(--radius-lg);
+            }
+
+            .login-branding {
+                padding: 30px;
+            }
+
+            .login-form-panel {
+                padding: 30px;
+            }
+
+            .form-header h2 {
+                font-size: 24px;
+            }
+
+            .form-options {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Elements -->
+    <div class="bg-pattern"></div>
+    <div class="bg-shapes"></div>
+
+    <!-- Login Container -->
+    <div class="login-container">
+        <!-- Left Panel - Branding -->
+        <div class="login-branding">
+            <div class="branding-content">
+                <div class="branding-logo">
+                    <img src="img/logo-acoem.png" alt="Acoem Brasil">
+                </div>
+                <h1 class="branding-title">
+                    Sistema de Gestão de<br>
+                    <span class="highlight">Qualidade do Ar</span>
+                </h1>
+                <p class="branding-subtitle">
+                    Plataforma integrada para monitoramento ambiental, análise de dados e geração de relatórios em tempo real.
+                </p>
+
+                <div class="branding-features">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <span class="feature-text">Monitoramento em tempo real</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-map-marked-alt"></i>
+                        </div>
+                        <span class="feature-text">Mapeamento georreferenciado</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-file-alt"></i>
+                        </div>
+                        <span class="feature-text">Relatórios automatizados</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <span class="feature-text">Alertas inteligentes</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="branding-footer">
+                <p>© 2026 Acoem Brasil. Todos os direitos reservados.</p>
+            </div>
+        </div>
+
+        <!-- Right Panel - Login Form -->
+        <div class="login-form-panel">
+            <div class="form-header">
+                <h2>Bem-vindo de volta</h2>
+                <p>Entre com suas credenciais para acessar o sistema</p>
+            </div>
+
+            <form class="login-form" id="loginForm">
+                <!-- Alert Messages -->
+                <div class="alert alert-error" id="alertError">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>E-mail ou senha incorretos.</span>
+                </div>
+
+                <div class="alert alert-success" id="alertSuccess">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Login realizado com sucesso! Redirecionando...</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="email">E-mail</label>
+                    <div class="input-wrapper">
+                        <input 
+                            type="email" 
+                            class="form-input" 
+                            id="email" 
+                            name="email"
+                            placeholder="seu.email@empresa.com"
+                            required
+                        >
+                        <i class="fas fa-envelope input-icon"></i>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Senha</label>
+                    <div class="input-wrapper">
+                        <input 
+                            type="password" 
+                            class="form-input" 
+                            id="password" 
+                            name="password"
+                            placeholder="••••••••"
+                            required
+                        >
+                        <i class="fas fa-lock input-icon"></i>
+                        <button type="button" class="password-toggle" id="togglePassword">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" id="rememberMe" name="rememberMe">
+                        <span class="checkbox-custom">
+                            <i class="fas fa-check"></i>
+                        </span>
+                        <span class="checkbox-label">Lembrar-me</span>
+                    </label>
+                    <a href="#" class="forgot-password">Esqueceu a senha?</a>
+                </div>
+
+                <button type="submit" class="btn-login" id="btnLogin">
+                    <span>Entrar</span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+
+                <div class="divider">
+                    <span class="divider-line"></span>
+                    <span class="divider-text">ou</span>
+                    <span class="divider-line"></span>
+                </div>
+
+                <div class="support-link">
+                    <p>Precisa de ajuda? <a href="mailto:suporte@acoem.com.br">Contate o suporte</a></p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Configuração da API
+        const API_URL = 'http://localhost:3000/api';
+
+        // Toggle Password Visibility
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput = document.getElementById('password');
+
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            
+            const icon = this.querySelector('i');
+            icon.classList.toggle('fa-eye');
+            icon.classList.toggle('fa-eye-slash');
+        });
+
+        // Form Submit Handler
+        const loginForm = document.getElementById('loginForm');
+        const btnLogin = document.getElementById('btnLogin');
+        const alertError = document.getElementById('alertError');
+        const alertSuccess = document.getElementById('alertSuccess');
+
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Hide any existing alerts
+            alertError.style.display = 'none';
+            alertSuccess.style.display = 'none';
+            
+            // Show loading state
+            btnLogin.classList.add('loading');
+            btnLogin.innerHTML = '<div class="spinner"></div><span>Entrando...</span>';
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, senha: password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.sucesso) {
+                    // Armazenar tokens e dados do usuário
+                    const storage = rememberMe ? localStorage : sessionStorage;
+                    storage.setItem('accessToken', data.dados.accessToken);
+                    storage.setItem('refreshToken', data.dados.refreshToken);
+                    storage.setItem('usuario', JSON.stringify(data.dados.usuario));
+                    
+                    // Mostrar sucesso
+                    alertSuccess.style.display = 'flex';
+                    
+                    // Redirecionar após delay
+                    setTimeout(function() {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                } else {
+                    // Erro de autenticação
+                    alertError.querySelector('span').textContent = data.mensagem || 'E-mail ou senha incorretos.';
+                    alertError.style.display = 'flex';
+                    btnLogin.classList.remove('loading');
+                    btnLogin.innerHTML = '<span>Entrar</span><i class="fas fa-arrow-right"></i>';
+                }
+            } catch (error) {
+                console.error('Erro no login:', error);
+                alertError.querySelector('span').textContent = 'Erro ao conectar com o servidor. Verifique se o backend está rodando.';
+                alertError.style.display = 'flex';
+                btnLogin.classList.remove('loading');
+                btnLogin.innerHTML = '<span>Entrar</span><i class="fas fa-arrow-right"></i>';
+            }
+        });
+
+        // Add subtle animation on input focus
+        const inputs = document.querySelectorAll('.form-input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'translateY(-1px)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'translateY(0)';
+            });
+        });
+
+        // Verificar se já está logado
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('accessToken') || sessionStorage.getItem('accessToken');
+            if (token) {
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>
