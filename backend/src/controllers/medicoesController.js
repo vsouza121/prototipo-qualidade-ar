@@ -370,49 +370,256 @@ const criarLote = async (req, res) => {
 
 /**
  * GET /api/medicoes/estatisticas
- * Estatísticas agregadas
+ * Estatísticas completas para página de análise
  */
 const estatisticas = async (req, res) => {
   try {
     const {
       estacao_id,
-      parametro_id,
-      data_inicio,
-      data_fim,
-      agregacao = 'hora' // hora, dia, semana, mes
+      parametro, // código do parâmetro (ex: PM2.5)
+      dias = 30
     } = req.query;
 
-    const where = { flag: 'valid' };
-    if (estacao_id) where.estacao_id = estacao_id;
-    if (parametro_id) where.parametro_id = parametro_id;
+    // Calcular data de início baseada nos dias
+    const dataInicio = new Date();
+    dataInicio.setDate(dataInicio.getDate() - parseInt(dias));
+
+    // Construir filtros base
+    const where = {};
+    if (estacao_id && estacao_id !== '') {
+      where.estacao_id = estacao_id;
+    }
     
-    if (data_inicio || data_fim) {
-      where.data_hora = {};
-      if (data_inicio) where.data_hora[Op.gte] = new Date(data_inicio);
-      if (data_fim) where.data_hora[Op.lte] = new Date(data_fim);
+    where.data_hora = { [Op.gte]: dataInicio };
+
+    // Buscar o parâmetro pelo código
+    let parametroObj = null;
+    if (parametro) {
+      parametroObj = await Parametro.findOne({ where: { codigo: parametro, ativo: true } });
+      if (parametroObj) {
+        where.parametro_id = parametroObj.id;
+      }
     }
 
-    // Calcular estatísticas básicas
-    const stats = await Medicao.findOne({
+    // Buscar todas as medições para cálculos
+    const medicoes = await Medicao.findAll({
       where,
-      attributes: [
-        [fn('COUNT', col('id')), 'total'],
-        [fn('AVG', col('valor')), 'media'],
-        [fn('MIN', col('valor')), 'minimo'],
-        [fn('MAX', col('valor')), 'maximo'],
-        [fn('STDEV', col('valor')), 'desvio_padrao']
+      include: [
+        {
+          model: Estacao,
+          as: 'estacao',
+          attributes: ['id', 'codigo', 'nome'],
+          where: { ativo: true },
+          required: true
+        },
+        {
+          model: Parametro,
+          as: 'parametro',
+          attributes: ['id', 'codigo', 'nome', 'unidade_medida'],
+          required: true
+        }
       ],
-      raw: true
+      order: [['data_hora', 'ASC']],
+      raw: true,
+      nest: true
     });
+
+    if (medicoes.length === 0) {
+      return res.json({
+        sucesso: true,
+        dados: {
+          estatisticas: {
+            total: 0,
+            media: 0,
+            mediana: 0,
+            desvio_padrao: 0,
+            minimo: 0,
+            maximo: 0
+          },
+          percentis: {},
+          histograma: [],
+          comparativo_estacoes: [],
+          serie_temporal: [],
+          unidade: parametroObj?.unidade_medida || 'µg/m³'
+        }
+      });
+    }
+
+    // Extrair valores numéricos
+    const valores = medicoes.map(m => parseFloat(m.valor)).filter(v => !isNaN(v));
+    valores.sort((a, b) => a - b);
+
+    // Calcular estatísticas básicas
+    const total = valores.length;
+    const media = valores.reduce((a, b) => a + b, 0) / total;
+    const minimo = valores[0];
+    const maximo = valores[valores.length - 1];
+    
+    // Mediana
+    const mediana = total % 2 === 0
+      ? (valores[total / 2 - 1] + valores[total / 2]) / 2
+      : valores[Math.floor(total / 2)];
+    
+    // Desvio padrão
+    const variancia = valores.reduce((acc, val) => acc + Math.pow(val - media, 2), 0) / total;
+    const desvio_padrao = Math.sqrt(variancia);
+
+    // Calcular percentis
+    const calcularPercentil = (arr, p) => {
+      const idx = (p / 100) * (arr.length - 1);
+      const lower = Math.floor(idx);
+      const upper = Math.ceil(idx);
+      if (lower === upper) return arr[lower];
+      return arr[lower] + (arr[upper] - arr[lower]) * (idx - lower);
+    };
+
+    const percentis = {
+      p10: calcularPercentil(valores, 10),
+      p25: calcularPercentil(valores, 25),
+      p50: calcularPercentil(valores, 50),
+      p75: calcularPercentil(valores, 75),
+      p90: calcularPercentil(valores, 90),
+      p95: calcularPercentil(valores, 95),
+      p99: calcularPercentil(valores, 99)
+    };
+
+    // Calcular histograma (10 faixas)
+    const range = maximo - minimo || 1;
+    const numFaixas = 10;
+    const tamFaixa = range / numFaixas;
+    const histograma = [];
+    
+    for (let i = 0; i < numFaixas; i++) {
+      const limiteInf = minimo + (i * tamFaixa);
+      const limiteSup = minimo + ((i + 1) * tamFaixa);
+      const contagem = valores.filter(v => 
+        i === numFaixas - 1 
+          ? v >= limiteInf && v <= limiteSup 
+          : v >= limiteInf && v < limiteSup
+      ).length;
+      
+      histograma.push({
+        faixa: `${limiteInf.toFixed(0)}-${limiteSup.toFixed(0)}`,
+        limiteInf,
+        limiteSup,
+        contagem,
+        percentual: ((contagem / total) * 100).toFixed(1)
+      });
+    }
+
+    // Calcular comparativo por estação
+    const estacaoMap = {};
+    medicoes.forEach(m => {
+      const estId = m.estacao.id;
+      if (!estacaoMap[estId]) {
+        estacaoMap[estId] = {
+          estacao_id: estId,
+          nome: m.estacao.nome,
+          codigo: m.estacao.codigo,
+          valores: []
+        };
+      }
+      estacaoMap[estId].valores.push(parseFloat(m.valor));
+    });
+
+    const comparativo_estacoes = Object.values(estacaoMap).map(e => {
+      const vals = e.valores.sort((a, b) => a - b);
+      const n = vals.length;
+      const avg = vals.reduce((a, b) => a + b, 0) / n;
+      const med = n % 2 === 0 
+        ? (vals[n / 2 - 1] + vals[n / 2]) / 2 
+        : vals[Math.floor(n / 2)];
+      
+      // Classificação baseada na média
+      let classificacao = 'good';
+      if (avg > 25) classificacao = 'bad';
+      else if (avg > 15) classificacao = 'moderate';
+
+      return {
+        estacao_id: e.estacao_id,
+        nome: e.nome,
+        codigo: e.codigo,
+        media: parseFloat(avg.toFixed(2)),
+        mediana: parseFloat(med.toFixed(2)),
+        minimo: vals[0],
+        maximo: vals[n - 1],
+        amostras: n,
+        classificacao,
+        q1: calcularPercentil(vals, 25),
+        q3: calcularPercentil(vals, 75)
+      };
+    }).sort((a, b) => a.media - b.media);
+
+    // Calcular série temporal (agregação diária)
+    const serieMap = {};
+    medicoes.forEach(m => {
+      const data = new Date(m.data_hora).toISOString().split('T')[0];
+      if (!serieMap[data]) {
+        serieMap[data] = { valores: [], data };
+      }
+      serieMap[data].valores.push(parseFloat(m.valor));
+    });
+
+    const serie_temporal = Object.values(serieMap)
+      .map(d => ({
+        data: d.data,
+        media: parseFloat((d.valores.reduce((a, b) => a + b, 0) / d.valores.length).toFixed(2)),
+        minimo: Math.min(...d.valores),
+        maximo: Math.max(...d.valores),
+        amostras: d.valores.length
+      }))
+      .sort((a, b) => new Date(a.data) - new Date(b.data));
+
+    // Calcular linha de tendência (regressão linear simples)
+    if (serie_temporal.length >= 2) {
+      const n = serie_temporal.length;
+      let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+      serie_temporal.forEach((d, i) => {
+        sumX += i;
+        sumY += d.media;
+        sumXY += i * d.media;
+        sumX2 += i * i;
+      });
+      const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+      const intercept = (sumY - slope * sumX) / n;
+      
+      serie_temporal.forEach((d, i) => {
+        d.tendencia = parseFloat((intercept + slope * i).toFixed(2));
+      });
+    }
+
+    // Unidade de medida
+    const unidade = parametroObj?.unidade_medida || medicoes[0]?.parametro?.unidade_medida || 'µg/m³';
 
     res.json({
       sucesso: true,
       dados: {
-        total: parseInt(stats.total) || 0,
-        media: parseFloat(stats.media) || 0,
-        minimo: parseFloat(stats.minimo) || 0,
-        maximo: parseFloat(stats.maximo) || 0,
-        desvio_padrao: parseFloat(stats.desvio_padrao) || 0
+        estatisticas: {
+          total,
+          media: parseFloat(media.toFixed(2)),
+          mediana: parseFloat(mediana.toFixed(2)),
+          desvio_padrao: parseFloat(desvio_padrao.toFixed(2)),
+          minimo: parseFloat(minimo.toFixed(2)),
+          maximo: parseFloat(maximo.toFixed(2))
+        },
+        percentis: {
+          p10: parseFloat(percentis.p10.toFixed(2)),
+          p25: parseFloat(percentis.p25.toFixed(2)),
+          p50: parseFloat(percentis.p50.toFixed(2)),
+          p75: parseFloat(percentis.p75.toFixed(2)),
+          p90: parseFloat(percentis.p90.toFixed(2)),
+          p95: parseFloat(percentis.p95.toFixed(2)),
+          p99: parseFloat(percentis.p99.toFixed(2))
+        },
+        histograma,
+        comparativo_estacoes,
+        serie_temporal,
+        unidade,
+        periodo: {
+          inicio: dataInicio,
+          fim: new Date(),
+          dias: parseInt(dias)
+        }
       }
     });
 
@@ -792,6 +999,590 @@ const importar = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/medicoes/rosa-ventos
+ * Dados para rosa dos ventos
+ */
+const rosaVentos = async (req, res) => {
+  try {
+    const { estacao_id, dias = 30 } = req.query;
+
+    if (!estacao_id) {
+      return res.status(400).json({
+        sucesso: false,
+        mensagem: 'estacao_id é obrigatório'
+      });
+    }
+
+    // Calcular data de início
+    const dataInicio = new Date();
+    dataInicio.setDate(dataInicio.getDate() - parseInt(dias));
+
+    // Buscar parâmetros de direção e velocidade do vento
+    const paramDirecao = await Parametro.findOne({ where: { codigo: 'DV', ativo: true } });
+    const paramVelocidade = await Parametro.findOne({ where: { codigo: 'VV', ativo: true } });
+
+    if (!paramDirecao || !paramVelocidade) {
+      return res.json({
+        sucesso: true,
+        dados: {
+          mensagem: 'Parâmetros de vento (DV/VV) não configurados',
+          directions: [],
+          frequencies: [],
+          avgSpeeds: [],
+          estatisticas: null,
+          porHora: [],
+          tabelaDirecoes: []
+        }
+      });
+    }
+
+    // Buscar medições de direção do vento
+    const medicoesDirecao = await Medicao.findAll({
+      where: {
+        estacao_id,
+        parametro_id: paramDirecao.id,
+        data_hora: { [Op.gte]: dataInicio }
+      },
+      attributes: ['valor', 'data_hora'],
+      order: [['data_hora', 'ASC']],
+      raw: true
+    });
+
+    // Buscar medições de velocidade do vento
+    const medicoesVelocidade = await Medicao.findAll({
+      where: {
+        estacao_id,
+        parametro_id: paramVelocidade.id,
+        data_hora: { [Op.gte]: dataInicio }
+      },
+      attributes: ['valor', 'data_hora'],
+      order: [['data_hora', 'ASC']],
+      raw: true
+    });
+
+    if (medicoesDirecao.length === 0 || medicoesVelocidade.length === 0) {
+      return res.json({
+        sucesso: true,
+        dados: {
+          mensagem: 'Sem dados de vento para o período selecionado',
+          directions: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
+          frequencies: [0, 0, 0, 0, 0, 0, 0, 0],
+          avgSpeeds: [0, 0, 0, 0, 0, 0, 0, 0],
+          estatisticas: {
+            velocidadeMedia: 0,
+            velocidadeMaxima: 0,
+            direcaoPredominante: '-',
+            calmaria: 0
+          },
+          porHora: [],
+          tabelaDirecoes: []
+        }
+      });
+    }
+
+    // Criar mapa de velocidade por timestamp para cruzar dados
+    const velocidadeMap = {};
+    medicoesVelocidade.forEach(m => {
+      const key = new Date(m.data_hora).toISOString();
+      velocidadeMap[key] = parseFloat(m.valor);
+    });
+
+    // Definir direções cardeais
+    const direcoes = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const limites = [22.5, 67.5, 112.5, 157.5, 202.5, 247.5, 292.5, 337.5];
+    
+    // Função para converter graus em direção cardinal
+    const grausParaDirecao = (graus) => {
+      if (graus >= 337.5 || graus < 22.5) return 'N';
+      if (graus >= 22.5 && graus < 67.5) return 'NE';
+      if (graus >= 67.5 && graus < 112.5) return 'E';
+      if (graus >= 112.5 && graus < 157.5) return 'SE';
+      if (graus >= 157.5 && graus < 202.5) return 'S';
+      if (graus >= 202.5 && graus < 247.5) return 'SW';
+      if (graus >= 247.5 && graus < 292.5) return 'W';
+      return 'NW';
+    };
+
+    // Agregar dados por direção
+    const contagem = { N: 0, NE: 0, E: 0, SE: 0, S: 0, SW: 0, W: 0, NW: 0 };
+    const somaVelocidade = { N: 0, NE: 0, E: 0, SE: 0, S: 0, SW: 0, W: 0, NW: 0 };
+    const maxVelocidade = { N: 0, NE: 0, E: 0, SE: 0, S: 0, SW: 0, W: 0, NW: 0 };
+    let totalMedicoes = 0;
+    let calmaria = 0;
+    let somaVelocidadeTotal = 0;
+    let velocidadeMax = 0;
+    
+    // Agregar por hora do dia
+    const porHora = Array(24).fill(0).map(() => ({ soma: 0, contagem: 0 }));
+
+    medicoesDirecao.forEach(m => {
+      const direcao = grausParaDirecao(parseFloat(m.valor));
+      const key = new Date(m.data_hora).toISOString();
+      const velocidade = velocidadeMap[key] || 0;
+      const hora = new Date(m.data_hora).getHours();
+      
+      totalMedicoes++;
+      contagem[direcao]++;
+      somaVelocidade[direcao] += velocidade;
+      somaVelocidadeTotal += velocidade;
+      
+      if (velocidade > maxVelocidade[direcao]) {
+        maxVelocidade[direcao] = velocidade;
+      }
+      if (velocidade > velocidadeMax) {
+        velocidadeMax = velocidade;
+      }
+      if (velocidade < 0.5) {
+        calmaria++;
+      }
+      
+      // Agregar por hora
+      porHora[hora].soma += velocidade;
+      porHora[hora].contagem++;
+    });
+
+    // Calcular frequências e médias
+    const frequencies = direcoes.map(d => totalMedicoes > 0 ? parseFloat(((contagem[d] / totalMedicoes) * 100).toFixed(1)) : 0);
+    const avgSpeeds = direcoes.map(d => contagem[d] > 0 ? parseFloat((somaVelocidade[d] / contagem[d]).toFixed(1)) : 0);
+    
+    // Determinar direção predominante
+    let maxFreq = 0;
+    let direcaoPredominante = 'N';
+    direcoes.forEach((d, i) => {
+      if (frequencies[i] > maxFreq) {
+        maxFreq = frequencies[i];
+        direcaoPredominante = d;
+      }
+    });
+
+    // Montar tabela de direções ordenada
+    const tabelaDirecoes = direcoes.map((d, i) => ({
+      direcao: d,
+      frequencia: frequencies[i],
+      velocidadeMedia: avgSpeeds[i],
+      velocidadeMaxima: parseFloat(maxVelocidade[d].toFixed(1)),
+      contagem: contagem[d]
+    })).sort((a, b) => b.frequencia - a.frequencia);
+
+    // Velocidade média por hora
+    const velocidadePorHora = porHora.map((h, i) => ({
+      hora: i,
+      velocidadeMedia: h.contagem > 0 ? parseFloat((h.soma / h.contagem).toFixed(1)) : 0
+    }));
+
+    res.json({
+      sucesso: true,
+      dados: {
+        directions: direcoes,
+        frequencies,
+        avgSpeeds,
+        estatisticas: {
+          velocidadeMedia: totalMedicoes > 0 ? parseFloat((somaVelocidadeTotal / totalMedicoes).toFixed(1)) : 0,
+          velocidadeMaxima: parseFloat(velocidadeMax.toFixed(1)),
+          direcaoPredominante,
+          calmaria: totalMedicoes > 0 ? parseFloat(((calmaria / totalMedicoes) * 100).toFixed(1)) : 0,
+          totalMedicoes
+        },
+        porHora: velocidadePorHora,
+        tabelaDirecoes,
+        periodo: {
+          inicio: dataInicio,
+          fim: new Date(),
+          dias: parseInt(dias)
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Erro ao gerar rosa dos ventos:', error);
+    res.status(500).json({
+      sucesso: false,
+      mensagem: 'Erro interno no servidor'
+    });
+  }
+};
+
+/**
+ * GET /api/medicoes/radar-poluentes
+ * Dados para radar de poluentes correlacionados com direção do vento
+ */
+const radarPoluentes = async (req, res) => {
+  try {
+    const { estacao_id, dias = 30 } = req.query;
+
+    if (!estacao_id) {
+      return res.status(400).json({
+        sucesso: false,
+        mensagem: 'estacao_id é obrigatório'
+      });
+    }
+
+    // Calcular data de início
+    const dataInicio = new Date();
+    dataInicio.setDate(dataInicio.getDate() - parseInt(dias));
+
+    // Buscar parâmetro de direção do vento
+    const paramDirecao = await Parametro.findOne({ where: { codigo: 'DV', ativo: true } });
+
+    if (!paramDirecao) {
+      return res.json({
+        sucesso: true,
+        dados: {
+          mensagem: 'Parâmetro de direção do vento (DV) não configurado',
+          poluentes: [],
+          directions: [],
+          dadosPorPoluente: {}
+        }
+      });
+    }
+
+    // Buscar poluentes configurados (tipo 'quimico' ou sem tipo específico meteorológico)
+    const poluentes = await Parametro.findAll({
+      where: {
+        ativo: true,
+        tipo: { [Op.or]: ['quimico', null] },
+        codigo: { [Op.notIn]: ['DV', 'VV', 'TEMP', 'UR', 'PRESS', 'RAD', 'PRECIP'] }
+      }
+    });
+
+    // Se não houver poluentes configurados, usar lista padrão
+    const codigosPoluentes = poluentes.length > 0 
+      ? poluentes.map(p => p.codigo) 
+      : ['PM2.5', 'PM10', 'O3', 'NO2', 'SO2', 'CO'];
+
+    // Buscar medições de direção do vento
+    const medicoesDirecao = await Medicao.findAll({
+      where: {
+        estacao_id,
+        parametro_id: paramDirecao.id,
+        data_hora: { [Op.gte]: dataInicio }
+      },
+      attributes: ['valor', 'data_hora'],
+      raw: true
+    });
+
+    if (medicoesDirecao.length === 0) {
+      return res.json({
+        sucesso: true,
+        dados: {
+          mensagem: 'Sem dados de direção de vento para o período',
+          poluentes: codigosPoluentes,
+          directions: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
+          dadosPorPoluente: {}
+        }
+      });
+    }
+
+    // Criar mapa de direção por timestamp
+    const direcaoMap = {};
+    const grausParaDirecao = (graus) => {
+      if (graus >= 337.5 || graus < 22.5) return 'N';
+      if (graus >= 22.5 && graus < 67.5) return 'NE';
+      if (graus >= 67.5 && graus < 112.5) return 'E';
+      if (graus >= 112.5 && graus < 157.5) return 'SE';
+      if (graus >= 157.5 && graus < 202.5) return 'S';
+      if (graus >= 202.5 && graus < 247.5) return 'SW';
+      if (graus >= 247.5 && graus < 292.5) return 'W';
+      return 'NW';
+    };
+
+    medicoesDirecao.forEach(m => {
+      const dataHora = new Date(m.data_hora);
+      // Agrupar por hora para correlacionar
+      const key = `${dataHora.getFullYear()}-${dataHora.getMonth()}-${dataHora.getDate()}-${dataHora.getHours()}`;
+      direcaoMap[key] = grausParaDirecao(parseFloat(m.valor));
+    });
+
+    const direcoes = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const dadosPorPoluente = {};
+    const poluentesEncontrados = [];
+
+    // Para cada poluente, buscar medições e correlacionar com direção
+    for (const codigo of codigosPoluentes) {
+      const parametro = await Parametro.findOne({ where: { codigo, ativo: true } });
+      if (!parametro) continue;
+
+      const medicoesPoluente = await Medicao.findAll({
+        where: {
+          estacao_id,
+          parametro_id: parametro.id,
+          data_hora: { [Op.gte]: dataInicio }
+        },
+        attributes: ['valor', 'data_hora'],
+        raw: true
+      });
+
+      if (medicoesPoluente.length === 0) continue;
+
+      poluentesEncontrados.push({
+        codigo: parametro.codigo,
+        nome: parametro.nome,
+        unidade: parametro.unidade_medida
+      });
+
+      // Agregar valores por direção
+      const somaPorDirecao = { N: 0, NE: 0, E: 0, SE: 0, S: 0, SW: 0, W: 0, NW: 0 };
+      const contagemPorDirecao = { N: 0, NE: 0, E: 0, SE: 0, S: 0, SW: 0, W: 0, NW: 0 };
+
+      medicoesPoluente.forEach(m => {
+        const dataHora = new Date(m.data_hora);
+        const key = `${dataHora.getFullYear()}-${dataHora.getMonth()}-${dataHora.getDate()}-${dataHora.getHours()}`;
+        const direcao = direcaoMap[key];
+        
+        if (direcao) {
+          const valor = parseFloat(m.valor);
+          if (!isNaN(valor)) {
+            somaPorDirecao[direcao] += valor;
+            contagemPorDirecao[direcao]++;
+          }
+        }
+      });
+
+      // Calcular médias
+      const mediaPorDirecao = direcoes.map(d => 
+        contagemPorDirecao[d] > 0 
+          ? parseFloat((somaPorDirecao[d] / contagemPorDirecao[d]).toFixed(2)) 
+          : 0
+      );
+
+      // Encontrar máximo para normalização
+      const maxValor = Math.max(...mediaPorDirecao);
+      const valoresNormalizados = mediaPorDirecao.map(v => 
+        maxValor > 0 ? parseFloat((v / maxValor * 100).toFixed(1)) : 0
+      );
+
+      dadosPorPoluente[codigo] = {
+        nome: parametro.nome,
+        unidade: parametro.unidade_medida,
+        valores: mediaPorDirecao,
+        valoresNormalizados,
+        maximo: maxValor,
+        totalAmostras: medicoesPoluente.length
+      };
+    }
+
+    res.json({
+      sucesso: true,
+      dados: {
+        poluentes: poluentesEncontrados,
+        directions: direcoes,
+        dadosPorPoluente,
+        periodo: {
+          inicio: dataInicio,
+          fim: new Date(),
+          dias: parseInt(dias)
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Erro ao gerar radar de poluentes:', error);
+    res.status(500).json({
+      sucesso: false,
+      mensagem: 'Erro interno no servidor'
+    });
+  }
+};
+
+/**
+ * GET /api/medicoes/sazonalidade
+ * Análise sazonal dos poluentes
+ */
+const sazonalidade = async (req, res) => {
+  try {
+    const { parametro = 'PM2.5', estacao_id, anos = 1 } = req.query;
+
+    // Calcular data de início (últimos X anos)
+    const dataInicio = new Date();
+    dataInicio.setFullYear(dataInicio.getFullYear() - parseInt(anos));
+
+    // Buscar parâmetro
+    const parametroObj = await Parametro.findOne({ 
+      where: { codigo: parametro, ativo: true } 
+    });
+
+    if (!parametroObj) {
+      return res.status(404).json({
+        sucesso: false,
+        mensagem: `Parâmetro ${parametro} não encontrado`
+      });
+    }
+
+    // Construir filtro
+    const where = {
+      parametro_id: parametroObj.id,
+      data_hora: { [Op.gte]: dataInicio }
+    };
+    if (estacao_id) where.estacao_id = estacao_id;
+
+    // Buscar todas as medições
+    const medicoes = await Medicao.findAll({
+      where,
+      attributes: ['valor', 'data_hora'],
+      include: [{
+        model: Estacao,
+        as: 'estacao',
+        attributes: ['id', 'nome'],
+        where: { ativo: true },
+        required: true
+      }],
+      raw: true,
+      nest: true
+    });
+
+    if (medicoes.length === 0) {
+      return res.json({
+        sucesso: true,
+        dados: {
+          parametro: parametroObj.codigo,
+          unidade: parametroObj.unidade_medida,
+          sazonalidade: {
+            verao: { media: 0, mediana: 0, minimo: 0, maximo: 0, amostras: 0 },
+            outono: { media: 0, mediana: 0, minimo: 0, maximo: 0, amostras: 0 },
+            inverno: { media: 0, mediana: 0, minimo: 0, maximo: 0, amostras: 0 },
+            primavera: { media: 0, mediana: 0, minimo: 0, maximo: 0, amostras: 0 }
+          },
+          porMes: [],
+          tendencia: null
+        }
+      });
+    }
+
+    // Determinar estação do ano (Hemisfério Sul)
+    // Verão: Dez-Fev | Outono: Mar-Mai | Inverno: Jun-Ago | Primavera: Set-Nov
+    const getEstacao = (mes) => {
+      if (mes === 11 || mes === 0 || mes === 1) return 'verao';
+      if (mes >= 2 && mes <= 4) return 'outono';
+      if (mes >= 5 && mes <= 7) return 'inverno';
+      return 'primavera';
+    };
+
+    // Agrupar por estação
+    const porEstacaoAno = {
+      verao: [],
+      outono: [],
+      inverno: [],
+      primavera: []
+    };
+
+    // Agrupar por mês
+    const porMes = Array(12).fill(null).map(() => []);
+
+    medicoes.forEach(m => {
+      const data = new Date(m.data_hora);
+      const mes = data.getMonth();
+      const valor = parseFloat(m.valor);
+      
+      if (!isNaN(valor)) {
+        porEstacaoAno[getEstacao(mes)].push(valor);
+        porMes[mes].push(valor);
+      }
+    });
+
+    // Calcular estatísticas por estação
+    const calcularStats = (valores) => {
+      if (valores.length === 0) {
+        return { media: 0, mediana: 0, minimo: 0, maximo: 0, amostras: 0, desvio: 0 };
+      }
+      
+      valores.sort((a, b) => a - b);
+      const n = valores.length;
+      const media = valores.reduce((a, b) => a + b, 0) / n;
+      const mediana = n % 2 === 0 
+        ? (valores[n/2-1] + valores[n/2]) / 2 
+        : valores[Math.floor(n/2)];
+      const variancia = valores.reduce((acc, v) => acc + Math.pow(v - media, 2), 0) / n;
+      
+      return {
+        media: parseFloat(media.toFixed(2)),
+        mediana: parseFloat(mediana.toFixed(2)),
+        minimo: parseFloat(valores[0].toFixed(2)),
+        maximo: parseFloat(valores[n-1].toFixed(2)),
+        amostras: n,
+        desvio: parseFloat(Math.sqrt(variancia).toFixed(2))
+      };
+    };
+
+    const sazonalidadeStats = {
+      verao: calcularStats(porEstacaoAno.verao),
+      outono: calcularStats(porEstacaoAno.outono),
+      inverno: calcularStats(porEstacaoAno.inverno),
+      primavera: calcularStats(porEstacaoAno.primavera)
+    };
+
+    // Calcular médias mensais
+    const nomesMeses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    const estatisticasMensais = porMes.map((valores, i) => ({
+      mes: nomesMeses[i],
+      mesNumero: i + 1,
+      ...calcularStats(valores)
+    }));
+
+    // Calcular variação sazonal (índice)
+    const mediasEstacoes = [
+      sazonalidadeStats.verao.media,
+      sazonalidadeStats.outono.media,
+      sazonalidadeStats.inverno.media,
+      sazonalidadeStats.primavera.media
+    ].filter(m => m > 0);
+    
+    const mediaGeral = mediasEstacoes.length > 0 
+      ? mediasEstacoes.reduce((a, b) => a + b, 0) / mediasEstacoes.length 
+      : 0;
+
+    const variacaoSazonal = {
+      verao: mediaGeral > 0 ? parseFloat(((sazonalidadeStats.verao.media / mediaGeral - 1) * 100).toFixed(1)) : 0,
+      outono: mediaGeral > 0 ? parseFloat(((sazonalidadeStats.outono.media / mediaGeral - 1) * 100).toFixed(1)) : 0,
+      inverno: mediaGeral > 0 ? parseFloat(((sazonalidadeStats.inverno.media / mediaGeral - 1) * 100).toFixed(1)) : 0,
+      primavera: mediaGeral > 0 ? parseFloat(((sazonalidadeStats.primavera.media / mediaGeral - 1) * 100).toFixed(1)) : 0
+    };
+
+    // Identificar estação crítica (maior média)
+    const estacoes = ['verao', 'outono', 'inverno', 'primavera'];
+    const estacaoNomes = { verao: 'Verão', outono: 'Outono', inverno: 'Inverno', primavera: 'Primavera' };
+    let estacaoCritica = 'verao';
+    let maiorMedia = 0;
+    estacoes.forEach(e => {
+      if (sazonalidadeStats[e].media > maiorMedia) {
+        maiorMedia = sazonalidadeStats[e].media;
+        estacaoCritica = e;
+      }
+    });
+
+    res.json({
+      sucesso: true,
+      dados: {
+        parametro: parametroObj.codigo,
+        nomeParametro: parametroObj.nome,
+        unidade: parametroObj.unidade_medida,
+        sazonalidade: sazonalidadeStats,
+        variacaoSazonal,
+        porMes: estatisticasMensais,
+        resumo: {
+          mediaGeral: parseFloat(mediaGeral.toFixed(2)),
+          estacaoCritica: estacaoNomes[estacaoCritica],
+          estacaoCriticaCodigo: estacaoCritica,
+          maiorMedia: parseFloat(maiorMedia.toFixed(2)),
+          totalAmostras: medicoes.length
+        },
+        periodo: {
+          inicio: dataInicio,
+          fim: new Date(),
+          anos: parseInt(anos)
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Erro ao calcular sazonalidade:', error);
+    res.status(500).json({
+      sucesso: false,
+      mensagem: 'Erro interno no servidor'
+    });
+  }
+};
+
 module.exports = {
   listar,
   tempoReal,
@@ -803,5 +1594,8 @@ module.exports = {
   validarLote,
   listarParaValidacao,
   exportar,
-  importar
+  importar,
+  rosaVentos,
+  radarPoluentes,
+  sazonalidade
 };

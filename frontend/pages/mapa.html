@@ -444,7 +444,7 @@
     <aside class="sidebar">
         <div class="sidebar-header">
             <div class="logo">
-                <img src="img/logo-acoem.png" alt="Acoem Brasil" class="logo-img">
+                <img src="../img/logo-acoem.png" alt="Acoem Brasil" class="logo-img">
             </div>
         </div>
         
@@ -861,18 +861,23 @@
         // Carregar estações
         async function carregarEstacoes() {
             try {
-                const response = await EstacoesService.listar();
+                // Usar endpoint getMapa que já filtra apenas estações ativas
+                const response = await EstacoesService.getMapa();
                 if (response && response.sucesso) {
-                    estacoes = response.dados.map(est => ({
-                        id: est.id,
-                        nome: est.nome,
-                        codigo: est.codigo,
-                        unidade: est.Unidade ? est.Unidade.nome : 'N/A',
-                        latitude: est.latitude || getRandomLat(),
-                        longitude: est.longitude || getRandomLng(),
-                        status: est.ativo ? getRandomStatus() : 'offline',
-                        iqar: Math.floor(Math.random() * 180) + 20
-                    }));
+                    estacoes = response.dados.map(est => {
+                        const iqarValor = est.iqar || Math.floor(Math.random() * 180) + 20;
+                        return {
+                            id: est.id,
+                            nome: est.nome,
+                            codigo: est.codigo,
+                            unidade: est.unidade || 'N/A',
+                            latitude: est.latitude || getRandomLat(),
+                            longitude: est.longitude || getRandomLng(),
+                            // Status baseado no IQAr: 0-80 normal, 81-120 warning, >120 critical
+                            status: est.ativo ? getStatusFromIqar(iqarValor) : 'offline',
+                            iqar: iqarValor
+                        };
+                    });
 
                     atualizarMarcadores();
                     atualizarLista();
@@ -892,7 +897,14 @@
             return -35 - Math.random() * 20; // -35 a -55
         }
 
-        // Status aleatório para demo
+        // Calcular status baseado no IQAr (conforme legenda: 0-80 normal, 81-120 warning, >120 critical)
+        function getStatusFromIqar(iqar) {
+            if (iqar <= 80) return 'normal';
+            if (iqar <= 120) return 'warning';
+            return 'critical';
+        }
+
+        // Status aleatório para demo (mantido apenas como fallback)
         function getRandomStatus() {
             const rand = Math.random();
             if (rand < 0.7) return 'normal';

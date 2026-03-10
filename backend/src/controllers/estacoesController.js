@@ -75,10 +75,20 @@ const listar = async (req, res) => {
 /**
  * GET /api/estacoes/mapa
  * Retorna dados para o mapa georreferenciado
+ * Por padrão, retorna apenas estações ativas
  */
 const mapa = async (req, res) => {
   try {
+    const { incluirInativas } = req.query;
+    
+    // Filtrar apenas estações ativas por padrão
+    const where = {};
+    if (incluirInativas !== 'true') {
+      where.ativo = true;
+    }
+    
     const estacoes = await Estacao.findAll({
+      where,
       include: [{
         model: Unidade,
         as: 'unidade',

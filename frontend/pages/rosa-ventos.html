@@ -151,6 +151,65 @@
                 grid-template-columns: 1fr 1fr;
             }
         }
+
+        .wind-legend {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .legend-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .legend-items {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .legend-label {
+            color: var(--text-primary);
+        }
+
+        .legend-value {
+            color: var(--text-secondary);
+            font-size: 11px;
+        }
+
+        .no-data-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .no-data-message i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .no-data-message p {
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -348,22 +407,22 @@
             <div class="stats-grid">
                 <div class="stat-card">
                     <i class="fas fa-tachometer-alt"></i>
-                    <div class="stat-value">3.2<span class="stat-unit"> m/s</span></div>
+                    <div class="stat-value" id="statVelMedia">--<span class="stat-unit"> m/s</span></div>
                     <div class="stat-label">Velocidade Média</div>
                 </div>
                 <div class="stat-card">
                     <i class="fas fa-arrow-up"></i>
-                    <div class="stat-value">12.8<span class="stat-unit"> m/s</span></div>
+                    <div class="stat-value" id="statVelMax">--<span class="stat-unit"> m/s</span></div>
                     <div class="stat-label">Velocidade Máxima</div>
                 </div>
                 <div class="stat-card">
                     <i class="fas fa-location-arrow"></i>
-                    <div class="stat-value">SE</div>
+                    <div class="stat-value" id="statDirecao">--</div>
                     <div class="stat-label">Direção Predominante</div>
                 </div>
                 <div class="stat-card">
                     <i class="fas fa-wind"></i>
-                    <div class="stat-value">8.4<span class="stat-unit">%</span></div>
+                    <div class="stat-value" id="statCalmaria">--<span class="stat-unit">%</span></div>
                     <div class="stat-label">Calmaria</div>
                 </div>
             </div>
@@ -375,6 +434,13 @@
                     <h3><i class="fas fa-compass"></i> Rosa dos Ventos</h3>
                     <div class="chart-wrapper">
                         <canvas id="windRoseChart"></canvas>
+                    </div>
+                    <!-- Legenda da Rosa dos Ventos -->
+                    <div class="wind-legend" id="windLegend">
+                        <div class="legend-title">Direções Cardeais</div>
+                        <div class="legend-items" id="legendItems">
+                            <!-- Preenchido via JS -->
+                        </div>
                     </div>
                 </div>
 
@@ -391,7 +457,9 @@
                             </tr>
                         </thead>
                         <tbody id="directionTableBody">
-                            <!-- Preenchido via JS -->
+                            <tr>
+                                <td colspan="4" style="text-align: center; color: var(--text-secondary);">Selecione uma estação</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -402,6 +470,44 @@
                 <h3><i class="fas fa-clock"></i> Velocidade Média por Hora do Dia</h3>
                 <div class="chart-wrapper">
                     <canvas id="hourlyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Radar de Poluentes -->
+            <div class="wind-grid" style="margin-top: 24px;">
+                <div class="wind-card">
+                    <h3><i class="fas fa-smog"></i> Radar de Poluentes por Direção do Vento</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="radarPoluentesChart"></canvas>
+                    </div>
+                    <div class="wind-legend" id="radarLegend">
+                        <div class="legend-title">Poluentes Monitorados</div>
+                        <div class="legend-items" id="radarLegendItems">
+                            <!-- Preenchido via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela Detalhada de Poluentes por Direção -->
+                <div class="wind-card">
+                    <h3><i class="fas fa-table"></i> Concentração Média por Direção</h3>
+                    <div style="overflow-x: auto;">
+                        <table class="direction-table" id="poluentesTable">
+                            <thead>
+                                <tr>
+                                    <th>Poluente</th>
+                                    <th>Unidade</th>
+                                    <th>Direção Crítica</th>
+                                    <th>Valor Máximo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="poluentesTableBody">
+                                <tr>
+                                    <td colspan="4" style="text-align: center; color: var(--text-secondary);">Carregando dados...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -446,13 +552,41 @@
     </script>
     
     <script>
-        let windRoseChart, hourlyChart;
+        let windRoseChart, hourlyChart, radarPoluentesChart;
+        let dadosRosaVentos = null;
+        let dadosRadarPoluentes = null;
         
-        // Dados simulados de vento
-        const windData = {
-            directions: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
-            frequencies: [5.2, 12.4, 18.3, 22.5, 15.8, 10.2, 8.5, 7.1],
-            avgSpeeds: [2.8, 3.5, 4.2, 3.8, 3.2, 2.5, 2.1, 2.4]
+        // Cores para as direções
+        const coresDirecoes = {
+            'N': { bg: 'rgba(59, 130, 246, 0.7)', border: '#3b82f6' },
+            'NE': { bg: 'rgba(16, 185, 129, 0.7)', border: '#10b981' },
+            'E': { bg: 'rgba(245, 158, 11, 0.7)', border: '#f59e0b' },
+            'SE': { bg: 'rgba(239, 68, 68, 0.7)', border: '#ef4444' },
+            'S': { bg: 'rgba(139, 92, 246, 0.7)', border: '#8b5cf6' },
+            'SW': { bg: 'rgba(236, 72, 153, 0.7)', border: '#ec4899' },
+            'W': { bg: 'rgba(6, 182, 212, 0.7)', border: '#06b6d4' },
+            'NW': { bg: 'rgba(132, 204, 22, 0.7)', border: '#84cc16' }
+        };
+
+        // Cores para os poluentes
+        const coresPoluentes = {
+            'PM2.5': { bg: 'rgba(239, 68, 68, 0.3)', border: '#ef4444' },
+            'PM10': { bg: 'rgba(245, 158, 11, 0.3)', border: '#f59e0b' },
+            'O3': { bg: 'rgba(59, 130, 246, 0.3)', border: '#3b82f6' },
+            'NO2': { bg: 'rgba(139, 92, 246, 0.3)', border: '#8b5cf6' },
+            'SO2': { bg: 'rgba(16, 185, 129, 0.3)', border: '#10b981' },
+            'CO': { bg: 'rgba(107, 114, 128, 0.3)', border: '#6b7280' }
+        };
+
+        const nomesDirecoes = {
+            'N': 'Norte',
+            'NE': 'Nordeste',
+            'E': 'Leste',
+            'SE': 'Sudeste',
+            'S': 'Sul',
+            'SW': 'Sudoeste',
+            'W': 'Oeste',
+            'NW': 'Noroeste'
         };
         
         document.addEventListener('DOMContentLoaded', async function() {
@@ -469,9 +603,6 @@
             }
             
             await carregarEstacoes();
-            desenharRosaVentos();
-            desenharGraficoHorario();
-            preencherTabelaDirecoes();
         });
 
         async function carregarEstacoes() {
@@ -479,11 +610,16 @@
                 const response = await ApiClient.get('/estacoes');
                 if (response.sucesso) {
                     const select = document.getElementById('selectEstacao');
+                    select.innerHTML = '<option value="">Selecione uma estação</option>';
                     response.dados.forEach(estacao => {
                         select.innerHTML += `<option value="${estacao.id}">${estacao.nome}</option>`;
                     });
+                    
+                    // Se houver estações, selecionar a primeira e carregar dados
                     if (response.dados.length > 0) {
                         select.value = response.dados[0].id;
+                        await carregarDadosRosaVentos();
+                        await carregarRadarPoluentes();
                     }
                 }
             } catch (error) {
@@ -491,35 +627,91 @@
             }
         }
 
-        function desenharRosaVentos() {
+        async function carregarDadosRosaVentos() {
+            const estacaoId = document.getElementById('selectEstacao').value;
+            const dias = document.getElementById('selectPeriodo').value;
+
+            if (!estacaoId) {
+                mostrarMensagemVazia('Selecione uma estação para visualizar os dados');
+                return;
+            }
+
+            try {
+                const response = await ApiClient.get(`/medicoes/rosa-ventos?estacao_id=${estacaoId}&dias=${dias}`);
+                
+                if (response.sucesso && response.dados) {
+                    dadosRosaVentos = response.dados;
+                    
+                    if (response.dados.estatisticas && response.dados.estatisticas.totalMedicoes > 0) {
+                        atualizarEstatisticas(response.dados.estatisticas);
+                        desenharRosaVentos(response.dados);
+                        desenharGraficoHorario(response.dados.porHora);
+                        preencherTabelaDirecoes(response.dados.tabelaDirecoes);
+                        atualizarLegenda(response.dados);
+                    } else {
+                        mostrarMensagemVazia('Sem dados de vento para o período selecionado');
+                    }
+                } else {
+                    mostrarMensagemVazia('Erro ao carregar dados');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados da rosa dos ventos:', error);
+                mostrarMensagemVazia('Erro ao conectar com o servidor');
+            }
+        }
+
+        function mostrarMensagemVazia(mensagem) {
+            // Limpar estatísticas
+            document.getElementById('statVelMedia').innerHTML = '--<span class="stat-unit"> m/s</span>';
+            document.getElementById('statVelMax').innerHTML = '--<span class="stat-unit"> m/s</span>';
+            document.getElementById('statDirecao').textContent = '--';
+            document.getElementById('statCalmaria').innerHTML = '--<span class="stat-unit">%</span>';
+            
+            // Limpar tabela
+            document.getElementById('directionTableBody').innerHTML = `
+                <tr><td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 20px;">${mensagem}</td></tr>
+            `;
+            
+            // Limpar legenda
+            document.getElementById('legendItems').innerHTML = '';
+            
+            // Destruir gráficos se existirem
+            if (windRoseChart) {
+                windRoseChart.destroy();
+                windRoseChart = null;
+            }
+            if (hourlyChart) {
+                hourlyChart.destroy();
+                hourlyChart = null;
+            }
+        }
+
+        function atualizarEstatisticas(stats) {
+            document.getElementById('statVelMedia').innerHTML = `${stats.velocidadeMedia}<span class="stat-unit"> m/s</span>`;
+            document.getElementById('statVelMax').innerHTML = `${stats.velocidadeMaxima}<span class="stat-unit"> m/s</span>`;
+            document.getElementById('statDirecao').textContent = stats.direcaoPredominante;
+            document.getElementById('statCalmaria').innerHTML = `${stats.calmaria}<span class="stat-unit">%</span>`;
+        }
+
+        function desenharRosaVentos(dados) {
+            // Destruir gráfico anterior se existir
+            if (windRoseChart) {
+                windRoseChart.destroy();
+            }
+
             const ctx = document.getElementById('windRoseChart').getContext('2d');
+            
+            const backgroundColor = dados.directions.map(d => coresDirecoes[d].bg);
+            const borderColor = dados.directions.map(d => coresDirecoes[d].border);
             
             windRoseChart = new Chart(ctx, {
                 type: 'polarArea',
                 data: {
-                    labels: windData.directions,
+                    labels: dados.directions.map(d => `${d} (${nomesDirecoes[d]})`),
                     datasets: [{
-                        data: windData.frequencies,
-                        backgroundColor: [
-                            'rgba(59, 130, 246, 0.7)',
-                            'rgba(16, 185, 129, 0.7)',
-                            'rgba(245, 158, 11, 0.7)',
-                            'rgba(239, 68, 68, 0.7)',
-                            'rgba(139, 92, 246, 0.7)',
-                            'rgba(236, 72, 153, 0.7)',
-                            'rgba(6, 182, 212, 0.7)',
-                            'rgba(132, 204, 22, 0.7)'
-                        ],
-                        borderColor: [
-                            '#3b82f6',
-                            '#10b981',
-                            '#f59e0b',
-                            '#ef4444',
-                            '#8b5cf6',
-                            '#ec4899',
-                            '#06b6d4',
-                            '#84cc16'
-                        ],
+                        data: dados.frequencies,
+                        backgroundColor: backgroundColor,
+                        borderColor: borderColor,
                         borderWidth: 2
                     }]
                 },
@@ -533,7 +725,13 @@
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
-                                    return `${context.label}: ${context.raw}% das observações`;
+                                    const dir = dados.directions[context.dataIndex];
+                                    const freq = context.raw;
+                                    const vel = dados.avgSpeeds[context.dataIndex];
+                                    return [
+                                        `${nomesDirecoes[dir]}: ${freq}%`,
+                                        `Vel. média: ${vel} m/s`
+                                    ];
                                 }
                             }
                         }
@@ -545,6 +743,12 @@
                                 callback: function(value) {
                                     return value + '%';
                                 }
+                            },
+                            pointLabels: {
+                                font: {
+                                    size: 11,
+                                    weight: 'bold'
+                                }
                             }
                         }
                     }
@@ -552,15 +756,20 @@
             });
         }
 
-        function desenharGraficoHorario() {
+        function desenharGraficoHorario(porHora) {
+            // Destruir gráfico anterior se existir
+            if (hourlyChart) {
+                hourlyChart.destroy();
+            }
+
+            if (!porHora || porHora.length === 0) {
+                return;
+            }
+
             const ctx = document.getElementById('hourlyChart').getContext('2d');
             
-            const hours = [];
-            for (let i = 0; i < 24; i++) {
-                hours.push(`${i.toString().padStart(2, '0')}:00`);
-            }
-            
-            const avgSpeed = [2.1, 1.8, 1.6, 1.5, 1.4, 1.6, 2.2, 3.1, 3.8, 4.2, 4.5, 4.8, 4.6, 4.3, 4.1, 3.9, 3.5, 3.2, 2.9, 2.6, 2.4, 2.3, 2.2, 2.1];
+            const hours = porHora.map(h => `${h.hora.toString().padStart(2, '0')}:00`);
+            const velocidades = porHora.map(h => h.velocidadeMedia);
             
             hourlyChart = new Chart(ctx, {
                 type: 'bar',
@@ -568,7 +777,7 @@
                     labels: hours,
                     datasets: [{
                         label: 'Velocidade Média (m/s)',
-                        data: avgSpeed,
+                        data: velocidades,
                         backgroundColor: 'rgba(0, 161, 154, 0.7)',
                         borderColor: '#00A19A',
                         borderWidth: 1,
@@ -594,7 +803,7 @@
                         x: {
                             title: {
                                 display: true,
-                                text: 'Hora'
+                                text: 'Hora do dia'
                             }
                         }
                     }
@@ -602,38 +811,271 @@
             });
         }
 
-        function preencherTabelaDirecoes() {
+        function preencherTabelaDirecoes(tabelaDirecoes) {
             const tbody = document.getElementById('directionTableBody');
-            const maxFreq = Math.max(...windData.frequencies);
             
-            // Ordenar por frequência (maior primeiro)
-            const sorted = windData.directions.map((dir, i) => ({
-                direction: dir,
-                frequency: windData.frequencies[i],
-                avgSpeed: windData.avgSpeeds[i]
-            })).sort((a, b) => b.frequency - a.frequency);
+            if (!tabelaDirecoes || tabelaDirecoes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Sem dados disponíveis</td></tr>';
+                return;
+            }
             
-            tbody.innerHTML = sorted.map(item => `
+            const maxFreq = Math.max(...tabelaDirecoes.map(d => d.frequencia));
+            
+            tbody.innerHTML = tabelaDirecoes.map(item => `
                 <tr>
-                    <td><strong>${item.direction}</strong></td>
-                    <td>${item.frequency.toFixed(1)}%</td>
-                    <td>${item.avgSpeed.toFixed(1)} m/s</td>
+                    <td>
+                        <span style="display: inline-flex; align-items: center; gap: 8px;">
+                            <span style="width: 10px; height: 10px; border-radius: 2px; background: ${coresDirecoes[item.direcao].border};"></span>
+                            <strong>${item.direcao}</strong>
+                            <span style="color: var(--text-secondary); font-size: 11px;">${nomesDirecoes[item.direcao]}</span>
+                        </span>
+                    </td>
+                    <td>${item.frequencia.toFixed(1)}%</td>
+                    <td>${item.velocidadeMedia.toFixed(1)} m/s</td>
                     <td>
                         <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${(item.frequency / maxFreq * 100)}%"></div>
+                            <div class="progress-fill" style="width: ${maxFreq > 0 ? (item.frequencia / maxFreq * 100) : 0}%; background: ${coresDirecoes[item.direcao].border};"></div>
                         </div>
                     </td>
                 </tr>
             `).join('');
         }
 
-        function atualizarDados() {
-            console.log('Atualizando dados...');
-            // Aqui seria feita a chamada à API com os filtros selecionados
+        function atualizarLegenda(dados) {
+            const legendItems = document.getElementById('legendItems');
+            
+            legendItems.innerHTML = dados.directions.map((d, i) => `
+                <div class="legend-item">
+                    <span class="legend-color" style="background: ${coresDirecoes[d].border};"></span>
+                    <span class="legend-label">${d}</span>
+                    <span class="legend-value">(${dados.frequencies[i]}%)</span>
+                </div>
+            `).join('');
+        }
+
+        async function atualizarDados() {
+            await carregarDadosRosaVentos();
+            await carregarRadarPoluentes();
+        }
+
+        async function carregarRadarPoluentes() {
+            const estacaoId = document.getElementById('selectEstacao').value;
+            const dias = document.getElementById('selectPeriodo').value;
+
+            if (!estacaoId) {
+                limparRadarPoluentes();
+                return;
+            }
+
+            try {
+                const response = await ApiClient.get(`/medicoes/radar-poluentes?estacao_id=${estacaoId}&dias=${dias}`);
+                
+                if (response.sucesso && response.dados) {
+                    dadosRadarPoluentes = response.dados;
+                    
+                    if (response.dados.poluentes && response.dados.poluentes.length > 0) {
+                        desenharRadarPoluentes(response.dados);
+                        preencherTabelaPoluentes(response.dados);
+                        atualizarLegendaRadar(response.dados);
+                    } else {
+                        limparRadarPoluentes('Sem dados de poluentes correlacionados com vento');
+                    }
+                } else {
+                    limparRadarPoluentes('Erro ao carregar dados de poluentes');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar radar de poluentes:', error);
+                limparRadarPoluentes('Erro ao conectar com o servidor');
+            }
+        }
+
+        function limparRadarPoluentes(mensagem = '') {
+            if (radarPoluentesChart) {
+                radarPoluentesChart.destroy();
+                radarPoluentesChart = null;
+            }
+            
+            document.getElementById('radarLegendItems').innerHTML = mensagem 
+                ? `<div style="grid-column: 1/-1; color: var(--text-secondary); font-size: 12px;">${mensagem}</div>` 
+                : '';
+            
+            document.getElementById('poluentesTableBody').innerHTML = `
+                <tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">${mensagem || 'Selecione uma estação'}</td></tr>
+            `;
+        }
+
+        function desenharRadarPoluentes(dados) {
+            if (radarPoluentesChart) {
+                radarPoluentesChart.destroy();
+            }
+
+            const ctx = document.getElementById('radarPoluentesChart').getContext('2d');
+            
+            // Criar datasets para cada poluente
+            const datasets = [];
+            const poluentes = Object.keys(dados.dadosPorPoluente);
+            
+            poluentes.forEach((codigo, index) => {
+                const poluente = dados.dadosPorPoluente[codigo];
+                const cor = coresPoluentes[codigo] || { 
+                    bg: `rgba(${Math.random()*255}, ${Math.random()*255}, ${Math.random()*255}, 0.3)`, 
+                    border: `rgb(${Math.random()*255}, ${Math.random()*255}, ${Math.random()*255})` 
+                };
+                
+                datasets.push({
+                    label: `${codigo} (${poluente.unidade || 'µg/m³'})`,
+                    data: poluente.valoresNormalizados,
+                    backgroundColor: cor.bg,
+                    borderColor: cor.border,
+                    borderWidth: 2,
+                    pointBackgroundColor: cor.border,
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: cor.border
+                });
+            });
+
+            radarPoluentesChart = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: dados.directions.map(d => `${d} (${nomesDirecoes[d]})`),
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const codigo = poluentes[context.datasetIndex];
+                                    const poluente = dados.dadosPorPoluente[codigo];
+                                    const valorReal = poluente.valores[context.dataIndex];
+                                    return `${codigo}: ${valorReal} ${poluente.unidade || 'µg/m³'}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                stepSize: 25,
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            },
+                            pointLabels: {
+                                font: {
+                                    size: 11,
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function preencherTabelaPoluentes(dados) {
+            const tbody = document.getElementById('poluentesTableBody');
+            const poluentes = Object.keys(dados.dadosPorPoluente);
+            
+            if (poluentes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Sem dados de poluentes</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = poluentes.map(codigo => {
+                const poluente = dados.dadosPorPoluente[codigo];
+                const valores = poluente.valores;
+                const maxIdx = valores.indexOf(Math.max(...valores));
+                const direcaoCritica = dados.directions[maxIdx];
+                const cor = coresPoluentes[codigo] || { border: '#6b7280' };
+                
+                return `
+                    <tr>
+                        <td>
+                            <span style="display: inline-flex; align-items: center; gap: 8px;">
+                                <span style="width: 10px; height: 10px; border-radius: 2px; background: ${cor.border};"></span>
+                                <strong>${codigo}</strong>
+                            </span>
+                        </td>
+                        <td>${poluente.unidade || 'µg/m³'}</td>
+                        <td>
+                            <span style="display: inline-flex; align-items: center; gap: 4px;">
+                                ${direcaoCritica}
+                                <span style="color: var(--text-secondary); font-size: 11px;">(${nomesDirecoes[direcaoCritica]})</span>
+                            </span>
+                        </td>
+                        <td><strong>${poluente.maximo.toFixed(1)}</strong> ${poluente.unidade || 'µg/m³'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function atualizarLegendaRadar(dados) {
+            const legendItems = document.getElementById('radarLegendItems');
+            const poluentes = Object.keys(dados.dadosPorPoluente);
+            
+            legendItems.innerHTML = poluentes.map(codigo => {
+                const poluente = dados.dadosPorPoluente[codigo];
+                const cor = coresPoluentes[codigo] || { border: '#6b7280' };
+                
+                return `
+                    <div class="legend-item">
+                        <span class="legend-color" style="background: ${cor.border};"></span>
+                        <span class="legend-label">${codigo}</span>
+                        <span class="legend-value">(${poluente.totalAmostras} amostras)</span>
+                    </div>
+                `;
+            }).join('');
         }
 
         function exportarPDF() {
-            alert('Funcionalidade de exportação será implementada');
+            if (!dadosRosaVentos || !dadosRosaVentos.estatisticas) {
+                alert('Nenhum dado disponível para exportar');
+                return;
+            }
+            
+            const stats = dadosRosaVentos.estatisticas;
+            const estacaoNome = document.getElementById('selectEstacao').selectedOptions[0]?.text || 'Estação';
+            
+            let conteudo = 'RELATÓRIO ROSA DOS VENTOS\n';
+            conteudo += '=' .repeat(50) + '\n\n';
+            conteudo += `Data de geração: ${new Date().toLocaleString('pt-BR')}\n`;
+            conteudo += `Estação: ${estacaoNome}\n`;
+            conteudo += `Período: ${dadosRosaVentos.periodo?.dias || 30} dias\n\n`;
+            
+            conteudo += 'ESTATÍSTICAS GERAIS\n';
+            conteudo += '-'.repeat(30) + '\n';
+            conteudo += `Velocidade Média: ${stats.velocidadeMedia} m/s\n`;
+            conteudo += `Velocidade Máxima: ${stats.velocidadeMaxima} m/s\n`;
+            conteudo += `Direção Predominante: ${stats.direcaoPredominante}\n`;
+            conteudo += `Calmaria: ${stats.calmaria}%\n`;
+            conteudo += `Total de Medições: ${stats.totalMedicoes}\n\n`;
+            
+            conteudo += 'FREQUÊNCIA POR DIREÇÃO\n';
+            conteudo += '-'.repeat(30) + '\n';
+            dadosRosaVentos.tabelaDirecoes.forEach(d => {
+                conteudo += `${d.direcao} (${nomesDirecoes[d.direcao]}): ${d.frequencia.toFixed(1)}% - Vel. média: ${d.velocidadeMedia.toFixed(1)} m/s\n`;
+            });
+            
+            const blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `rosa_ventos_${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
         }
 
         function fazerLogout() {

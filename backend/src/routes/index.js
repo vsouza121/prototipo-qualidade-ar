@@ -61,6 +61,9 @@ router.delete('/estacoes/:id', autenticar, autorizar('admin'), estacoesControlle
 router.get('/medicoes', autenticar, medicoesController.listar);
 router.get('/medicoes/tempo-real', autenticar, medicoesController.tempoReal);
 router.get('/medicoes/estatisticas', autenticar, medicoesController.estatisticas);
+router.get('/medicoes/rosa-ventos', autenticar, medicoesController.rosaVentos);
+router.get('/medicoes/radar-poluentes', autenticar, medicoesController.radarPoluentes);
+router.get('/medicoes/sazonalidade', autenticar, medicoesController.sazonalidade);
 router.get('/medicoes/validacao', autenticar, medicoesController.listarParaValidacao);
 router.get('/medicoes/estacao/:id', autenticar, medicoesController.porEstacao);
 router.post('/medicoes', autenticar, autorizar('admin', 'supervisor', 'analista'), medicoesController.criar);

@@ -155,6 +155,30 @@
             background: var(--bg-primary);
             border-radius: 0 0 var(--radius-lg) var(--radius-lg);
         }
+
+        .data-table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table th {
+            background: var(--bg-primary);
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        .data-table tr:hover {
+            background: var(--bg-primary);
+        }
     </style>
 </head>
 <body>
@@ -321,11 +345,11 @@
                     <p>Análises estatísticas e gráficas dos dados monitorados</p>
                 </div>
                 <div class="page-actions">
-                    <button class="btn btn-outline">
+                    <button class="btn btn-outline" id="btnPeriodo">
                         <i class="fas fa-calendar"></i>
-                        01/01/2026 - 05/02/2026
+                        <span id="periodoTexto">Últimos 30 dias</span>
                     </button>
-                    <button class="btn btn-primary">
+                    <button class="btn btn-primary" onclick="gerarRelatorioCompleto()">
                         <i class="fas fa-file-pdf"></i>
                         Gerar Relatório
                     </button>
@@ -334,7 +358,7 @@
 
             <!-- Report Types -->
             <div class="reports-grid">
-                <div class="report-card active">
+                <div class="report-card active" data-tipo="evolucao" onclick="selecionarTipoRelatorio(this, 'evolucao')">
                     <div class="report-icon blue">
                         <i class="fas fa-chart-line"></i>
                     </div>
@@ -342,7 +366,7 @@
                     <p>Visualize a evolução dos parâmetros ao longo do tempo</p>
                 </div>
                 
-                <div class="report-card">
+                <div class="report-card" data-tipo="histograma" onclick="selecionarTipoRelatorio(this, 'histograma')">
                     <div class="report-icon green">
                         <i class="fas fa-chart-bar"></i>
                     </div>
@@ -350,7 +374,7 @@
                     <p>Distribuição dos valores por intervalo</p>
                 </div>
                 
-                <div class="report-card">
+                <div class="report-card" data-tipo="boxplot" onclick="selecionarTipoRelatorio(this, 'boxplot')">
                     <div class="report-icon purple">
                         <i class="fas fa-box"></i>
                     </div>
@@ -358,7 +382,7 @@
                     <p>Medidas estatísticas: mediana, quartis, mín/máx</p>
                 </div>
                 
-                <div class="report-card">
+                <div class="report-card" data-tipo="rosa-ventos" onclick="navegarPara('rosa-ventos.html')">
                     <div class="report-icon orange">
                         <i class="fas fa-compass"></i>
                     </div>
@@ -366,7 +390,7 @@
                     <p>Direção e velocidade dos ventos</p>
                 </div>
                 
-                <div class="report-card">
+                <div class="report-card" data-tipo="rosa-poluentes" onclick="navegarPara('rosa-ventos.html?tipo=poluentes')">
                     <div class="report-icon pink">
                         <i class="fas fa-smog"></i>
                     </div>
@@ -374,35 +398,43 @@
                     <p>Correlação entre direção dos ventos e poluentes</p>
                 </div>
                 
-                <div class="report-card">
+                <div class="report-card" data-tipo="sazonalidade" onclick="selecionarTipoRelatorio(this, 'sazonalidade')">
                     <div class="report-icon cyan">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <h4>Sazonalidade</h4>
+                    <p>Análise sazonal e variação mensal dos poluentes</p>
+                </div>
+                
+                <div class="report-card" data-tipo="estatisticas" onclick="navegarPara('estatisticas.html')">
+                    <div class="report-icon green">
                         <i class="fas fa-percentage"></i>
                     </div>
-                    <h4>Percentil</h4>
-                    <p>Distribuição acumulativa dos valores</p>
+                    <h4>Estatísticas</h4>
+                    <p>Percentis e análise estatística completa</p>
                 </div>
             </div>
 
             <!-- Stats Row -->
             <div class="stats-row">
                 <div class="mini-stat">
-                    <div class="mini-stat-value">15.8</div>
+                    <div class="mini-stat-value" id="statMedia">--</div>
                     <div class="mini-stat-label">Média (µg/m³)</div>
                 </div>
                 <div class="mini-stat">
-                    <div class="mini-stat-value">14.2</div>
+                    <div class="mini-stat-value" id="statMediana">--</div>
                     <div class="mini-stat-label">Mediana (µg/m³)</div>
                 </div>
                 <div class="mini-stat">
-                    <div class="mini-stat-value">5.3</div>
+                    <div class="mini-stat-value" id="statMinimo">--</div>
                     <div class="mini-stat-label">Mínimo (µg/m³)</div>
                 </div>
                 <div class="mini-stat">
-                    <div class="mini-stat-value">42.5</div>
+                    <div class="mini-stat-value" id="statMaximo">--</div>
                     <div class="mini-stat-label">Máximo (µg/m³)</div>
                 </div>
                 <div class="mini-stat">
-                    <div class="mini-stat-value">8.7</div>
+                    <div class="mini-stat-value" id="statDesvio">--</div>
                     <div class="mini-stat-label">Desvio Padrão</div>
                 </div>
             </div>
@@ -410,46 +442,41 @@
             <!-- Main Chart -->
             <div class="chart-container">
                 <div class="chart-header">
-                    <h3><i class="fas fa-chart-area"></i> Gráfico de Evolução - PM2.5</h3>
+                    <h3><i class="fas fa-chart-area"></i> <span id="chartTitle">Gráfico de Evolução</span></h3>
                     <div class="chart-filters">
-                        <select class="select-small">
-                            <option>PM2.5</option>
-                            <option>PM10</option>
-                            <option>O₃</option>
-                            <option>NO₂</option>
-                            <option>SO₂</option>
-                            <option>CO</option>
+                        <select class="select-small" id="selectParametro" onchange="atualizarRelatorio()">
+                            <option value="PM2.5">PM2.5</option>
+                            <option value="PM10">PM10</option>
+                            <option value="O3">O₃</option>
+                            <option value="NO2">NO₂</option>
+                            <option value="SO2">SO₂</option>
+                            <option value="CO">CO</option>
                         </select>
-                        <select class="select-small">
-                            <option>REPLAN-01</option>
-                            <option>REPLAN-02</option>
-                            <option>REDUC-01</option>
-                            <option>Todas as estações</option>
+                        <select class="select-small" id="selectEstacao" onchange="atualizarRelatorio()">
+                            <option value="">Todas as estações</option>
                         </select>
-                        <select class="select-small">
-                            <option>Últimos 7 dias</option>
-                            <option>Últimos 30 dias</option>
-                            <option>Último ano</option>
+                        <select class="select-small" id="selectPeriodo" onchange="atualizarRelatorio()">
+                            <option value="7">Últimos 7 dias</option>
+                            <option value="30" selected>Últimos 30 dias</option>
+                            <option value="90">Últimos 90 dias</option>
+                            <option value="365">Último ano</option>
                         </select>
-                        <button class="btn btn-outline btn-small">
-                            <i class="fas fa-plus"></i> Adicionar Parâmetro
-                        </button>
                     </div>
                 </div>
                 <div class="chart-body">
                     <canvas id="mainChart" class="chart-canvas"></canvas>
                 </div>
                 <div class="export-options">
-                    <button class="btn btn-outline btn-small">
+                    <button class="btn btn-outline btn-small" onclick="exportarExcel()">
                         <i class="fas fa-file-excel"></i> Exportar Excel
                     </button>
-                    <button class="btn btn-outline btn-small">
+                    <button class="btn btn-outline btn-small" onclick="exportarCSV()">
                         <i class="fas fa-file-csv"></i> Exportar CSV
                     </button>
-                    <button class="btn btn-outline btn-small">
+                    <button class="btn btn-outline btn-small" onclick="exportarImagem()">
                         <i class="fas fa-image"></i> Exportar Imagem
                     </button>
-                    <button class="btn btn-outline btn-small">
+                    <button class="btn btn-outline btn-small" onclick="exportarPDF()">
                         <i class="fas fa-file-pdf"></i> Exportar PDF
                     </button>
                 </div>
@@ -477,139 +504,780 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Sazonalidade Section -->
+            <div id="sazonalidadeSection" class="chart-container" style="margin-top: 24px; display: none;">
+                <div class="chart-header">
+                    <h3><i class="fas fa-calendar-alt"></i> Análise de Sazonalidade</h3>
+                    <div class="chart-filters">
+                        <select class="select-small" id="selectParametroSazonalidade" onchange="carregarSazonalidade()">
+                            <option value="PM2.5">PM2.5</option>
+                            <option value="PM10">PM10</option>
+                            <option value="O3">O₃</option>
+                            <option value="NO2">NO₂</option>
+                            <option value="SO2">SO₂</option>
+                            <option value="CO">CO</option>
+                        </select>
+                        <select class="select-small" id="selectAnosSazonalidade" onchange="carregarSazonalidade()">
+                            <option value="1" selected>Último ano</option>
+                            <option value="2">Últimos 2 anos</option>
+                            <option value="3">Últimos 3 anos</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chart-body">
+                    <!-- Resumo Sazonalidade -->
+                    <div class="stats-row" style="margin-bottom: 20px;">
+                        <div class="mini-stat" style="background: linear-gradient(135deg, #fef3c7 0%, #fbbf24 100%);">
+                            <div class="mini-stat-value" id="statVerao">--</div>
+                            <div class="mini-stat-label">☀️ Verão</div>
+                        </div>
+                        <div class="mini-stat" style="background: linear-gradient(135deg, #fed7aa 0%, #f97316 100%);">
+                            <div class="mini-stat-value" id="statOutono">--</div>
+                            <div class="mini-stat-label">🍂 Outono</div>
+                        </div>
+                        <div class="mini-stat" style="background: linear-gradient(135deg, #dbeafe 0%, #3b82f6 100%);">
+                            <div class="mini-stat-value" id="statInverno">--</div>
+                            <div class="mini-stat-label">❄️ Inverno</div>
+                        </div>
+                        <div class="mini-stat" style="background: linear-gradient(135deg, #d1fae5 0%, #10b981 100%);">
+                            <div class="mini-stat-value" id="statPrimavera">--</div>
+                            <div class="mini-stat-label">🌸 Primavera</div>
+                        </div>
+                        <div class="mini-stat" style="background: linear-gradient(135deg, #fce7f3 0%, #ec4899 100%);">
+                            <div class="mini-stat-value" id="statEstacaoCritica">--</div>
+                            <div class="mini-stat-label">⚠️ Estação Crítica</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Gráficos de Sazonalidade -->
+                    <div class="analysis-grid">
+                        <div style="background: var(--bg-primary); border-radius: var(--radius); padding: 16px;">
+                            <h4 style="margin-bottom: 12px; font-size: 14px; color: var(--text-secondary);">Média por Estação do Ano</h4>
+                            <canvas id="sazonalidadeChart" style="height: 250px;"></canvas>
+                        </div>
+                        <div style="background: var(--bg-primary); border-radius: var(--radius); padding: 16px;">
+                            <h4 style="margin-bottom: 12px; font-size: 14px; color: var(--text-secondary);">Variação Mensal</h4>
+                            <canvas id="mensalChart" style="height: 250px;"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Tabela de Variação Sazonal -->
+                    <div style="margin-top: 20px;">
+                        <h4 style="margin-bottom: 12px; font-size: 14px; color: var(--text-secondary);">Variação em Relação à Média Anual</h4>
+                        <table class="data-table" style="width: 100%; font-size: 13px;">
+                            <thead>
+                                <tr>
+                                    <th>Estação</th>
+                                    <th>Média</th>
+                                    <th>Variação</th>
+                                    <th>Amostras</th>
+                                    <th>Tendência</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sazonalidadeTableBody">
+                                <tr><td colspan="5" style="text-align: center;">Selecione "Sazonalidade" para ver os dados</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
+    <!-- API e Autenticação -->
+    <script src="../js/api.js"></script>
+    
     <script>
-        // Gráfico Principal de Evolução
-        const mainCtx = document.getElementById('mainChart').getContext('2d');
+        // Variáveis globais
+        let mainChart, histogramChart, boxplotChart, sazonalidadeChart, mensalChart;
+        let dadosRelatorio = null;
+        let dadosSazonalidade = null;
+        let tipoRelatorioAtual = 'evolucao';
         
-        const labels = [];
-        for (let i = 6; i >= 0; i--) {
-            const date = new Date();
-            date.setDate(date.getDate() - i);
-            labels.push(date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
-        }
-        
-        new Chart(mainCtx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'PM2.5 - REPLAN-01',
-                    data: [12.4, 14.2, 11.8, 15.6, 13.9, 16.2, 14.8],
-                    borderColor: '#00263A',
-                    backgroundColor: 'rgba(0, 38, 58, 0.1)',
-                    fill: true,
-                    tension: 0.4
-                }, {
-                    label: 'Limite CONAMA',
-                    data: [25, 25, 25, 25, 25, 25, 25],
-                    borderColor: '#ef4444',
-                    borderDash: [5, 5],
-                    pointRadius: 0,
-                    fill: false
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'top'
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Concentração (µg/m³)'
-                        }
-                    }
+        // Inicializar ao carregar
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (!AuthService.isLoggedIn()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Atualizar informações do usuário
+            const usuario = AuthService.getUsuario();
+            if (usuario) {
+                const userNameEl = document.querySelector('.user-name');
+                if (userNameEl) userNameEl.textContent = usuario.nome;
+                
+                const userRoleEl = document.querySelector('.user-role');
+                if (userRoleEl) {
+                    const roles = { 'admin': 'Administrador', 'supervisor': 'Supervisor', 'analista': 'Analista', 'operador': 'Operador' };
+                    userRoleEl.textContent = roles[usuario.role] || usuario.role;
                 }
             }
+            
+            await carregarEstacoes();
+            await carregarRelatorio();
         });
 
-        // Histograma
-        const histCtx = document.getElementById('histogramChart').getContext('2d');
-        new Chart(histCtx, {
-            type: 'bar',
-            data: {
-                labels: ['0-5', '5-10', '10-15', '15-20', '20-25', '25-30', '30-35', '35-40'],
-                datasets: [{
-                    label: 'Frequência',
-                    data: [5, 18, 42, 35, 22, 8, 3, 1],
-                    backgroundColor: 'rgba(0, 161, 154, 0.7)',
-                    borderColor: '#00A19A',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
+        async function carregarEstacoes() {
+            try {
+                const response = await ApiClient.get('/estacoes');
+                if (response.sucesso) {
+                    const select = document.getElementById('selectEstacao');
+                    response.dados.forEach(estacao => {
+                        select.innerHTML += `<option value="${estacao.id}">${estacao.nome}</option>`;
+                    });
+                }
+            } catch (error) {
+                console.error('Erro ao carregar estações:', error);
+            }
+        }
+
+        async function carregarRelatorio() {
+            try {
+                const parametro = document.getElementById('selectParametro').value;
+                const estacaoId = document.getElementById('selectEstacao').value;
+                const dias = document.getElementById('selectPeriodo').value;
+
+                // Atualizar texto do período
+                const periodoTextos = {
+                    '7': 'Últimos 7 dias',
+                    '30': 'Últimos 30 dias',
+                    '90': 'Últimos 90 dias',
+                    '365': 'Último ano'
+                };
+                document.getElementById('periodoTexto').textContent = periodoTextos[dias] || `Últimos ${dias} dias`;
+
+                // Buscar estatísticas da API
+                let endpoint = `/medicoes/estatisticas?parametro=${parametro}&dias=${dias}`;
+                if (estacaoId) {
+                    endpoint += `&estacao_id=${estacaoId}`;
+                }
+
+                const response = await ApiClient.get(endpoint);
+                
+                if (response.sucesso && response.dados) {
+                    dadosRelatorio = response.dados;
+                    atualizarEstatisticas(response.dados);
+                    atualizarGraficos(response.dados);
+                } else {
+                    mostrarDadosVazios();
+                }
+            } catch (error) {
+                console.error('Erro ao carregar relatório:', error);
+                mostrarDadosVazios();
+            }
+        }
+
+        function mostrarDadosVazios() {
+            document.getElementById('statMedia').textContent = '--';
+            document.getElementById('statMediana').textContent = '--';
+            document.getElementById('statMinimo').textContent = '--';
+            document.getElementById('statMaximo').textContent = '--';
+            document.getElementById('statDesvio').textContent = '--';
+        }
+
+        function atualizarEstatisticas(dados) {
+            const stats = dados.estatisticas;
+            document.getElementById('statMedia').textContent = stats.media?.toFixed(1) || '--';
+            document.getElementById('statMediana').textContent = stats.mediana?.toFixed(1) || '--';
+            document.getElementById('statMinimo').textContent = stats.minimo?.toFixed(1) || '--';
+            document.getElementById('statMaximo').textContent = stats.maximo?.toFixed(1) || '--';
+            document.getElementById('statDesvio').textContent = stats.desvio_padrao?.toFixed(2) || '--';
+        }
+
+        function atualizarGraficos(dados) {
+            const parametro = document.getElementById('selectParametro').value;
+            const unidade = dados.unidade || 'µg/m³';
+            
+            // Atualizar título do gráfico
+            document.getElementById('chartTitle').textContent = `Gráfico de ${tipoRelatorioAtual === 'evolucao' ? 'Evolução' : tipoRelatorioAtual === 'histograma' ? 'Histograma' : 'Box Plot'} - ${parametro}`;
+            
+            // Destruir gráficos existentes
+            if (mainChart) mainChart.destroy();
+            if (histogramChart) histogramChart.destroy();
+            if (boxplotChart) boxplotChart.destroy();
+            
+            // Gráfico Principal
+            const mainCtx = document.getElementById('mainChart').getContext('2d');
+            
+            if (tipoRelatorioAtual === 'evolucao' && dados.serie_temporal && dados.serie_temporal.length > 0) {
+                mainChart = new Chart(mainCtx, {
+                    type: 'line',
+                    data: {
+                        labels: dados.serie_temporal.map(s => {
+                            const d = new Date(s.data);
+                            return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                        }),
+                        datasets: [{
+                            label: `${parametro}`,
+                            data: dados.serie_temporal.map(s => s.media),
+                            borderColor: '#00263A',
+                            backgroundColor: 'rgba(0, 38, 58, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }, {
+                            label: 'Tendência',
+                            data: dados.serie_temporal.map(s => s.tendencia),
+                            borderColor: '#ef4444',
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'top' }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: { display: true, text: `Concentração (${unidade})` }
+                            }
+                        }
+                    }
+                });
+            } else if (tipoRelatorioAtual === 'histograma' && dados.histograma && dados.histograma.length > 0) {
+                mainChart = new Chart(mainCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: dados.histograma.map(h => h.faixa),
+                        datasets: [{
+                            label: 'Frequência',
+                            data: dados.histograma.map(h => h.contagem),
+                            backgroundColor: 'rgba(0, 161, 154, 0.7)',
+                            borderColor: '#00A19A',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: { display: true, text: 'Frequência' }
+                            },
+                            x: {
+                                title: { display: true, text: `Faixas de ${parametro} (${unidade})` }
+                            }
+                        }
+                    }
+                });
+            } else if (tipoRelatorioAtual === 'boxplot' && dados.comparativo_estacoes && dados.comparativo_estacoes.length > 0) {
+                const estacoes = dados.comparativo_estacoes.slice(0, 6);
+                mainChart = new Chart(mainCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: estacoes.map(e => e.nome),
+                        datasets: [{
+                            label: 'Mínimo',
+                            data: estacoes.map(e => e.minimo),
+                            backgroundColor: 'rgba(0, 38, 58, 0.3)'
+                        }, {
+                            label: 'Q1',
+                            data: estacoes.map(e => e.q1),
+                            backgroundColor: 'rgba(0, 161, 154, 0.4)'
+                        }, {
+                            label: 'Mediana',
+                            data: estacoes.map(e => e.mediana),
+                            backgroundColor: 'rgba(0, 161, 154, 0.7)'
+                        }, {
+                            label: 'Q3',
+                            data: estacoes.map(e => e.q3),
+                            backgroundColor: 'rgba(0, 161, 154, 0.4)'
+                        }, {
+                            label: 'Máximo',
+                            data: estacoes.map(e => e.maximo),
+                            backgroundColor: 'rgba(0, 38, 58, 0.3)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'top' }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: { display: true, text: `${parametro} (${unidade})` }
+                            }
+                        }
+                    }
+                });
+            } else {
+                // Gráfico vazio
+                mainChart = new Chart(mainCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Sem dados'],
+                        datasets: [{
+                            label: 'Nenhum dado disponível',
+                            data: [0],
+                            backgroundColor: 'rgba(200, 200, 200, 0.5)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            }
+
+            // Histograma (gráfico secundário)
+            if (dados.histograma && dados.histograma.length > 0) {
+                const histCtx = document.getElementById('histogramChart').getContext('2d');
+                histogramChart = new Chart(histCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: dados.histograma.map(h => h.faixa),
+                        datasets: [{
+                            label: 'Frequência',
+                            data: dados.histograma.map(h => h.contagem),
+                            backgroundColor: 'rgba(0, 161, 154, 0.7)',
+                            borderColor: '#00A19A',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: { display: true, text: 'Frequência' }
+                            },
+                            x: {
+                                title: { display: true, text: `Faixas de ${parametro} (${unidade})` }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Box Plot (gráfico secundário)
+            if (dados.comparativo_estacoes && dados.comparativo_estacoes.length > 0) {
+                const boxCtx = document.getElementById('boxplotChart').getContext('2d');
+                const estacoes = dados.comparativo_estacoes.slice(0, 5);
+                boxplotChart = new Chart(boxCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: estacoes.map(e => e.nome),
+                        datasets: [{
+                            label: 'Q1',
+                            data: estacoes.map(e => e.q1),
+                            backgroundColor: 'rgba(0, 161, 154, 0.3)'
+                        }, {
+                            label: 'Mediana',
+                            data: estacoes.map(e => e.mediana),
+                            backgroundColor: 'rgba(0, 161, 154, 0.6)'
+                        }, {
+                            label: 'Q3',
+                            data: estacoes.map(e => e.q3),
+                            backgroundColor: 'rgba(0, 161, 154, 0.9)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { position: 'top' } },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: { display: true, text: `${parametro} (${unidade})` }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function selecionarTipoRelatorio(elemento, tipo) {
+            // Remover active de todos
+            document.querySelectorAll('.report-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            // Adicionar active ao selecionado
+            elemento.classList.add('active');
+            tipoRelatorioAtual = tipo;
+            
+            // Mostrar/ocultar seção de sazonalidade
+            const sazonalidadeSection = document.getElementById('sazonalidadeSection');
+            if (tipo === 'sazonalidade') {
+                sazonalidadeSection.style.display = 'block';
+                carregarSazonalidade();
+            } else {
+                sazonalidadeSection.style.display = 'none';
+                // Atualizar gráficos normais
+                if (dadosRelatorio) {
+                    atualizarGraficos(dadosRelatorio);
+                }
+            }
+        }
+
+        async function carregarSazonalidade() {
+            try {
+                const parametro = document.getElementById('selectParametroSazonalidade').value;
+                const anos = document.getElementById('selectAnosSazonalidade').value;
+                const estacaoId = document.getElementById('selectEstacao').value;
+
+                let endpoint = `/medicoes/sazonalidade?parametro=${parametro}&anos=${anos}`;
+                if (estacaoId) {
+                    endpoint += `&estacao_id=${estacaoId}`;
+                }
+
+                const response = await ApiClient.get(endpoint);
+                
+                if (response.sucesso && response.dados) {
+                    dadosSazonalidade = response.dados;
+                    atualizarSazonalidade(response.dados);
+                } else {
+                    mostrarSazonalidadeVazia();
+                }
+            } catch (error) {
+                console.error('Erro ao carregar sazonalidade:', error);
+                mostrarSazonalidadeVazia();
+            }
+        }
+
+        function mostrarSazonalidadeVazia() {
+            document.getElementById('statVerao').textContent = '--';
+            document.getElementById('statOutono').textContent = '--';
+            document.getElementById('statInverno').textContent = '--';
+            document.getElementById('statPrimavera').textContent = '--';
+            document.getElementById('statEstacaoCritica').textContent = '--';
+            document.getElementById('sazonalidadeTableBody').innerHTML = 
+                '<tr><td colspan="5" style="text-align: center;">Sem dados disponíveis</td></tr>';
+        }
+
+        function atualizarSazonalidade(dados) {
+            const unidade = dados.unidade || 'µg/m³';
+            const saz = dados.sazonalidade;
+            
+            // Atualizar cards de estatísticas
+            document.getElementById('statVerao').textContent = saz.verao.media.toFixed(1);
+            document.getElementById('statOutono').textContent = saz.outono.media.toFixed(1);
+            document.getElementById('statInverno').textContent = saz.inverno.media.toFixed(1);
+            document.getElementById('statPrimavera').textContent = saz.primavera.media.toFixed(1);
+            document.getElementById('statEstacaoCritica').textContent = dados.resumo.estacaoCritica;
+            
+            // Desenhar gráficos
+            desenharGraficoSazonalidade(dados);
+            desenharGraficoMensal(dados);
+            
+            // Preencher tabela
+            preencherTabelaSazonalidade(dados);
+        }
+
+        function desenharGraficoSazonalidade(dados) {
+            if (sazonalidadeChart) {
+                sazonalidadeChart.destroy();
+            }
+
+            const ctx = document.getElementById('sazonalidadeChart').getContext('2d');
+            const saz = dados.sazonalidade;
+            const unidade = dados.unidade || 'µg/m³';
+            
+            const coresEstacoes = {
+                verao: { bg: 'rgba(251, 191, 36, 0.7)', border: '#fbbf24' },
+                outono: { bg: 'rgba(249, 115, 22, 0.7)', border: '#f97316' },
+                inverno: { bg: 'rgba(59, 130, 246, 0.7)', border: '#3b82f6' },
+                primavera: { bg: 'rgba(16, 185, 129, 0.7)', border: '#10b981' }
+            };
+
+            sazonalidadeChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Verão', 'Outono', 'Inverno', 'Primavera'],
+                    datasets: [{
+                        label: `${dados.parametro} - Média (${unidade})`,
+                        data: [saz.verao.media, saz.outono.media, saz.inverno.media, saz.primavera.media],
+                        backgroundColor: [
+                            coresEstacoes.verao.bg,
+                            coresEstacoes.outono.bg,
+                            coresEstacoes.inverno.bg,
+                            coresEstacoes.primavera.bg
+                        ],
+                        borderColor: [
+                            coresEstacoes.verao.border,
+                            coresEstacoes.outono.border,
+                            coresEstacoes.inverno.border,
+                            coresEstacoes.primavera.border
+                        ],
+                        borderWidth: 2,
+                        borderRadius: 6
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Frequência'
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: function(context) {
+                                    const estacoes = ['verao', 'outono', 'inverno', 'primavera'];
+                                    const est = estacoes[context.dataIndex];
+                                    const s = saz[est];
+                                    return [
+                                        `Mediana: ${s.mediana} ${unidade}`,
+                                        `Min: ${s.minimo} | Max: ${s.maximo}`,
+                                        `Amostras: ${s.amostras}`
+                                    ];
+                                }
+                            }
                         }
                     },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Faixas de PM2.5 (µg/m³)'
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: `Concentração (${unidade})` }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
 
-        // Box Plot (simulado com bar chart)
-        const boxCtx = document.getElementById('boxplotChart').getContext('2d');
-        new Chart(boxCtx, {
-            type: 'bar',
-            data: {
-                labels: ['REPLAN-01', 'REPLAN-02', 'REDUC-01', 'RLAM-01', 'REFAP-01'],
-                datasets: [{
-                    label: 'Q1',
-                    data: [8.2, 10.5, 12.1, 7.8, 15.2],
-                    backgroundColor: 'rgba(0, 161, 154, 0.3)',
-                }, {
-                    label: 'Mediana',
-                    data: [14.2, 16.8, 18.4, 12.5, 22.8],
-                    backgroundColor: 'rgba(0, 161, 154, 0.6)',
-                }, {
-                    label: 'Q3',
-                    data: [18.5, 21.2, 24.6, 16.2, 32.4],
-                    backgroundColor: 'rgba(0, 161, 154, 0.9)',
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: 'top' }
+        function desenharGraficoMensal(dados) {
+            if (mensalChart) {
+                mensalChart.destroy();
+            }
+
+            const ctx = document.getElementById('mensalChart').getContext('2d');
+            const unidade = dados.unidade || 'µg/m³';
+            
+            mensalChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dados.porMes.map(m => m.mes),
+                    datasets: [{
+                        label: `${dados.parametro} - Média Mensal`,
+                        data: dados.porMes.map(m => m.media),
+                        borderColor: '#00A19A',
+                        backgroundColor: 'rgba(0, 161, 154, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#00A19A',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'PM2.5 (µg/m³)'
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: function(context) {
+                                    const mes = dados.porMes[context.dataIndex];
+                                    return [
+                                        `Min: ${mes.minimo} | Max: ${mes.maximo}`,
+                                        `Amostras: ${mes.amostras}`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: `Concentração (${unidade})` }
                         }
                     }
                 }
+            });
+        }
+
+        function preencherTabelaSazonalidade(dados) {
+            const tbody = document.getElementById('sazonalidadeTableBody');
+            const saz = dados.sazonalidade;
+            const variacao = dados.variacaoSazonal;
+            const unidade = dados.unidade || 'µg/m³';
+            
+            const estacoes = [
+                { key: 'verao', nome: 'Verão ☀️', cor: '#fbbf24' },
+                { key: 'outono', nome: 'Outono 🍂', cor: '#f97316' },
+                { key: 'inverno', nome: 'Inverno ❄️', cor: '#3b82f6' },
+                { key: 'primavera', nome: 'Primavera 🌸', cor: '#10b981' }
+            ];
+            
+            tbody.innerHTML = estacoes.map(est => {
+                const s = saz[est.key];
+                const v = variacao[est.key];
+                const tendenciaIcon = v > 5 ? '📈' : v < -5 ? '📉' : '➡️';
+                const tendenciaCor = v > 5 ? '#ef4444' : v < -5 ? '#10b981' : '#6b7280';
+                
+                return `
+                    <tr>
+                        <td>
+                            <span style="display: inline-flex; align-items: center; gap: 8px;">
+                                <span style="width: 10px; height: 10px; border-radius: 2px; background: ${est.cor};"></span>
+                                ${est.nome}
+                            </span>
+                        </td>
+                        <td><strong>${s.media.toFixed(1)}</strong> ${unidade}</td>
+                        <td style="color: ${tendenciaCor};">
+                            ${v > 0 ? '+' : ''}${v.toFixed(1)}%
+                        </td>
+                        <td>${s.amostras.toLocaleString('pt-BR')}</td>
+                        <td style="font-size: 18px;">${tendenciaIcon}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function navegarPara(pagina) {
+            window.location.href = pagina;
+        }
+
+        async function atualizarRelatorio() {
+            await carregarRelatorio();
+        }
+
+        // Funções de Exportação
+        function exportarCSV() {
+            if (!dadosRelatorio || !dadosRelatorio.serie_temporal) {
+                alert('Nenhum dado disponível para exportar');
+                return;
+            }
+            
+            const parametro = document.getElementById('selectParametro').value;
+            const unidade = dadosRelatorio.unidade || 'µg/m³';
+            
+            let csv = `Data;${parametro} Média (${unidade});Mínimo;Máximo;Amostras\n`;
+            dadosRelatorio.serie_temporal.forEach(s => {
+                const data = new Date(s.data).toLocaleDateString('pt-BR');
+                csv += `${data};${s.media};${s.minimo};${s.maximo};${s.amostras}\n`;
+            });
+            
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `relatorio_${parametro}_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportarExcel() {
+            // Simula exportação Excel usando CSV com extensão .xls
+            if (!dadosRelatorio || !dadosRelatorio.serie_temporal) {
+                alert('Nenhum dado disponível para exportar');
+                return;
+            }
+            
+            const parametro = document.getElementById('selectParametro').value;
+            const unidade = dadosRelatorio.unidade || 'µg/m³';
+            
+            let csv = `Data\t${parametro} Média (${unidade})\tMínimo\tMáximo\tAmostras\n`;
+            dadosRelatorio.serie_temporal.forEach(s => {
+                const data = new Date(s.data).toLocaleDateString('pt-BR');
+                csv += `${data}\t${s.media}\t${s.minimo}\t${s.maximo}\t${s.amostras}\n`;
+            });
+            
+            const blob = new Blob(['\uFEFF' + csv], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `relatorio_${parametro}_${new Date().toISOString().split('T')[0]}.xls`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportarImagem() {
+            const canvas = document.getElementById('mainChart');
+            const url = canvas.toDataURL('image/png');
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `grafico_${new Date().toISOString().split('T')[0]}.png`;
+            a.click();
+        }
+
+        function exportarPDF() {
+            // Gera relatório em formato texto (simulando PDF)
+            if (!dadosRelatorio) {
+                alert('Nenhum dado disponível para exportar');
+                return;
+            }
+            
+            const parametro = document.getElementById('selectParametro').value;
+            const stats = dadosRelatorio.estatisticas;
+            const unidade = dadosRelatorio.unidade || 'µg/m³';
+            
+            let conteudo = 'RELATÓRIO DE QUALIDADE DO AR\n';
+            conteudo += '=' .repeat(50) + '\n\n';
+            conteudo += `Data de geração: ${new Date().toLocaleString('pt-BR')}\n`;
+            conteudo += `Parâmetro: ${parametro}\n`;
+            conteudo += `Período: ${dadosRelatorio.periodo?.dias || 30} dias\n\n`;
+            
+            conteudo += 'ESTATÍSTICAS DESCRITIVAS\n';
+            conteudo += '-'.repeat(30) + '\n';
+            conteudo += `Total de Amostras: ${stats.total}\n`;
+            conteudo += `Média: ${stats.media} ${unidade}\n`;
+            conteudo += `Mediana: ${stats.mediana} ${unidade}\n`;
+            conteudo += `Desvio Padrão: ${stats.desvio_padrao}\n`;
+            conteudo += `Mínimo: ${stats.minimo} ${unidade}\n`;
+            conteudo += `Máximo: ${stats.maximo} ${unidade}\n\n`;
+            
+            if (dadosRelatorio.percentis) {
+                conteudo += 'PERCENTIS\n';
+                conteudo += '-'.repeat(30) + '\n';
+                Object.entries(dadosRelatorio.percentis).forEach(([key, val]) => {
+                    conteudo += `${key.toUpperCase()}: ${val} ${unidade}\n`;
+                });
+                conteudo += '\n';
+            }
+            
+            if (dadosRelatorio.comparativo_estacoes && dadosRelatorio.comparativo_estacoes.length > 0) {
+                conteudo += 'COMPARATIVO POR ESTAÇÃO\n';
+                conteudo += '-'.repeat(30) + '\n';
+                dadosRelatorio.comparativo_estacoes.forEach(e => {
+                    conteudo += `${e.nome}: Média ${e.media} ${unidade} (${e.amostras} amostras)\n`;
+                });
+            }
+            
+            const blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `relatorio_${parametro}_${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function gerarRelatorioCompleto() {
+            exportarPDF();
+        }
+
+        function fazerLogout() {
+            AuthService.logout();
+        }
+
+        function toggleUserDropdown() {
+            document.getElementById('userDropdown').classList.toggle('active');
+        }
+
+        document.addEventListener('click', function(event) {
+            const userMenu = document.getElementById('userMenu');
+            const dropdown = document.getElementById('userDropdown');
+            if (userMenu && !userMenu.contains(event.target)) {
+                dropdown.classList.remove('active');
             }
         });
     </script>
-    
-    <!-- API e Autenticação -->
-    <script src="../js/api.js"></script>
     
     <!-- Sidebar Toggle Script -->
     <script>
@@ -647,45 +1315,6 @@
             } else {
                 sidebar.classList.remove('open');
                 if (overlay) overlay.classList.remove('active');
-            }
-        });
-    </script>
-    
-    <script>
-        // Verificar autenticação ao carregar
-        document.addEventListener('DOMContentLoaded', function() {
-            if (!AuthService.isLoggedIn()) {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            // Atualizar informações do usuário
-            const usuario = AuthService.getUsuario();
-            if (usuario) {
-                const userNameEl = document.querySelector('.user-name');
-                if (userNameEl) userNameEl.textContent = usuario.nome;
-                
-                const userRoleEl = document.querySelector('.user-role');
-                if (userRoleEl) {
-                    const roles = { 'admin': 'Administrador', 'supervisor': 'Supervisor', 'analista': 'Analista', 'operador': 'Operador' };
-                    userRoleEl.textContent = roles[usuario.role] || usuario.role;
-                }
-            }
-        });
-
-        function fazerLogout() {
-            AuthService.logout();
-        }
-
-        function toggleUserDropdown() {
-            document.getElementById('userDropdown').classList.toggle('active');
-        }
-
-        document.addEventListener('click', function(event) {
-            const userMenu = document.getElementById('userMenu');
-            const dropdown = document.getElementById('userDropdown');
-            if (userMenu && !userMenu.contains(event.target)) {
-                dropdown.classList.remove('active');
             }
         });
     </script>

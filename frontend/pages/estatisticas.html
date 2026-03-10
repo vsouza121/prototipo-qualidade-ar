@@ -455,27 +455,27 @@
             <!-- Stats Overview -->
             <div class="stats-overview">
                 <div class="stat-card highlight">
-                    <div class="stat-value" id="statMedia">15.8 <span class="stat-unit">µg/m³</span></div>
+                    <div class="stat-value" id="statMedia">-- <span class="stat-unit">µg/m³</span></div>
                     <div class="stat-label">Média</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value" id="statMediana">14.2 <span class="stat-unit">µg/m³</span></div>
+                    <div class="stat-value" id="statMediana">-- <span class="stat-unit">µg/m³</span></div>
                     <div class="stat-label">Mediana</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value" id="statDesvio">8.7</div>
+                    <div class="stat-value" id="statDesvio">--</div>
                     <div class="stat-label">Desvio Padrão</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value" id="statMinimo">5.3 <span class="stat-unit">µg/m³</span></div>
+                    <div class="stat-value" id="statMinimo">-- <span class="stat-unit">µg/m³</span></div>
                     <div class="stat-label">Mínimo</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value" id="statMaximo">42.5 <span class="stat-unit">µg/m³</span></div>
+                    <div class="stat-value" id="statMaximo">-- <span class="stat-unit">µg/m³</span></div>
                     <div class="stat-label">Máximo</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value" id="statAmostras">1.245</div>
+                    <div class="stat-value" id="statAmostras">--</div>
                     <div class="stat-label">Amostras</div>
                 </div>
             </div>
@@ -513,67 +513,7 @@
                             </thead>
                             <tbody id="percentilBody">
                                 <tr>
-                                    <td>P10</td>
-                                    <td>6.2 µg/m³</td>
-                                    <td>
-                                        <div class="percentile-bar">
-                                            <div class="percentile-bar-fill" style="width: 10%"></div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>P25 (Q1)</td>
-                                    <td>9.8 µg/m³</td>
-                                    <td>
-                                        <div class="percentile-bar">
-                                            <div class="percentile-bar-fill" style="width: 25%"></div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>P50 (Mediana)</td>
-                                    <td>14.2 µg/m³</td>
-                                    <td>
-                                        <div class="percentile-bar">
-                                            <div class="percentile-bar-fill" style="width: 50%"></div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>P75 (Q3)</td>
-                                    <td>20.5 µg/m³</td>
-                                    <td>
-                                        <div class="percentile-bar">
-                                            <div class="percentile-bar-fill" style="width: 75%"></div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>P90</td>
-                                    <td>28.4 µg/m³</td>
-                                    <td>
-                                        <div class="percentile-bar">
-                                            <div class="percentile-bar-fill" style="width: 90%"></div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>P95</td>
-                                    <td>35.2 µg/m³</td>
-                                    <td>
-                                        <div class="percentile-bar">
-                                            <div class="percentile-bar-fill" style="width: 95%"></div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>P99</td>
-                                    <td>41.8 µg/m³</td>
-                                    <td>
-                                        <div class="percentile-bar">
-                                            <div class="percentile-bar-fill" style="width: 99%"></div>
-                                        </div>
-                                    </td>
+                                    <td colspan="3" style="text-align: center; color: var(--text-secondary);">Carregando dados...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -669,6 +609,7 @@
     
     <script>
         let histogramChart, boxplotChart, distributionChart, trendChart;
+        let dadosEstatisticas = null;
         
         // Inicializar ao carregar
         document.addEventListener('DOMContentLoaded', async function() {
@@ -685,8 +626,7 @@
             }
             
             await carregarEstacoes();
-            inicializarGraficos();
-            atualizarComparativo();
+            await carregarEstatisticas();
         });
 
         async function carregarEstacoes() {
@@ -703,200 +643,321 @@
             }
         }
 
-        function inicializarGraficos() {
-            // Histograma
-            const histCtx = document.getElementById('histogramChart').getContext('2d');
-            histogramChart = new Chart(histCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['0-5', '5-10', '10-15', '15-20', '20-25', '25-30', '30-35', '35-40', '40-45', '45+'],
-                    datasets: [{
-                        label: 'Frequência',
-                        data: [12, 45, 78, 95, 68, 42, 25, 18, 8, 4],
-                        backgroundColor: 'rgba(0, 161, 154, 0.7)',
-                        borderColor: '#00A19A',
-                        borderWidth: 1,
-                        borderRadius: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: { display: true, text: 'Frequência' }
-                        },
-                        x: {
-                            title: { display: true, text: 'Faixas (µg/m³)' }
-                        }
-                    }
+        async function carregarEstatisticas() {
+            try {
+                const parametro = document.getElementById('selectParametro').value;
+                const estacaoId = document.getElementById('selectEstacao').value;
+                const dias = document.getElementById('selectPeriodo').value;
+
+                // Atualizar texto do período
+                const periodoTextos = {
+                    '7': 'Últimos 7 dias',
+                    '30': 'Últimos 30 dias',
+                    '90': 'Últimos 90 dias',
+                    '365': 'Último ano'
+                };
+                document.getElementById('periodoTexto').textContent = periodoTextos[dias] || `Últimos ${dias} dias`;
+
+                // Buscar estatísticas da API
+                let endpoint = `/medicoes/estatisticas?parametro=${parametro}&dias=${dias}`;
+                if (estacaoId) {
+                    endpoint += `&estacao_id=${estacaoId}`;
                 }
-            });
-            
-            // Box Plot (simulado)
-            const boxCtx = document.getElementById('boxplotChart').getContext('2d');
-            boxplotChart = new Chart(boxCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['Copacabana', 'Centro', 'Campo Grande', 'Bangu', 'Irajá'],
-                    datasets: [
-                        {
-                            label: 'Mínimo',
-                            data: [5.2, 7.8, 8.4, 9.1, 6.5],
-                            backgroundColor: 'rgba(0, 38, 58, 0.3)'
-                        },
-                        {
-                            label: 'Q1',
-                            data: [8.5, 12.3, 14.2, 15.8, 10.2],
-                            backgroundColor: 'rgba(0, 161, 154, 0.4)'
-                        },
-                        {
-                            label: 'Mediana',
-                            data: [14.2, 18.5, 21.3, 24.6, 15.8],
-                            backgroundColor: 'rgba(0, 161, 154, 0.7)'
-                        },
-                        {
-                            label: 'Q3',
-                            data: [20.5, 25.4, 28.7, 32.1, 22.4],
-                            backgroundColor: 'rgba(0, 161, 154, 0.4)'
-                        },
-                        {
-                            label: 'Máximo',
-                            data: [32.4, 38.2, 42.5, 48.3, 35.6],
-                            backgroundColor: 'rgba(0, 38, 58, 0.3)'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'top' }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: { display: true, text: 'µg/m³' }
-                        }
-                    }
+
+                const response = await ApiClient.get(endpoint);
+                
+                if (response.sucesso && response.dados) {
+                    dadosEstatisticas = response.dados;
+                    atualizarCardsEstatisticas(response.dados);
+                    atualizarPercentis(response.dados);
+                    inicializarGraficos(response.dados);
+                    atualizarComparativo(response.dados.comparativo_estacoes);
+                } else {
+                    mostrarDadosVazios();
                 }
-            });
-            
-            // Curva de Distribuição
-            const distCtx = document.getElementById('distributionChart').getContext('2d');
-            const xValues = [];
-            const yValues = [];
-            for (let x = 0; x <= 50; x += 0.5) {
-                xValues.push(x);
-                // Distribuição normal: média=15.8, desvio=8.7
-                const y = (1 / (8.7 * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - 15.8) / 8.7, 2));
-                yValues.push(y * 100);
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+                mostrarDadosVazios();
             }
-            
-            distributionChart = new Chart(distCtx, {
-                type: 'line',
-                data: {
-                    labels: xValues,
-                    datasets: [{
-                        label: 'Densidade',
-                        data: yValues,
-                        borderColor: '#00A19A',
-                        backgroundColor: 'rgba(0, 161, 154, 0.2)',
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: { display: true, text: 'Densidade' }
-                        },
-                        x: {
-                            title: { display: true, text: 'Valor (µg/m³)' }
-                        }
-                    }
-                }
-            });
-            
-            // Tendência Temporal
-            const trendCtx = document.getElementById('trendChart').getContext('2d');
-            const labels = [];
-            const values = [];
-            const trendValues = [];
-            for (let i = 29; i >= 0; i--) {
-                const date = new Date();
-                date.setDate(date.getDate() - i);
-                labels.push(date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }));
-                const baseValue = 15 + Math.sin(i / 5) * 5 + Math.random() * 8;
-                values.push(baseValue.toFixed(1));
-                trendValues.push((15 + (30 - i) * 0.05).toFixed(1));
-            }
-            
-            trendChart = new Chart(trendCtx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Valores',
-                        data: values,
-                        borderColor: '#00A19A',
-                        backgroundColor: 'rgba(0, 161, 154, 0.1)',
-                        fill: true,
-                        tension: 0.3,
-                        pointRadius: 2
-                    }, {
-                        label: 'Tendência',
-                        data: trendValues,
-                        borderColor: '#ef4444',
-                        borderDash: [5, 5],
-                        pointRadius: 0,
-                        fill: false
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'top' }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: { display: true, text: 'µg/m³' }
-                        }
-                    }
-                }
-            });
         }
 
-        function atualizarComparativo() {
-            const estacoes = [
-                { nome: 'Copacabana', media: 14.2, classificacao: 'good' },
-                { nome: 'Centro', media: 18.5, classificacao: 'moderate' },
-                { nome: 'Campo Grande', media: 21.3, classificacao: 'moderate' },
-                { nome: 'Bangu', media: 28.6, classificacao: 'bad' },
-                { nome: 'Irajá', media: 15.8, classificacao: 'good' },
-                { nome: 'Pedra de Guaratiba', media: 12.4, classificacao: 'good' },
-                { nome: 'São Cristóvão', media: 22.1, classificacao: 'moderate' },
-                { nome: 'Tijuca', media: 16.8, classificacao: 'good' }
-            ];
+        function mostrarDadosVazios() {
+            document.getElementById('statMedia').innerHTML = '-- <span class="stat-unit">µg/m³</span>';
+            document.getElementById('statMediana').innerHTML = '-- <span class="stat-unit">µg/m³</span>';
+            document.getElementById('statDesvio').textContent = '--';
+            document.getElementById('statMinimo').innerHTML = '-- <span class="stat-unit">µg/m³</span>';
+            document.getElementById('statMaximo').innerHTML = '-- <span class="stat-unit">µg/m³</span>';
+            document.getElementById('statAmostras').textContent = '0';
             
+            document.getElementById('percentilBody').innerHTML = `
+                <tr><td colspan="3" style="text-align: center; color: var(--text-secondary);">
+                    Nenhum dado disponível para o período selecionado
+                </td></tr>`;
+            
+            document.getElementById('comparisonGrid').innerHTML = `
+                <div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 40px;">
+                    Nenhum dado disponível
+                </div>`;
+        }
+
+        function atualizarCardsEstatisticas(dados) {
+            const stats = dados.estatisticas;
+            const unidade = dados.unidade || 'µg/m³';
+            
+            document.getElementById('statMedia').innerHTML = `${stats.media.toFixed(1)} <span class="stat-unit">${unidade}</span>`;
+            document.getElementById('statMediana').innerHTML = `${stats.mediana.toFixed(1)} <span class="stat-unit">${unidade}</span>`;
+            document.getElementById('statDesvio').textContent = stats.desvio_padrao.toFixed(2);
+            document.getElementById('statMinimo').innerHTML = `${stats.minimo.toFixed(1)} <span class="stat-unit">${unidade}</span>`;
+            document.getElementById('statMaximo').innerHTML = `${stats.maximo.toFixed(1)} <span class="stat-unit">${unidade}</span>`;
+            document.getElementById('statAmostras').textContent = stats.total.toLocaleString('pt-BR');
+        }
+
+        function atualizarPercentis(dados) {
+            const percentis = dados.percentis;
+            const unidade = dados.unidade || 'µg/m³';
+            
+            if (!percentis || Object.keys(percentis).length === 0) {
+                document.getElementById('percentilBody').innerHTML = `
+                    <tr><td colspan="3" style="text-align: center; color: var(--text-secondary);">
+                        Dados insuficientes para calcular percentis
+                    </td></tr>`;
+                return;
+            }
+
+            const percentisList = [
+                { key: 'p10', label: 'P10', pct: 10 },
+                { key: 'p25', label: 'P25 (Q1)', pct: 25 },
+                { key: 'p50', label: 'P50 (Mediana)', pct: 50 },
+                { key: 'p75', label: 'P75 (Q3)', pct: 75 },
+                { key: 'p90', label: 'P90', pct: 90 },
+                { key: 'p95', label: 'P95', pct: 95 },
+                { key: 'p99', label: 'P99', pct: 99 }
+            ];
+
+            document.getElementById('percentilBody').innerHTML = percentisList.map(p => `
+                <tr>
+                    <td>${p.label}</td>
+                    <td>${percentis[p.key]?.toFixed(1) || '--'} ${unidade}</td>
+                    <td>
+                        <div class="percentile-bar">
+                            <div class="percentile-bar-fill" style="width: ${p.pct}%"></div>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function inicializarGraficos(dados) {
+            // Destruir gráficos existentes
+            if (histogramChart) histogramChart.destroy();
+            if (boxplotChart) boxplotChart.destroy();
+            if (distributionChart) distributionChart.destroy();
+            if (trendChart) trendChart.destroy();
+
+            const unidade = dados.unidade || 'µg/m³';
+
+            // Histograma
+            if (dados.histograma && dados.histograma.length > 0) {
+                const histCtx = document.getElementById('histogramChart').getContext('2d');
+                histogramChart = new Chart(histCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: dados.histograma.map(h => h.faixa),
+                        datasets: [{
+                            label: 'Frequência',
+                            data: dados.histograma.map(h => h.contagem),
+                            backgroundColor: 'rgba(0, 161, 154, 0.7)',
+                            borderColor: '#00A19A',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: { display: true, text: 'Frequência' }
+                            },
+                            x: {
+                                title: { display: true, text: `Faixas (${unidade})` }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Box Plot por Estação
+            if (dados.comparativo_estacoes && dados.comparativo_estacoes.length > 0) {
+                const boxCtx = document.getElementById('boxplotChart').getContext('2d');
+                const estacoes = dados.comparativo_estacoes.slice(0, 5);
+                
+                boxplotChart = new Chart(boxCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: estacoes.map(e => e.nome),
+                        datasets: [
+                            {
+                                label: 'Mínimo',
+                                data: estacoes.map(e => e.minimo),
+                                backgroundColor: 'rgba(0, 38, 58, 0.3)'
+                            },
+                            {
+                                label: 'Q1',
+                                data: estacoes.map(e => e.q1),
+                                backgroundColor: 'rgba(0, 161, 154, 0.4)'
+                            },
+                            {
+                                label: 'Mediana',
+                                data: estacoes.map(e => e.mediana),
+                                backgroundColor: 'rgba(0, 161, 154, 0.7)'
+                            },
+                            {
+                                label: 'Q3',
+                                data: estacoes.map(e => e.q3),
+                                backgroundColor: 'rgba(0, 161, 154, 0.4)'
+                            },
+                            {
+                                label: 'Máximo',
+                                data: estacoes.map(e => e.maximo),
+                                backgroundColor: 'rgba(0, 38, 58, 0.3)'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'top' }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: { display: true, text: unidade }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Curva de Distribuição
+            if (dados.estatisticas.media && dados.estatisticas.desvio_padrao) {
+                const distCtx = document.getElementById('distributionChart').getContext('2d');
+                const media = dados.estatisticas.media;
+                const desvio = dados.estatisticas.desvio_padrao || 1;
+                const minX = Math.max(0, media - 4 * desvio);
+                const maxX = media + 4 * desvio;
+                
+                const xValues = [];
+                const yValues = [];
+                const step = (maxX - minX) / 100;
+                
+                for (let x = minX; x <= maxX; x += step) {
+                    xValues.push(x.toFixed(1));
+                    const y = (1 / (desvio * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - media) / desvio, 2));
+                    yValues.push(y * 100);
+                }
+                
+                distributionChart = new Chart(distCtx, {
+                    type: 'line',
+                    data: {
+                        labels: xValues,
+                        datasets: [{
+                            label: 'Densidade',
+                            data: yValues,
+                            borderColor: '#00A19A',
+                            backgroundColor: 'rgba(0, 161, 154, 0.2)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: { display: true, text: 'Densidade' }
+                            },
+                            x: {
+                                title: { display: true, text: `Valor (${unidade})` }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Tendência Temporal
+            if (dados.serie_temporal && dados.serie_temporal.length > 0) {
+                const trendCtx = document.getElementById('trendChart').getContext('2d');
+                const serie = dados.serie_temporal;
+                
+                trendChart = new Chart(trendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: serie.map(s => {
+                            const d = new Date(s.data);
+                            return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                        }),
+                        datasets: [{
+                            label: 'Média Diária',
+                            data: serie.map(s => s.media),
+                            borderColor: '#00A19A',
+                            backgroundColor: 'rgba(0, 161, 154, 0.1)',
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 2
+                        }, {
+                            label: 'Tendência',
+                            data: serie.map(s => s.tendencia),
+                            borderColor: '#ef4444',
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'top' }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: { display: true, text: unidade }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function atualizarComparativo(estacoes) {
             const grid = document.getElementById('comparisonGrid');
+            
+            if (!estacoes || estacoes.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 40px;">
+                        Nenhum dado de estação disponível para comparação
+                    </div>`;
+                return;
+            }
+
+            const unidade = dadosEstatisticas?.unidade || 'µg/m³';
+            
             grid.innerHTML = estacoes.map(e => `
                 <div class="comparison-item">
                     <div class="comparison-station">${e.nome}</div>
-                    <div class="comparison-value">${e.media} <small>µg/m³</small></div>
+                    <div class="comparison-value">${e.media.toFixed(1)} <small>${unidade}</small></div>
                     <span class="comparison-badge ${e.classificacao}">
                         ${e.classificacao === 'good' ? 'Bom' : e.classificacao === 'moderate' ? 'Moderado' : 'Inadequado'}
                     </span>
@@ -904,13 +965,49 @@
             `).join('');
         }
 
-        function atualizarEstatisticas() {
-            // Em produção, buscaria da API
-            console.log('Atualizando estatísticas...');
+        async function atualizarEstatisticas() {
+            await carregarEstatisticas();
         }
 
         function exportarEstatisticas() {
-            alert('Funcionalidade de exportação será implementada');
+            if (!dadosEstatisticas) {
+                alert('Nenhum dado para exportar');
+                return;
+            }
+            
+            // Criar conteúdo do relatório
+            const stats = dadosEstatisticas.estatisticas;
+            const percentis = dadosEstatisticas.percentis;
+            const unidade = dadosEstatisticas.unidade;
+            
+            let conteudo = 'RELATÓRIO DE ESTATÍSTICAS - QUALIDADE DO AR\n';
+            conteudo += '=' .repeat(50) + '\n\n';
+            conteudo += `Data de geração: ${new Date().toLocaleString('pt-BR')}\n`;
+            conteudo += `Período: ${dadosEstatisticas.periodo?.dias || 30} dias\n\n`;
+            
+            conteudo += 'ESTATÍSTICAS DESCRITIVAS\n';
+            conteudo += '-'.repeat(30) + '\n';
+            conteudo += `Amostras: ${stats.total}\n`;
+            conteudo += `Média: ${stats.media} ${unidade}\n`;
+            conteudo += `Mediana: ${stats.mediana} ${unidade}\n`;
+            conteudo += `Desvio Padrão: ${stats.desvio_padrao}\n`;
+            conteudo += `Mínimo: ${stats.minimo} ${unidade}\n`;
+            conteudo += `Máximo: ${stats.maximo} ${unidade}\n\n`;
+            
+            conteudo += 'PERCENTIS\n';
+            conteudo += '-'.repeat(30) + '\n';
+            Object.entries(percentis).forEach(([key, val]) => {
+                conteudo += `${key.toUpperCase()}: ${val} ${unidade}\n`;
+            });
+            
+            // Criar download
+            const blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `estatisticas_${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
         }
 
         function fazerLogout() {
