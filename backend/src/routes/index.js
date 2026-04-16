@@ -249,4 +249,18 @@ router.get('/integracao/rio/status', autenticar, integracaoController.statusInte
 router.get('/integracao/rio/preview', autenticar, integracaoController.previewDadosRio);
 router.post('/integracao/rio/importar', autenticar, autorizar('admin', 'supervisor'), integracaoController.importarDadosRio);
 
+// ========================================
+// ROTAS DE SUPORTE TÉCNICO
+// ========================================
+const suporteController = require('../controllers/suporteController');
+
+// Criar chamado (público - não requer autenticação para permitir usuários com problema de login)
+router.post('/suporte/chamado', suporteController.criarChamado);
+
+// Listar chamados do usuário (requer autenticação)
+router.get('/suporte/chamados', autenticar, suporteController.listar);
+
+// Verificar config de email (admin apenas)
+router.get('/suporte/config', autenticar, autorizar('admin'), suporteController.verificarConfig);
+
 module.exports = router;
