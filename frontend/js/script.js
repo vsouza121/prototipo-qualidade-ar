@@ -77,7 +77,7 @@ function initChart() {
         return;
     }
     
-    // Dados simulados das últimas 24 horas
+    // Dados de demonstração (gráficos dinâmicos usam API real)
     const labels = [];
     const now = new Date();
     for (let i = 23; i >= 0; i--) {
@@ -85,7 +85,7 @@ function initChart() {
         labels.push(hour.getHours() + ':00');
     }
     
-    // Dados simulados para diferentes estações
+    // Dados de exemplo para visualização inicial
     const data = {
         labels: labels,
         datasets: [

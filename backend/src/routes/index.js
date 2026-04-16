@@ -65,6 +65,7 @@ router.get('/medicoes/rosa-ventos', autenticar, medicoesController.rosaVentos);
 router.get('/medicoes/radar-poluentes', autenticar, medicoesController.radarPoluentes);
 router.get('/medicoes/sazonalidade', autenticar, medicoesController.sazonalidade);
 router.get('/medicoes/validacao', autenticar, medicoesController.listarParaValidacao);
+router.get('/medicoes/ultimos/:estacao_id', autenticar, medicoesController.ultimosDados);
 router.get('/medicoes/estacao/:id', autenticar, medicoesController.porEstacao);
 router.post('/medicoes', autenticar, autorizar('admin', 'supervisor', 'analista'), medicoesController.criar);
 router.post('/medicoes/batch', autenticar, autorizar('admin', 'supervisor'), medicoesController.criarLote);
@@ -243,11 +244,61 @@ router.delete('/parametros/:id', autenticar, autorizar('admin'), async (req, res
 // ROTAS DE INTEGRAÇÃO COM APIs EXTERNAS
 // ========================================
 const integracaoController = require('../controllers/integracaoController');
+const scheduler = require('../jobs/importacaoScheduler');
 
 // API do Rio de Janeiro (SMAC)
 router.get('/integracao/rio/status', autenticar, integracaoController.statusIntegracaoRio);
 router.get('/integracao/rio/preview', autenticar, integracaoController.previewDadosRio);
 router.post('/integracao/rio/importar', autenticar, autorizar('admin', 'supervisor'), integracaoController.importarDadosRio);
+
+// ========================================
+// ROTAS DO SCHEDULER DE IMPORTAÇÃO
+// ========================================
+
+// Status do scheduler
+router.get('/scheduler/status', autenticar, (req, res) => {
+    const status = scheduler.getStatus();
+    res.json({ sucesso: true, dados: status });
+});
+
+// Configurar intervalo de importação (em minutos)
+router.post('/scheduler/intervalo', autenticar, autorizar('admin'), (req, res) => {
+    const { minutos } = req.body;
+    if (!minutos || minutos < 5 || minutos > 120) {
+        return res.status(400).json({ 
+            sucesso: false, 
+            mensagem: 'Intervalo deve ser entre 5 e 120 minutos' 
+        });
+    }
+    const resultado = scheduler.configurarIntervalo(minutos);
+    res.json({ 
+        sucesso: true, 
+        mensagem: `Intervalo configurado para ${minutos} minutos`,
+        dados: resultado 
+    });
+});
+
+// Parar scheduler
+router.post('/scheduler/parar', autenticar, autorizar('admin'), (req, res) => {
+    scheduler.pararJobRio();
+    res.json({ sucesso: true, mensagem: 'Scheduler parado' });
+});
+
+// Iniciar scheduler
+router.post('/scheduler/iniciar', autenticar, autorizar('admin'), (req, res) => {
+    scheduler.iniciarJobRio();
+    res.json({ sucesso: true, mensagem: 'Scheduler iniciado', dados: scheduler.getStatus() });
+});
+
+// Executar importação imediata
+router.post('/scheduler/executar', autenticar, autorizar('admin', 'supervisor'), async (req, res) => {
+    try {
+        const resultado = await scheduler.executarImediato('rio');
+        res.json({ sucesso: true, mensagem: 'Importação executada', dados: resultado });
+    } catch (e) {
+        res.status(500).json({ sucesso: false, mensagem: e.message });
+    }
+});
 
 // ========================================
 // ROTAS DE SUPORTE TÉCNICO

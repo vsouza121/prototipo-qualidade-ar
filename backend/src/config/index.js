@@ -17,7 +17,10 @@ module.exports = {
       options: {
         encrypt: false, // true para Azure
         trustServerCertificate: true, // desenvolvimento local
-        enableArithAbort: true
+        enableArithAbort: true,
+        // Para Windows Authentication:
+        trustedConnection: true,
+        integratedSecurity: true
       }
     },
     pool: {

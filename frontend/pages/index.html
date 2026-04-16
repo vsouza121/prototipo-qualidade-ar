@@ -1400,26 +1400,53 @@
             });
         }
 
-        // Atualizar rosa dos ventos (dados simulados - backend não possui dados de vento)
+        // Atualizar rosa dos ventos (dados de vento - depende de sensores específicos)
         async function atualizarRosaVentos() {
             const estacaoId = document.getElementById('selectEstacaoVento')?.value;
             
             if (!estacaoId) return;
 
-            // Simular dados de vento (em produção, viriam de sensores de vento)
-            const velocidades = [2.1, 3.5, 4.2, 2.8, 3.1, 2.9, 3.8, 4.0];
-            const direcoes = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+            try {
+                // Tentar buscar dados reais de vento da estação
+                const response = await ApiClient.get(`/medicoes/tempo-real`);
+                if (response && response.sucesso) {
+                    const estacao = response.dados.find(e => e.estacao.id == estacaoId);
+                    if (estacao && estacao.medicoes) {
+                        // VV = Velocidade do Vento, DV = Direção do Vento
+                        const velVento = estacao.medicoes['VV'];
+                        const dirVento = estacao.medicoes['DV'];
+                        
+                        const windStats = document.querySelectorAll('.wind-stat-value');
+                        if (windStats[0]) {
+                            windStats[0].textContent = velVento ? 
+                                `${velVento.valor.toFixed(1)} m/s` : '-- m/s';
+                        }
+                        if (windStats[1]) {
+                            windStats[1].textContent = dirVento ? 
+                                converterDirecaoVento(dirVento.valor) : '--';
+                        }
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.log('Dados de vento não disponíveis:', error.message);
+            }
             
-            const velMedia = velocidades[Math.floor(Math.random() * velocidades.length)].toFixed(1);
-            const dirPredominante = direcoes[Math.floor(Math.random() * direcoes.length)];
-            
-            // Atualizar UI
+            // Fallback se não houver dados de vento
             const windStats = document.querySelectorAll('.wind-stat-value');
-            if (windStats[0]) windStats[0].textContent = velMedia + ' m/s';
-            if (windStats[1]) windStats[1].textContent = dirPredominante;
+            if (windStats[0]) windStats[0].textContent = '-- m/s';
+            if (windStats[1]) windStats[1].textContent = '--';
         }
 
-        // Atualizar lista de disponibilidade (compacta)
+        // Converter graus para direção cardinal
+        function converterDirecaoVento(graus) {
+            if (graus == null) return '--';
+            const direcoes = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+            const indice = Math.round(graus / 45) % 8;
+            return direcoes[indice];
+        }
+
+        // Atualizar lista de disponibilidade (compacta) - DADOS REAIS
         async function atualizarDisponibilidade() {
             try {
                 let url = '/estacoes';
@@ -1448,9 +1475,27 @@
                         const estacoesExibir = estacoes.slice(0, 8);
                         
                         container.innerHTML = estacoesExibir.map(est => {
-                            // Calcular disponibilidade (simulado)
-                            const disponibilidade = est.ativo ? (85 + Math.random() * 15).toFixed(0) : 0;
-                            const colorClass = disponibilidade >= 95 ? 'success' : (disponibilidade >= 80 ? 'warning' : 'danger');
+                            // Calcular disponibilidade real baseada na última comunicação
+                            let disponibilidade = 0;
+                            if (est.ativo && est.ultima_comunicacao) {
+                                const agora = new Date();
+                                const ultimaComm = new Date(est.ultima_comunicacao);
+                                const diffMinutos = (agora - ultimaComm) / (1000 * 60);
+                                
+                                // Se comunicou nos últimos 10 min = 100%, depois diminui gradualmente
+                                if (diffMinutos <= 10) {
+                                    disponibilidade = 100;
+                                } else if (diffMinutos <= 60) {
+                                    disponibilidade = Math.round(100 - ((diffMinutos - 10) * 0.5));
+                                } else if (diffMinutos <= 1440) { // 24h
+                                    disponibilidade = Math.round(75 - ((diffMinutos - 60) / 60));
+                                } else {
+                                    disponibilidade = Math.max(0, Math.round(50 - ((diffMinutos - 1440) / 1440) * 50));
+                                }
+                            }
+                            
+                            const colorClass = disponibilidade >= 95 ? 'success' : 
+                                             (disponibilidade >= 80 ? 'warning' : 'danger');
                             
                             return `
                                 <div class="availability-item-compact">

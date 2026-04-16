@@ -244,6 +244,54 @@
             border: none;
             color: white;
         }
+        
+        /* Período Personalizado */
+        .periodo-personalizado {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .periodo-personalizado.visible {
+            display: flex;
+        }
+        
+        .periodo-personalizado label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        
+        .periodo-personalizado input[type="date"] {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 13px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        
+        .periodo-personalizado .btn-aplicar-periodo {
+            padding: 8px 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .periodo-personalizado .btn-aplicar-periodo:hover {
+            background: var(--primary-dark);
+        }
     </style>
 </head>
 <body>
@@ -438,16 +486,28 @@
                     
                     <div class="filtro-grupo">
                         <label>Período</label>
-                        <select class="select-small" id="selectPeriodo" onchange="atualizarGrafico()">
+                        <select class="select-small" id="selectPeriodo" onchange="alterarPeriodo()">
                             <option value="24h">Últimas 24 horas</option>
                             <option value="7d">Última semana</option>
                             <option value="30d">Último mês</option>
                             <option value="90d">Últimos 3 meses</option>
+                            <option value="personalizado">Personalizado</option>
                         </select>
                     </div>
                     
                     <button class="btn-primary" onclick="atualizarGrafico()" style="margin-left: auto;">
                         <i class="fas fa-sync-alt"></i> Atualizar
+                    </button>
+                </div>
+                
+                <!-- Período Personalizado -->
+                <div class="periodo-personalizado" id="periodoPersonalizado">
+                    <label>De:</label>
+                    <input type="date" id="dataInicio" />
+                    <label>Até:</label>
+                    <input type="date" id="dataFim" />
+                    <button class="btn-aplicar-periodo" onclick="aplicarPeriodoPersonalizado()">
+                        <i class="fas fa-check"></i> Aplicar
                     </button>
                 </div>
                 
@@ -725,6 +785,54 @@
             }
         });
         
+        // Variáveis para período personalizado
+        let periodoPersonalizadoAtivo = false;
+        let dataInicioPersonalizado = null;
+        let dataFimPersonalizado = null;
+
+        function alterarPeriodo() {
+            const periodo = document.getElementById('selectPeriodo').value;
+            const divPersonalizado = document.getElementById('periodoPersonalizado');
+            
+            if (periodo === 'personalizado') {
+                divPersonalizado.classList.add('visible');
+                periodoPersonalizadoAtivo = true;
+                
+                // Definir valores padrão (último mês)
+                const hoje = new Date();
+                const mesPassado = new Date();
+                mesPassado.setMonth(mesPassado.getMonth() - 1);
+                
+                document.getElementById('dataFim').value = hoje.toISOString().split('T')[0];
+                document.getElementById('dataInicio').value = mesPassado.toISOString().split('T')[0];
+            } else {
+                divPersonalizado.classList.remove('visible');
+                periodoPersonalizadoAtivo = false;
+                dataInicioPersonalizado = null;
+                dataFimPersonalizado = null;
+                atualizarGrafico();
+            }
+        }
+
+        function aplicarPeriodoPersonalizado() {
+            const dataInicio = document.getElementById('dataInicio').value;
+            const dataFim = document.getElementById('dataFim').value;
+            
+            if (!dataInicio || !dataFim) {
+                alert('Por favor, selecione as datas de início e fim.');
+                return;
+            }
+            
+            if (new Date(dataInicio) > new Date(dataFim)) {
+                alert('A data de início não pode ser maior que a data de fim.');
+                return;
+            }
+            
+            dataInicioPersonalizado = dataInicio;
+            dataFimPersonalizado = dataFim;
+            atualizarGrafico();
+        }
+
         // Atualizar gráfico
         async function atualizarGrafico() {
             const parametro = document.getElementById('selectParametro').value || 'PM2.5';
@@ -735,12 +843,24 @@
                 return;
             }
             
-            const horasMap = { '24h': 24, '7d': 168, '30d': 720, '90d': 2160 };
-            const horas = horasMap[periodo] || 24;
+            let horas;
+            let queryParams = `parametro=${parametro}`;
+            
+            if (periodoPersonalizadoAtivo && dataInicioPersonalizado && dataFimPersonalizado) {
+                // Período personalizado
+                queryParams += `&data_inicio=${dataInicioPersonalizado}&data_fim=${dataFimPersonalizado}`;
+                // Calcular horas aproximadas para o gráfico
+                const diffMs = new Date(dataFimPersonalizado) - new Date(dataInicioPersonalizado);
+                horas = Math.ceil(diffMs / (1000 * 60 * 60)) + 24;
+            } else {
+                const horasMap = { '24h': 24, '7d': 168, '30d': 720, '90d': 2160 };
+                horas = horasMap[periodo] || 24;
+                queryParams += `&horas=${horas}`;
+            }
             
             try {
                 const promessas = estacoesSelecionadas.map(id => 
-                    ApiClient.get(`/medicoes/estacao/${id}?horas=${horas}&parametro=${parametro}`)
+                    ApiClient.get(`/medicoes/estacao/${id}?${queryParams}`)
                 );
                 
                 const respostas = await Promise.all(promessas);

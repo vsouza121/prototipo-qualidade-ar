@@ -97,19 +97,29 @@ const mapa = async (req, res) => {
       attributes: ['id', 'codigo', 'nome', 'latitude', 'longitude', 'status', 'ultima_comunicacao', 'ativo']
     });
 
-    // Função para gerar coordenadas aleatórias no Brasil (quando não há coordenadas válidas)
-    const getRandomLat = () => -5 - Math.random() * 25; // -5 a -30
-    const getRandomLng = () => -35 - Math.random() * 20; // -35 a -55
+    // Importar serviço de IQAr para calcular valores reais
+    const iqarService = require('../services/iqarService');
 
-    // Adicionar IQAr simulado (em produção, buscar do banco)
-    const dadosMapa = estacoes.map(estacao => {
+    // Processar cada estação com IQAr real
+    const dadosMapa = await Promise.all(estacoes.map(async (estacao) => {
       let lat = parseFloat(estacao.latitude);
       let lng = parseFloat(estacao.longitude);
       
-      // Se coordenadas inválidas, gerar aleatórias
+      // Se coordenadas inválidas, usar coordenadas do Rio de Janeiro com pequeno offset
       if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) {
-        lat = getRandomLat();
-        lng = getRandomLng();
+        // Gerar offset baseado no ID para espalhar as estações no mapa
+        const offsetLat = (estacao.id % 10) * 0.05;
+        const offsetLng = (estacao.id % 7) * 0.07;
+        lat = -22.9068 + offsetLat - 0.25;
+        lng = -43.1729 + offsetLng - 0.35;
+      }
+      
+      // Buscar IQAr real do banco de dados
+      let iqarData = { iqar: null, classificacao: 'N/A', cor: '#6b7280', poluente_predominante: null };
+      try {
+        iqarData = await iqarService.calcularIQArEstacao(estacao.id);
+      } catch (e) {
+        // Se não conseguir calcular, mantém valores padrão
       }
       
       return {
@@ -122,11 +132,12 @@ const mapa = async (req, res) => {
         status: estacao.status,
         ativo: estacao.ativo,
         ultimaComunicacao: estacao.ultima_comunicacao,
-        // Em produção, buscar IQAr real do banco
-        iqar: Math.floor(Math.random() * 150) + 20,
-        classificacao: 'Bom' // calcular baseado no IQAr real
+        iqar: iqarData.iqar || 0,
+        classificacao: iqarData.classificacao || 'N/A',
+        cor: iqarData.cor,
+        poluente_predominante: iqarData.poluente_predominante
       };
-    });
+    }));
 
     res.json({
       sucesso: true,

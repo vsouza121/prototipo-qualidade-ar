@@ -547,7 +547,7 @@
     </script>
     
     <script>
-        // Dados das estações (simulados - serão carregados da API)
+        // Dados das estações (carregados do banco de dados via API)
         let estacoes = [];
         let estacoesExibidas = [];
 
@@ -577,10 +577,10 @@
         // Carregar unidades no filtro
         async function carregarUnidades() {
             try {
-                const response = await ApiClient.get('/dashboard');
-                if (response && response.sucesso && response.dados.unidades) {
+                const response = await ApiClient.get('/unidades');
+                if (response && response.sucesso && response.dados) {
                     const select = document.getElementById('filtroUnidade');
-                    response.dados.unidades.forEach(unidade => {
+                    response.dados.forEach(unidade => {
                         select.innerHTML += `<option value="${unidade.id}">${unidade.nome}</option>`;
                     });
                 }
@@ -589,38 +589,90 @@
             }
         }
 
-        // Carregar estações
+        // Limites CONAMA para classificação de alertas
+        const LIMITES_ALERTA = {
+            'PM25': { warning: 50, critical: 75 },
+            'PM2.5': { warning: 50, critical: 75 },
+            'PM10': { warning: 100, critical: 150 },
+            'O3': { warning: 130, critical: 160 },
+            'NO2': { warning: 240, critical: 320 },
+            'SO2': { warning: 40, critical: 365 },
+            'CO': { warning: 11, critical: 13 }
+        };
+
+        // Determinar status baseado nos valores dos parâmetros
+        function determinarStatus(medicoes, iqar) {
+            let status = 'normal';
+            
+            // Verifica cada parâmetro se excede limites
+            for (const [codigo, dados] of Object.entries(medicoes)) {
+                const limites = LIMITES_ALERTA[codigo];
+                if (limites && dados.valor) {
+                    if (dados.valor >= limites.critical) {
+                        return 'critical';
+                    } else if (dados.valor >= limites.warning) {
+                        status = 'warning';
+                    }
+                }
+            }
+            
+            // Verifica IQAr
+            if (iqar > 120) return 'critical';
+            if (iqar > 80) status = status === 'normal' ? 'warning' : status;
+            
+            return status;
+        }
+
+        // Verificar alerta para um parâmetro
+        function verificarAlerta(codigo, valor) {
+            const limites = LIMITES_ALERTA[codigo];
+            if (!limites || !valor) return false;
+            return valor >= limites.warning;
+        }
+
+        // Carregar estações com dados reais do banco
         async function carregarEstacoes() {
             try {
-                const response = await EstacoesService.listar();
+                // Buscar medições em tempo real (dados do banco de dados)
+                const response = await ApiClient.get('/medicoes/tempo-real');
+                
                 if (response && response.sucesso) {
-                    estacoes = response.dados.map(est => ({
-                        id: est.id,
-                        nome: est.nome,
-                        codigo: est.codigo,
-                        unidade: est.Unidade ? est.Unidade.nome : 'N/A',
-                        unidadeId: est.unidadeId,
-                        status: est.ativo ? 'normal' : 'offline',
-                        iqar: Math.floor(Math.random() * 150) + 10, // Simulado
-                        parametros: gerarParametrosSimulados()
-                    }));
-
-                    // Simular alguns alertas
-                    if (estacoes.length > 2) {
-                        estacoes[1].status = 'warning';
-                        estacoes[1].parametros.SO2.valor = 145;
-                        estacoes[1].parametros.SO2.alerta = true;
-                    }
-                    if (estacoes.length > 4) {
-                        estacoes[3].status = 'critical';
-                        estacoes[3].parametros.PM25.valor = 89;
-                        estacoes[3].parametros.PM25.alerta = true;
-                        estacoes[3].iqar = 165;
-                    }
+                    estacoes = response.dados.map(item => {
+                        // Formatar parâmetros das medições reais
+                        const parametros = {};
+                        for (const [codigo, dados] of Object.entries(item.medicoes || {})) {
+                            parametros[codigo] = {
+                                valor: dados.valor !== null ? dados.valor.toFixed(1) : '--',
+                                unidade: dados.unidade || 'µg/m³',
+                                alerta: verificarAlerta(codigo, dados.valor),
+                                data_hora: dados.data_hora
+                            };
+                        }
+                        
+                        // Determinar status baseado nos dados reais
+                        const status = item.estacao.status === 'offline' ? 'offline' : 
+                                        determinarStatus(item.medicoes || {}, item.iqar || 0);
+                        
+                        return {
+                            id: item.estacao.id,
+                            nome: item.estacao.nome,
+                            codigo: item.estacao.codigo,
+                            unidade: item.estacao.unidade_nome || 'N/A',
+                            unidadeId: item.estacao.unidade_id,
+                            status: status,
+                            iqar: item.iqar || 0,
+                            classificacao: item.classificacao || 'N/A',
+                            poluente_predominante: item.poluente_predominante || '-',
+                            parametros: parametros,
+                            ultima_atualizacao: item.atualizadoEm
+                        };
+                    });
 
                     renderizarEstacoes();
                     atualizarContadores();
                     atualizarHora();
+                    
+                    console.log(`[Supervisório] ${estacoes.length} estações carregadas com dados do banco`);
                 }
             } catch (error) {
                 console.error('Erro ao carregar estações:', error);
@@ -632,18 +684,6 @@
                     </div>
                 `;
             }
-        }
-
-        // Gerar parâmetros simulados
-        function gerarParametrosSimulados() {
-            return {
-                PM25: { valor: (Math.random() * 40 + 5).toFixed(1), unidade: 'µg/m³', alerta: false },
-                PM10: { valor: (Math.random() * 80 + 10).toFixed(1), unidade: 'µg/m³', alerta: false },
-                O3: { valor: (Math.random() * 100 + 20).toFixed(1), unidade: 'µg/m³', alerta: false },
-                NO2: { valor: (Math.random() * 60 + 5).toFixed(1), unidade: 'µg/m³', alerta: false },
-                SO2: { valor: (Math.random() * 50 + 5).toFixed(1), unidade: 'µg/m³', alerta: false },
-                CO: { valor: (Math.random() * 5 + 0.5).toFixed(2), unidade: 'ppm', alerta: false }
-            };
         }
 
         // Renderizar estações
@@ -665,7 +705,12 @@
                 return;
             }
 
-            grid.innerHTML = estacoesExibidas.map(estacao => `
+            grid.innerHTML = estacoesExibidas.map(estacao => {
+                // Formatar os parâmetros para exibição (limitar a 6)
+                const parametrosArray = Object.entries(estacao.parametros).slice(0, 6);
+                const temParametros = parametrosArray.length > 0;
+                
+                return `
                 <div class="station-card status-${estacao.status}">
                     <div class="station-header">
                         <div class="station-info">
@@ -679,24 +724,30 @@
                     </div>
                     <div class="station-body">
                         <div class="parameters-grid">
-                            ${Object.entries(estacao.parametros).map(([nome, param]) => `
+                            ${temParametros ? parametrosArray.map(([nome, param]) => `
                                 <div class="parameter-item ${param.alerta ? 'alert' : ''}">
                                     <div class="param-name">${nome}</div>
                                     <div class="param-value">${param.valor}</div>
                                     <div class="param-unit">${param.unidade}</div>
                                 </div>
-                            `).join('')}
+                            `).join('') : `
+                                <div style="grid-column: 1 / -1; text-align: center; padding: 20px; color: #94a3b8;">
+                                    <i class="fas fa-database"></i> Sem medições disponíveis
+                                </div>
+                            `}
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
                             <span class="iqar-badge ${getIqarClass(estacao.iqar)}">
                                 <i class="fas fa-leaf"></i>
-                                IQAr: ${estacao.iqar} - ${getIqarLabel(estacao.iqar)}
+                                IQAr: ${estacao.iqar || '--'} - ${estacao.classificacao || getIqarLabel(estacao.iqar)}
                             </span>
+                            ${estacao.poluente_predominante && estacao.poluente_predominante !== '-' ? 
+                                `<span style="font-size: 11px; color: #64748b;">Poluente: ${estacao.poluente_predominante}</span>` : ''}
                         </div>
                     </div>
                     <div class="station-footer">
                         <div class="last-update">
-                            <i class="fas fa-clock"></i> ${new Date().toLocaleTimeString('pt-BR')}
+                            <i class="fas fa-clock"></i> ${formatarDataHora(estacao.ultima_atualizacao)}
                         </div>
                         <div class="station-actions">
                             <button class="btn-history" onclick="verHistorico(${estacao.id})">
@@ -708,12 +759,18 @@
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
+        }
+
+        // Formatar data/hora
+        function formatarDataHora(data) {
+            if (!data) return new Date().toLocaleTimeString('pt-BR');
+            return new Date(data).toLocaleTimeString('pt-BR');
         }
 
         // Classificação IQAr
         function getIqarClass(valor) {
-            if (valor <= 40) return 'bom';
+            if (!valor || valor <= 40) return 'bom';
             if (valor <= 80) return 'moderado';
             if (valor <= 120) return 'ruim';
             if (valor <= 200) return 'muito-ruim';
@@ -721,7 +778,7 @@
         }
 
         function getIqarLabel(valor) {
-            if (valor <= 40) return 'Bom';
+            if (!valor || valor <= 40) return 'Bom';
             if (valor <= 80) return 'Moderado';
             if (valor <= 120) return 'Ruim';
             if (valor <= 200) return 'Muito Ruim';
@@ -747,18 +804,15 @@
             document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('pt-BR');
         }
 
-        // Atualizar dados
+        // Atualizar dados - buscar novos dados do banco
         async function atualizarDados() {
-            // Simular atualização de valores
-            estacoes.forEach(estacao => {
-                Object.keys(estacao.parametros).forEach(key => {
-                    const variacao = (Math.random() - 0.5) * 5;
-                    estacao.parametros[key].valor = Math.max(0, parseFloat(estacao.parametros[key].valor) + variacao).toFixed(key === 'CO' ? 2 : 1);
-                });
-            });
-
-            renderizarEstacoes();
-            atualizarHora();
+            try {
+                // Recarregar dados do banco de dados
+                await carregarEstacoes();
+                console.log('[Supervisório] Dados atualizados do banco');
+            } catch (error) {
+                console.error('Erro ao atualizar dados:', error);
+            }
         }
 
         // Filtrar estações

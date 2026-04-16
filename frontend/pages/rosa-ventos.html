@@ -194,6 +194,72 @@
             color: var(--text-secondary);
             font-size: 11px;
         }
+        
+        /* Estilos para a rosa dos ventos estilo INEA */
+        .wind-rose-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #windRoseCanvas {
+            max-width: 100%;
+            max-height: 350px;
+        }
+        
+        .wind-rose-legend {
+            margin-top: 16px;
+            padding: 16px;
+            background: var(--bg-primary);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+        }
+        
+        .wind-rose-legend-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+        
+        .wind-rose-legend-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+        
+        .wind-rose-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            padding: 4px 8px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+        }
+        
+        .wind-rose-legend-color {
+            width: 20px;
+            height: 12px;
+            border-radius: 2px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .wind-rose-calmaria {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .wind-rose-calmaria strong {
+            color: var(--text-primary);
+        }
 
         .no-data-message {
             text-align: center;
@@ -209,6 +275,54 @@
 
         .no-data-message p {
             font-size: 14px;
+        }
+        
+        /* Período Personalizado */
+        .periodo-personalizado {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .periodo-personalizado.visible {
+            display: flex;
+        }
+        
+        .periodo-personalizado label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        
+        .periodo-personalizado input[type="date"] {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 13px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        
+        .periodo-personalizado .btn-aplicar-periodo {
+            padding: 8px 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .periodo-personalizado .btn-aplicar-periodo:hover {
+            background: var(--primary-dark);
         }
     </style>
 </head>
@@ -395,12 +509,24 @@
                 </div>
                 <div class="filter-group">
                     <label>Período:</label>
-                    <select class="select-small" id="selectPeriodo" onchange="atualizarDados()">
+                    <select class="select-small" id="selectPeriodo" onchange="alterarPeriodo()">
                         <option value="7">Últimos 7 dias</option>
                         <option value="30" selected>Últimos 30 dias</option>
                         <option value="90">Últimos 90 dias</option>
+                        <option value="personalizado">Personalizado</option>
                     </select>
                 </div>
+            </div>
+            
+            <!-- Período Personalizado -->
+            <div class="periodo-personalizado" id="periodoPersonalizado">
+                <label>De:</label>
+                <input type="date" id="dataInicio" />
+                <label>Até:</label>
+                <input type="date" id="dataFim" />
+                <button class="btn-aplicar-periodo" onclick="aplicarPeriodoPersonalizado()">
+                    <i class="fas fa-check"></i> Aplicar
+                </button>
             </div>
 
             <!-- Stats Cards -->
@@ -433,13 +559,18 @@
                 <div class="wind-card">
                     <h3><i class="fas fa-compass"></i> Rosa dos Ventos</h3>
                     <div class="chart-wrapper">
-                        <canvas id="windRoseChart"></canvas>
+                        <div class="wind-rose-container">
+                            <canvas id="windRoseCanvas" width="400" height="400"></canvas>
+                        </div>
                     </div>
-                    <!-- Legenda da Rosa dos Ventos -->
-                    <div class="wind-legend" id="windLegend">
-                        <div class="legend-title">Direções Cardeais</div>
-                        <div class="legend-items" id="legendItems">
+                    <!-- Legenda da Rosa dos Ventos - Faixas de Velocidade -->
+                    <div class="wind-rose-legend">
+                        <div class="wind-rose-legend-title">VV - Velocidade do Vento [m/s]</div>
+                        <div class="wind-rose-legend-items" id="windRoseLegendItems">
                             <!-- Preenchido via JS -->
+                        </div>
+                        <div class="wind-rose-calmaria" id="windRoseCalmaria">
+                            Calmarias: <strong>--</strong>
                         </div>
                     </div>
                 </div>
@@ -552,7 +683,7 @@
     </script>
     
     <script>
-        let windRoseChart, hourlyChart, radarPoluentesChart;
+        let hourlyChart, radarPoluentesChart;
         let dadosRosaVentos = null;
         let dadosRadarPoluentes = null;
         
@@ -627,9 +758,56 @@
             }
         }
 
+        // Variáveis para período personalizado
+        let periodoPersonalizadoAtivo = false;
+        let dataInicioPersonalizado = null;
+        let dataFimPersonalizado = null;
+
+        function alterarPeriodo() {
+            const periodo = document.getElementById('selectPeriodo').value;
+            const divPersonalizado = document.getElementById('periodoPersonalizado');
+            
+            if (periodo === 'personalizado') {
+                divPersonalizado.classList.add('visible');
+                periodoPersonalizadoAtivo = true;
+                
+                const hoje = new Date();
+                const mesPassado = new Date();
+                mesPassado.setMonth(mesPassado.getMonth() - 1);
+                
+                document.getElementById('dataFim').value = hoje.toISOString().split('T')[0];
+                document.getElementById('dataInicio').value = mesPassado.toISOString().split('T')[0];
+            } else {
+                divPersonalizado.classList.remove('visible');
+                periodoPersonalizadoAtivo = false;
+                dataInicioPersonalizado = null;
+                dataFimPersonalizado = null;
+                atualizarDados();
+            }
+        }
+
+        function aplicarPeriodoPersonalizado() {
+            const dataInicio = document.getElementById('dataInicio').value;
+            const dataFim = document.getElementById('dataFim').value;
+            
+            if (!dataInicio || !dataFim) {
+                alert('Por favor, selecione as datas de início e fim.');
+                return;
+            }
+            
+            if (new Date(dataInicio) > new Date(dataFim)) {
+                alert('A data de início não pode ser maior que a data de fim.');
+                return;
+            }
+            
+            dataInicioPersonalizado = dataInicio;
+            dataFimPersonalizado = dataFim;
+            atualizarDados();
+        }
+
         async function carregarDadosRosaVentos() {
             const estacaoId = document.getElementById('selectEstacao').value;
-            const dias = document.getElementById('selectPeriodo').value;
+            const periodo = document.getElementById('selectPeriodo').value;
 
             if (!estacaoId) {
                 mostrarMensagemVazia('Selecione uma estação para visualizar os dados');
@@ -637,7 +815,16 @@
             }
 
             try {
-                const response = await ApiClient.get(`/medicoes/rosa-ventos?estacao_id=${estacaoId}&dias=${dias}`);
+                let endpoint = `/medicoes/rosa-ventos?estacao_id=${estacaoId}`;
+                
+                if (periodoPersonalizadoAtivo && dataInicioPersonalizado && dataFimPersonalizado) {
+                    endpoint += `&data_inicio=${dataInicioPersonalizado}&data_fim=${dataFimPersonalizado}`;
+                } else {
+                    const dias = periodo === 'personalizado' ? 30 : periodo;
+                    endpoint += `&dias=${dias}`;
+                }
+                
+                const response = await ApiClient.get(endpoint);
                 
                 if (response.sucesso && response.dados) {
                     dadosRosaVentos = response.dados;
@@ -647,7 +834,6 @@
                         desenharRosaVentos(response.dados);
                         desenharGraficoHorario(response.dados.porHora);
                         preencherTabelaDirecoes(response.dados.tabelaDirecoes);
-                        atualizarLegenda(response.dados);
                     } else {
                         mostrarMensagemVazia('Sem dados de vento para o período selecionado');
                     }
@@ -672,14 +858,25 @@
                 <tr><td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 20px;">${mensagem}</td></tr>
             `;
             
-            // Limpar legenda
-            document.getElementById('legendItems').innerHTML = '';
-            
-            // Destruir gráficos se existirem
-            if (windRoseChart) {
-                windRoseChart.destroy();
-                windRoseChart = null;
+            // Limpar legenda da rosa dos ventos
+            const legendItems = document.getElementById('windRoseLegendItems');
+            if (legendItems) {
+                legendItems.innerHTML = `<div style="color: var(--text-secondary); font-size: 12px;">${mensagem}</div>`;
             }
+            
+            const calmariaEl = document.getElementById('windRoseCalmaria');
+            if (calmariaEl) {
+                calmariaEl.innerHTML = 'Calmarias: <strong>--</strong>';
+            }
+            
+            // Limpar canvas da rosa dos ventos
+            const canvas = document.getElementById('windRoseCanvas');
+            if (canvas) {
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            
+            // Destruir gráfico horário se existir
             if (hourlyChart) {
                 hourlyChart.destroy();
                 hourlyChart = null;
@@ -694,66 +891,204 @@
         }
 
         function desenharRosaVentos(dados) {
-            // Destruir gráfico anterior se existir
-            if (windRoseChart) {
-                windRoseChart.destroy();
+            const canvas = document.getElementById('windRoseCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Ajustar para alta resolução (retina)
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.parentElement.getBoundingClientRect();
+            const size = Math.min(rect.width, 400);
+            
+            canvas.width = size * dpr;
+            canvas.height = size * dpr;
+            canvas.style.width = size + 'px';
+            canvas.style.height = size + 'px';
+            ctx.scale(dpr, dpr);
+            
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const maxRadius = size / 2 - 40; // Margem para labels
+            
+            // Limpar canvas
+            ctx.clearRect(0, 0, size, size);
+            
+            // Cores das faixas de velocidade (padrão INEA)
+            const coresFaixas = dados.faixasVelocidade ? dados.faixasVelocidade.map(f => f.cor) : [
+                '#c8e6c9', // Verde claro (>=0.5 - <2)
+                '#fff176', // Amarelo (>=2 - <4)
+                '#ffb74d', // Laranja (>=4 - <7)
+                '#ef5350', // Vermelho (>=7 - <12)
+                '#b71c1c'  // Vermelho escuro (>=12)
+            ];
+            
+            // Calcular frequência máxima para escala
+            let maxFreq = 0;
+            dados.directions.forEach(d => {
+                const totalDir = dados.frequenciasPorFaixa && dados.frequenciasPorFaixa[d] 
+                    ? dados.frequenciasPorFaixa[d].reduce((a, b) => a + b, 0) 
+                    : dados.frequencies[dados.directions.indexOf(d)];
+                if (totalDir > maxFreq) maxFreq = totalDir;
+            });
+            
+            // Arredondar para cima para escala bonita
+            const escalaMax = Math.ceil(maxFreq / 5) * 5 || 25;
+            
+            // Desenhar círculos concêntricos de referência
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([]);
+            
+            const numCirculos = 4;
+            for (let i = 1; i <= numCirculos; i++) {
+                const r = (maxRadius / numCirculos) * i;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                // Labels de porcentagem
+                const pct = ((escalaMax / numCirculos) * i).toFixed(0);
+                ctx.fillStyle = '#999';
+                ctx.font = '10px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(pct + '%', centerX + 5, centerY - r + 12);
             }
-
-            const ctx = document.getElementById('windRoseChart').getContext('2d');
             
-            const backgroundColor = dados.directions.map(d => coresDirecoes[d].bg);
-            const borderColor = dados.directions.map(d => coresDirecoes[d].border);
+            // Desenhar linhas radiais para cada direção
+            const direcoes8 = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+            const angulos = {
+                'N': -90,
+                'NE': -45,
+                'E': 0,
+                'SE': 45,
+                'S': 90,
+                'SW': 135,
+                'W': 180,
+                'NW': -135
+            };
             
-            windRoseChart = new Chart(ctx, {
-                type: 'polarArea',
-                data: {
-                    labels: dados.directions.map(d => `${d} (${nomesDirecoes[d]})`),
-                    datasets: [{
-                        data: dados.frequencies,
-                        backgroundColor: backgroundColor,
-                        borderColor: borderColor,
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const dir = dados.directions[context.dataIndex];
-                                    const freq = context.raw;
-                                    const vel = dados.avgSpeeds[context.dataIndex];
-                                    return [
-                                        `${nomesDirecoes[dir]}: ${freq}%`,
-                                        `Vel. média: ${vel} m/s`
-                                    ];
-                                }
-                            }
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            
+            direcoes8.forEach(d => {
+                const ang = angulos[d] * Math.PI / 180;
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.lineTo(centerX + maxRadius * Math.cos(ang), centerY + maxRadius * Math.sin(ang));
+                ctx.stroke();
+            });
+            
+            // Desenhar as barras da rosa dos ventos (pétalas)
+            const larguraPetala = 35; // Largura angular em graus
+            
+            dados.directions.forEach((d, idx) => {
+                const angBase = angulos[d] * Math.PI / 180;
+                const angInicio = angBase - (larguraPetala / 2) * Math.PI / 180;
+                const angFim = angBase + (larguraPetala / 2) * Math.PI / 180;
+                
+                let raioAtual = 0;
+                
+                // Se temos dados por faixa de velocidade
+                if (dados.frequenciasPorFaixa && dados.frequenciasPorFaixa[d]) {
+                    dados.frequenciasPorFaixa[d].forEach((freq, faixaIdx) => {
+                        if (freq > 0) {
+                            const raioFaixa = (freq / escalaMax) * maxRadius;
+                            
+                            // Desenhar setor para esta faixa
+                            ctx.beginPath();
+                            ctx.moveTo(
+                                centerX + raioAtual * Math.cos(angInicio),
+                                centerY + raioAtual * Math.sin(angInicio)
+                            );
+                            ctx.arc(centerX, centerY, raioAtual + raioFaixa, angInicio, angFim);
+                            ctx.lineTo(
+                                centerX + raioAtual * Math.cos(angFim),
+                                centerY + raioAtual * Math.sin(angFim)
+                            );
+                            ctx.arc(centerX, centerY, raioAtual, angFim, angInicio, true);
+                            ctx.closePath();
+                            
+                            ctx.fillStyle = coresFaixas[faixaIdx];
+                            ctx.fill();
+                            ctx.strokeStyle = '#666';
+                            ctx.lineWidth = 0.5;
+                            ctx.stroke();
+                            
+                            raioAtual += raioFaixa;
                         }
-                    },
-                    scales: {
-                        r: {
-                            beginAtZero: true,
-                            ticks: {
-                                callback: function(value) {
-                                    return value + '%';
-                                }
-                            },
-                            pointLabels: {
-                                font: {
-                                    size: 11,
-                                    weight: 'bold'
-                                }
-                            }
-                        }
+                    });
+                } else {
+                    // Fallback: usar frequência total com cor única
+                    const freq = dados.frequencies[idx];
+                    if (freq > 0) {
+                        const raio = (freq / escalaMax) * maxRadius;
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(centerX, centerY);
+                        ctx.arc(centerX, centerY, raio, angInicio, angFim);
+                        ctx.closePath();
+                        
+                        ctx.fillStyle = coresDirecoes[d].bg;
+                        ctx.fill();
+                        ctx.strokeStyle = coresDirecoes[d].border;
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
                     }
                 }
             });
+            
+            // Desenhar labels das direções cardeais
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 14px Inter, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            const labelOffset = maxRadius + 20;
+            
+            Object.entries(angulos).forEach(([d, ang]) => {
+                const radAng = ang * Math.PI / 180;
+                const x = centerX + labelOffset * Math.cos(radAng);
+                const y = centerY + labelOffset * Math.sin(radAng);
+                ctx.fillText(d, x, y);
+            });
+            
+            // Desenhar ponto central
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
+            ctx.fillStyle = '#333';
+            ctx.fill();
+            
+            // Atualizar legenda de faixas de velocidade
+            atualizarLegendaFaixas(dados);
+        }
+        
+        function atualizarLegendaFaixas(dados) {
+            const legendItems = document.getElementById('windRoseLegendItems');
+            const calmariaEl = document.getElementById('windRoseCalmaria');
+            
+            // Faixas de velocidade padrão
+            const faixas = dados.faixasVelocidade || [
+                { label: '>=0,5 - <2', cor: '#c8e6c9' },
+                { label: '>=2 - <4', cor: '#fff176' },
+                { label: '>=4 - <7', cor: '#ffb74d' },
+                { label: '>=7 - <12', cor: '#ef5350' },
+                { label: '>=12', cor: '#b71c1c' }
+            ];
+            
+            legendItems.innerHTML = faixas.map(f => `
+                <div class="wind-rose-legend-item">
+                    <span class="wind-rose-legend-color" style="background-color: ${f.cor};"></span>
+                    <span>${f.label}</span>
+                </div>
+            `).join('');
+            
+            // Calmarias
+            const calmaria = dados.estatisticas?.calmaria || 0;
+            calmariaEl.innerHTML = `Calmarias: <strong>${calmaria.toFixed(2)}%</strong>`;
+        }
+
+        // Manter função antiga para compatibilidade mas não usar mais
+        function atualizarLegenda(dados) {
+            // Não mais necessário - usando atualizarLegendaFaixas
         }
 
         function desenharGraficoHorario(porHora) {
@@ -841,18 +1176,6 @@
             `).join('');
         }
 
-        function atualizarLegenda(dados) {
-            const legendItems = document.getElementById('legendItems');
-            
-            legendItems.innerHTML = dados.directions.map((d, i) => `
-                <div class="legend-item">
-                    <span class="legend-color" style="background: ${coresDirecoes[d].border};"></span>
-                    <span class="legend-label">${d}</span>
-                    <span class="legend-value">(${dados.frequencies[i]}%)</span>
-                </div>
-            `).join('');
-        }
-
         async function atualizarDados() {
             await carregarDadosRosaVentos();
             await carregarRadarPoluentes();
@@ -860,7 +1183,7 @@
 
         async function carregarRadarPoluentes() {
             const estacaoId = document.getElementById('selectEstacao').value;
-            const dias = document.getElementById('selectPeriodo').value;
+            const periodo = document.getElementById('selectPeriodo').value;
 
             if (!estacaoId) {
                 limparRadarPoluentes();
@@ -868,7 +1191,16 @@
             }
 
             try {
-                const response = await ApiClient.get(`/medicoes/radar-poluentes?estacao_id=${estacaoId}&dias=${dias}`);
+                let endpoint = `/medicoes/radar-poluentes?estacao_id=${estacaoId}`;
+                
+                if (periodoPersonalizadoAtivo && dataInicioPersonalizado && dataFimPersonalizado) {
+                    endpoint += `&data_inicio=${dataInicioPersonalizado}&data_fim=${dataFimPersonalizado}`;
+                } else {
+                    const dias = periodo === 'personalizado' ? 30 : periodo;
+                    endpoint += `&dias=${dias}`;
+                }
+                
+                const response = await ApiClient.get(endpoint);
                 
                 if (response.sucesso && response.dados) {
                     dadosRadarPoluentes = response.dados;

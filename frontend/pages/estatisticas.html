@@ -247,6 +247,54 @@
                 grid-template-columns: repeat(2, 1fr);
             }
         }
+        
+        /* Período Personalizado */
+        .periodo-personalizado {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            margin-top: 12px;
+        }
+        
+        .periodo-personalizado.visible {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        
+        .periodo-personalizado label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        
+        .periodo-personalizado input[type="date"] {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 13px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        
+        .periodo-personalizado .btn-aplicar {
+            padding: 8px 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .periodo-personalizado .btn-aplicar:hover {
+            background: var(--primary-dark);
+        }
     </style>
 </head>
 <body>
@@ -443,13 +491,25 @@
                 </div>
                 <div class="filter-group">
                     <label>Período:</label>
-                    <select class="select-small" id="selectPeriodo" onchange="atualizarEstatisticas()">
+                    <select class="select-small" id="selectPeriodo" onchange="alterarPeriodo()">
                         <option value="7">Últimos 7 dias</option>
                         <option value="30" selected>Últimos 30 dias</option>
                         <option value="90">Últimos 90 dias</option>
                         <option value="365">Último ano</option>
+                        <option value="personalizado">Personalizado</option>
                     </select>
                 </div>
+            </div>
+            
+            <!-- Período Personalizado -->
+            <div class="periodo-personalizado" id="periodoPersonalizado">
+                <label>De:</label>
+                <input type="date" id="dataInicio" />
+                <label>Até:</label>
+                <input type="date" id="dataFim" />
+                <button class="btn-aplicar" onclick="aplicarPeriodoPersonalizado()">
+                    <i class="fas fa-check"></i> Aplicar
+                </button>
             </div>
 
             <!-- Stats Overview -->
@@ -643,23 +703,89 @@
             }
         }
 
+        // Variáveis para período personalizado
+        let periodoPersonalizadoAtivo = false;
+        let dataInicioPersonalizado = null;
+        let dataFimPersonalizado = null;
+
+        function alterarPeriodo() {
+            const periodo = document.getElementById('selectPeriodo').value;
+            const divPersonalizado = document.getElementById('periodoPersonalizado');
+            
+            if (periodo === 'personalizado') {
+                divPersonalizado.classList.add('visible');
+                periodoPersonalizadoAtivo = true;
+                
+                // Definir valores padrão (último mês)
+                const hoje = new Date();
+                const mesPassado = new Date();
+                mesPassado.setMonth(mesPassado.getMonth() - 1);
+                
+                document.getElementById('dataFim').value = hoje.toISOString().split('T')[0];
+                document.getElementById('dataInicio').value = mesPassado.toISOString().split('T')[0];
+            } else {
+                divPersonalizado.classList.remove('visible');
+                periodoPersonalizadoAtivo = false;
+                dataInicioPersonalizado = null;
+                dataFimPersonalizado = null;
+                atualizarEstatisticas();
+            }
+        }
+
+        function aplicarPeriodoPersonalizado() {
+            const dataInicio = document.getElementById('dataInicio').value;
+            const dataFim = document.getElementById('dataFim').value;
+            
+            if (!dataInicio || !dataFim) {
+                alert('Por favor, selecione as datas de início e fim.');
+                return;
+            }
+            
+            if (new Date(dataInicio) > new Date(dataFim)) {
+                alert('A data de início não pode ser maior que a data de fim.');
+                return;
+            }
+            
+            dataInicioPersonalizado = dataInicio;
+            dataFimPersonalizado = dataFim;
+            
+            // Atualizar texto do botão de período
+            const inicio = new Date(dataInicio).toLocaleDateString('pt-BR');
+            const fim = new Date(dataFim).toLocaleDateString('pt-BR');
+            document.getElementById('periodoTexto').textContent = `${inicio} - ${fim}`;
+            
+            atualizarEstatisticas();
+        }
+
         async function carregarEstatisticas() {
             try {
                 const parametro = document.getElementById('selectParametro').value;
                 const estacaoId = document.getElementById('selectEstacao').value;
-                const dias = document.getElementById('selectPeriodo').value;
+                const periodo = document.getElementById('selectPeriodo').value;
 
-                // Atualizar texto do período
-                const periodoTextos = {
-                    '7': 'Últimos 7 dias',
-                    '30': 'Últimos 30 dias',
-                    '90': 'Últimos 90 dias',
-                    '365': 'Último ano'
-                };
-                document.getElementById('periodoTexto').textContent = periodoTextos[dias] || `Últimos ${dias} dias`;
-
-                // Buscar estatísticas da API
-                let endpoint = `/medicoes/estatisticas?parametro=${parametro}&dias=${dias}`;
+                let endpoint = `/medicoes/estatisticas?parametro=${parametro}`;
+                
+                if (periodoPersonalizadoAtivo && dataInicioPersonalizado && dataFimPersonalizado) {
+                    // Período personalizado com data_inicio e data_fim
+                    endpoint += `&data_inicio=${dataInicioPersonalizado}&data_fim=${dataFimPersonalizado}`;
+                    
+                    const inicio = new Date(dataInicioPersonalizado).toLocaleDateString('pt-BR');
+                    const fim = new Date(dataFimPersonalizado).toLocaleDateString('pt-BR');
+                    document.getElementById('periodoTexto').textContent = `${inicio} - ${fim}`;
+                } else {
+                    // Período em dias
+                    const dias = periodo === 'personalizado' ? 30 : periodo;
+                    endpoint += `&dias=${dias}`;
+                    
+                    const periodoTextos = {
+                        '7': 'Últimos 7 dias',
+                        '30': 'Últimos 30 dias',
+                        '90': 'Últimos 90 dias',
+                        '365': 'Último ano'
+                    };
+                    document.getElementById('periodoTexto').textContent = periodoTextos[dias] || `Últimos ${dias} dias`;
+                }
+                
                 if (estacaoId) {
                     endpoint += `&estacao_id=${estacaoId}`;
                 }

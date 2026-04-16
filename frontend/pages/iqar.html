@@ -3,390 +3,716 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Índice IQAr - Acoem Brasil</title>
+    <title>Relatório IQAr - Acoem Brasil</title>
     <link rel="stylesheet" href="../css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .iqar-hero {
-            background: linear-gradient(135deg, #00263A 0%, #00A19A 100%);
-            border-radius: var(--radius-lg);
-            padding: 32px;
-            color: white;
-            margin-bottom: 24px;
-        }
-        
-        .iqar-hero h2 {
-            font-size: 24px;
-            margin-bottom: 8px;
-        }
-        
-        .iqar-hero p {
-            opacity: 0.9;
-            font-size: 14px;
-            max-width: 600px;
-        }
-        
-        .iqar-current {
+        /* ===== Layout Principal ===== */
+        .report-container {
             display: flex;
+            flex-direction: column;
             gap: 24px;
-            margin-top: 24px;
         }
         
-        .iqar-gauge {
-            width: 180px;
-            height: 180px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 50%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border: 8px solid;
-        }
-        
-        .iqar-gauge.good { border-color: #00A651; }
-        .iqar-gauge.moderate { border-color: #FFFF00; }
-        .iqar-gauge.inadequate { border-color: #FF7E00; }
-        .iqar-gauge.bad { border-color: #FF0000; }
-        .iqar-gauge.terrible { border-color: #99004C; }
-        
-        .iqar-gauge-value {
-            font-size: 48px;
-            font-weight: 700;
-            line-height: 1;
-        }
-        
-        .iqar-gauge-label {
-            font-size: 14px;
-            opacity: 0.9;
-            margin-top: 4px;
-        }
-        
-        .iqar-info {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        
-        .iqar-station {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        
-        .iqar-pollutant {
-            font-size: 13px;
-            opacity: 0.8;
-            margin-bottom: 16px;
-        }
-        
-        .iqar-recommendation {
-            background: rgba(255,255,255,0.15);
-            padding: 12px 16px;
-            border-radius: var(--radius);
-            font-size: 13px;
-            line-height: 1.5;
-        }
-        
-        .iqar-recommendation i {
-            margin-right: 8px;
-        }
-        
-        .scale-section {
+        /* ===== Filtros Globais ===== */
+        .filtros-globais {
             background: var(--bg-secondary);
             border-radius: var(--radius-lg);
+            padding: 20px;
             box-shadow: var(--shadow);
-            padding: 24px;
-            margin-bottom: 24px;
         }
         
-        .scale-section h3 {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 20px;
+        .filtros-row {
             display: flex;
-            align-items: center;
-            gap: 10px;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: flex-end;
         }
         
-        .scale-section h3 i {
-            color: var(--primary);
-        }
-        
-        .iqar-scale {
+        .filtro-item {
             display: flex;
-            border-radius: var(--radius);
-            overflow: hidden;
-            margin-bottom: 20px;
+            flex-direction: column;
+            gap: 6px;
         }
         
-        .scale-item {
-            flex: 1;
-            padding: 16px 12px;
-            text-align: center;
-            color: white;
-            font-weight: 600;
-        }
-        
-        .scale-item.good { background: #00A651; }
-        .scale-item.moderate { background: #FFFF00; color: #333; }
-        .scale-item.inadequate { background: #FF7E00; }
-        .scale-item.bad { background: #FF0000; }
-        .scale-item.terrible { background: #99004C; }
-        
-        .scale-value {
-            font-size: 18px;
-            display: block;
-        }
-        
-        .scale-label {
-            font-size: 11px;
-            opacity: 0.9;
-            margin-top: 4px;
-            display: block;
-        }
-        
-        .scale-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        
-        .scale-table th,
-        .scale-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 13px;
-        }
-        
-        .scale-table th {
-            background: var(--bg-primary);
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
-        
-        .scale-table tr:hover {
-            background: var(--bg-primary);
-        }
-        
-        .quality-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
+        .filtro-item label {
             font-size: 12px;
             font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+        
+        .filtro-item select,
+        .filtro-item input {
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 14px;
+            min-width: 180px;
+            background: var(--bg-primary);
+        }
+        
+        .btn-aplicar {
+            padding: 10px 20px;
+            background: var(--primary);
             color: white;
-        }
-        
-        .quality-badge.good { background: #00A651; }
-        .quality-badge.moderate { background: #FFFF00; color: #333; }
-        .quality-badge.inadequate { background: #FF7E00; }
-        .quality-badge.bad { background: #FF0000; }
-        .quality-badge.terrible { background: #99004C; }
-        
-        .stations-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-        
-        .station-iqar-card {
-            background: var(--bg-secondary);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow);
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            border-left: 4px solid;
-            transition: transform 0.2s;
-        }
-        
-        .station-iqar-card:hover {
-            transform: translateY(-2px);
-        }
-        
-        .station-iqar-card.good { border-color: #00A651; }
-        .station-iqar-card.moderate { border-color: #FFFF00; }
-        .station-iqar-card.inadequate { border-color: #FF7E00; }
-        .station-iqar-card.bad { border-color: #FF0000; }
-        .station-iqar-card.terrible { border-color: #99004C; }
-        
-        .station-iqar-value {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            font-weight: 700;
-            color: white;
-        }
-        
-        .station-iqar-value.good { background: #00A651; }
-        .station-iqar-value.moderate { background: #FFFF00; color: #333; }
-        .station-iqar-value.inadequate { background: #FF7E00; }
-        .station-iqar-value.bad { background: #FF0000; }
-        .station-iqar-value.terrible { background: #99004C; }
-        
-        .station-iqar-info {
-            flex: 1;
-        }
-        
-        .station-iqar-name {
-            font-size: 15px;
+            border: none;
+            border-radius: var(--radius);
             font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+        
+        .btn-aplicar:hover {
+            background: var(--primary-dark);
+        }
+        
+        /* ===== Resumo Executivo ===== */
+        .resumo-executivo {
+            background: linear-gradient(135deg, #00263A 0%, #00A19A 100%);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            color: white;
+        }
+        
+        .resumo-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+        
+        .resumo-titulo h2 {
+            font-size: 20px;
+            font-weight: 700;
             margin-bottom: 4px;
         }
         
-        .station-iqar-classification {
+        .resumo-titulo p {
             font-size: 13px;
-            color: var(--text-secondary);
+            opacity: 0.85;
         }
         
-        .station-iqar-pollutant {
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-top: 4px;
+        .resumo-data {
+            text-align: right;
+            font-size: 12px;
+            opacity: 0.9;
         }
         
-        .charts-row {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 24px;
-            margin-bottom: 24px;
-        }
-        
-        .chart-card {
-            background: var(--bg-secondary);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow);
-        }
-        
-        .chart-card-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .chart-card-header h3 {
-            font-size: 15px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .chart-card-header h3 i {
-            color: var(--primary);
-        }
-        
-        .chart-card-body {
-            padding: 20px;
-        }
-        
-        .health-effects {
-            background: var(--bg-secondary);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow);
-            padding: 24px;
-        }
-        
-        .health-effects h3 {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .health-effects h3 i {
-            color: var(--primary);
-        }
-        
-        .health-grid {
+        .resumo-cards {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 16px;
         }
         
-        .health-item {
+        .resumo-card {
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius);
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .resumo-card-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .resumo-card-valor {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+        
+        .resumo-card-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            opacity: 0.85;
+            margin-top: 4px;
+        }
+        
+        @media (max-width: 1200px) {
+            .resumo-cards { grid-template-columns: repeat(3, 1fr); }
+        }
+        
+        @media (max-width: 768px) {
+            .resumo-cards { grid-template-columns: repeat(2, 1fr); }
+        }
+        
+        /* ===== Seções de Relatório ===== */
+        .secao-relatorio {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        
+        .secao-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        .secao-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .secao-header h3 i {
+            color: var(--primary);
+        }
+        
+        .secao-body {
+            padding: 20px;
+        }
+        
+        /* ===== Indicador IQAr Principal ===== */
+        .iqar-principal {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 24px;
+            align-items: center;
+        }
+        
+        @media (max-width: 768px) {
+            .iqar-principal { grid-template-columns: 1fr; }
+        }
+        
+        .iqar-gauge {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            border: 8px solid;
+            position: relative;
+        }
+        
+        .iqar-gauge::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2) 0%, transparent 50%);
+        }
+        
+        .iqar-gauge.boa { border-color: #00A651; background: linear-gradient(135deg, rgba(0,166,81,0.15) 0%, rgba(0,166,81,0.05) 100%); }
+        .iqar-gauge.moderada { border-color: #FFFF00; background: linear-gradient(135deg, rgba(255,255,0,0.15) 0%, rgba(255,255,0,0.05) 100%); }
+        .iqar-gauge.inadequada { border-color: #FF7E00; background: linear-gradient(135deg, rgba(255,126,0,0.15) 0%, rgba(255,126,0,0.05) 100%); }
+        .iqar-gauge.ma { border-color: #FF0000; background: linear-gradient(135deg, rgba(255,0,0,0.15) 0%, rgba(255,0,0,0.05) 100%); }
+        .iqar-gauge.pessima { border-color: #99004C; background: linear-gradient(135deg, rgba(153,0,76,0.15) 0%, rgba(153,0,76,0.05) 100%); }
+        
+        .iqar-gauge-valor {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--text-primary);
+            z-index: 1;
+        }
+        
+        .iqar-gauge-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-weight: 600;
+            z-index: 1;
+        }
+        
+        .iqar-detalhes {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .iqar-classificacao {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .iqar-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            color: white;
+        }
+        
+        .iqar-badge.boa { background: #00A651; }
+        .iqar-badge.moderada { background: #FFFF00; color: #333; }
+        .iqar-badge.inadequada { background: #FF7E00; }
+        .iqar-badge.ma { background: #FF0000; }
+        .iqar-badge.pessima { background: #99004C; }
+        
+        .iqar-info-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        
+        .iqar-info-item {
+            background: var(--bg-primary);
+            padding: 12px;
+            border-radius: var(--radius);
+            text-align: center;
+        }
+        
+        .iqar-info-item label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        .iqar-info-item span {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .iqar-recomendacao {
+            background: var(--bg-primary);
+            padding: 14px 16px;
+            border-radius: var(--radius);
+            border-left: 4px solid var(--primary);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .iqar-recomendacao i {
+            margin-right: 8px;
+            color: var(--primary);
+        }
+        
+        /* ===== Grid de Estações ===== */
+        .estacoes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        
+        .estacao-card {
+            background: var(--bg-primary);
+            border-radius: var(--radius);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border-left: 4px solid;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .estacao-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .estacao-card.selecionada {
+            border-left-width: 6px;
+            box-shadow: 0 4px 16px rgba(0,161,154,0.25);
+            background: linear-gradient(to right, rgba(0,161,154,0.08) 0%, transparent 100%);
+        }
+        
+        .estacao-card.boa { border-color: #00A651; }
+        .estacao-card.moderada { border-color: #FFFF00; }
+        .estacao-card.inadequada { border-color: #FF7E00; }
+        .estacao-card.ma { border-color: #FF0000; }
+        .estacao-card.pessima { border-color: #99004C; }
+        
+        .estacao-iqar {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .estacao-iqar.boa { background: #00A651; }
+        .estacao-iqar.moderada { background: #FFFF00; color: #333; }
+        .estacao-iqar.inadequada { background: #FF7E00; }
+        .estacao-iqar.ma { background: #FF0000; }
+        .estacao-iqar.pessima { background: #99004C; }
+        
+        .estacao-info h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .estacao-info p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin: 2px 0;
+        }
+        
+        /* ===== Análise por Poluente ===== */
+        .poluentes-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+        }
+        
+        @media (max-width: 1200px) {
+            .poluentes-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        
+        @media (max-width: 768px) {
+            .poluentes-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        
+        .poluente-card {
+            background: var(--bg-primary);
+            border-radius: var(--radius);
+            padding: 16px;
+            text-align: center;
+            border-top: 3px solid var(--primary);
+            transition: transform 0.2s;
+        }
+        
+        .poluente-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .poluente-card.critico {
+            border-top-color: #ef4444;
+            background: linear-gradient(to bottom, rgba(239,68,68,0.05) 0%, transparent 100%);
+        }
+        
+        .poluente-card.atencao {
+            border-top-color: #f97316;
+            background: linear-gradient(to bottom, rgba(249,115,22,0.05) 0%, transparent 100%);
+        }
+        
+        .poluente-card.ok {
+            border-top-color: #10b981;
+            background: linear-gradient(to bottom, rgba(16,185,129,0.05) 0%, transparent 100%);
+        }
+        
+        .poluente-nome {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .poluente-formula {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+        
+        .poluente-valor {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .poluente-unidade {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+        
+        .poluente-iqar {
+            margin-top: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+        
+        .poluente-iqar.boa { background: #d1fae5; color: #065f46; }
+        .poluente-iqar.moderada { background: #fef3c7; color: #92400e; }
+        .poluente-iqar.inadequada { background: #fed7aa; color: #9a3412; }
+        .poluente-iqar.ma { background: #fee2e2; color: #991b1b; }
+        .poluente-iqar.pessima { background: #fce7f3; color: #9d174d; }
+        
+        .poluente-limite {
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+        }
+        
+        /* ===== Gráficos ===== */
+        .graficos-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+        
+        @media (max-width: 1200px) {
+            .graficos-row { grid-template-columns: 1fr; }
+        }
+        
+        .grafico-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        /* ===== Tabela Comparativa ===== */
+        .tabela-wrapper {
+            overflow-x: auto;
+        }
+        
+        .tabela-iqar {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        
+        .tabela-iqar th,
+        .tabela-iqar td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .tabela-iqar th {
+            background: var(--bg-primary);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+        
+        .tabela-iqar tbody tr:hover {
+            background: var(--bg-primary);
+        }
+        
+        .tabela-iqar .badge-iqar {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 12px;
+            color: white;
+        }
+        
+        .tabela-iqar .badge-iqar.boa { background: #00A651; }
+        .tabela-iqar .badge-iqar.moderada { background: #FFFF00; color: #333; }
+        .tabela-iqar .badge-iqar.inadequada { background: #FF7E00; }
+        .tabela-iqar .badge-iqar.ma { background: #FF0000; }
+        .tabela-iqar .badge-iqar.pessima { background: #99004C; }
+        
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .status-badge.conforme { background: #d1fae5; color: #065f46; }
+        .status-badge.atencao { background: #fef3c7; color: #92400e; }
+        .status-badge.excedido { background: #fee2e2; color: #991b1b; }
+        
+        /* ===== Escala de Referência ===== */
+        .escala-iqar {
+            display: flex;
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        
+        .escala-item {
+            flex: 1;
+            padding: 12px 8px;
+            text-align: center;
+            color: white;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        
+        .escala-item:hover {
+            transform: scaleY(1.1);
+        }
+        
+        .escala-item.boa { background: #00A651; }
+        .escala-item.moderada { background: #FFFF00; color: #333; }
+        .escala-item.inadequada { background: #FF7E00; }
+        .escala-item.ma { background: #FF0000; }
+        .escala-item.pessima { background: #99004C; }
+        
+        .escala-valor {
+            font-size: 16px;
+            display: block;
+        }
+        
+        .escala-nome {
+            font-size: 10px;
+            opacity: 0.9;
+            margin-top: 2px;
+            display: block;
+        }
+        
+        /* ===== Alertas/Excedências ===== */
+        .alertas-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .alerta-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            border-radius: var(--radius);
+            background: var(--bg-primary);
+            border-left: 4px solid;
+        }
+        
+        .alerta-item.critico {
+            border-color: #ef4444;
+            background: linear-gradient(to right, rgba(239,68,68,0.08) 0%, transparent 100%);
+        }
+        
+        .alerta-item.atencao {
+            border-color: #f97316;
+            background: linear-gradient(to right, rgba(249,115,22,0.08) 0%, transparent 100%);
+        }
+        
+        .alerta-item.info {
+            border-color: #3b82f6;
+            background: linear-gradient(to right, rgba(59,130,246,0.08) 0%, transparent 100%);
+        }
+        
+        .alerta-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .alerta-item.critico .alerta-icon { background: #fee2e2; color: #ef4444; }
+        .alerta-item.atencao .alerta-icon { background: #fef3c7; color: #f97316; }
+        .alerta-item.info .alerta-icon { background: #dbeafe; color: #3b82f6; }
+        
+        .alerta-texto h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .alerta-texto p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+        
+        .alerta-hora {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+        
+        /* ===== Efeitos na Saúde ===== */
+        .saude-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+        }
+        
+        @media (max-width: 1200px) {
+            .saude-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        
+        @media (max-width: 768px) {
+            .saude-grid { grid-template-columns: 1fr; }
+        }
+        
+        .saude-card {
             padding: 16px;
             border-radius: var(--radius);
             text-align: center;
             color: white;
         }
         
-        .health-item.good { background: #00A651; }
-        .health-item.moderate { background: #FFFF00; color: #333; }
-        .health-item.inadequate { background: #FF7E00; }
-        .health-item.bad { background: #FF0000; }
-        .health-item.terrible { background: #99004C; }
+        .saude-card.boa { background: linear-gradient(135deg, #00A651 0%, #00c760 100%); }
+        .saude-card.moderada { background: linear-gradient(135deg, #e6e600 0%, #FFFF00 100%); color: #333; }
+        .saude-card.inadequada { background: linear-gradient(135deg, #e66a00 0%, #FF7E00 100%); }
+        .saude-card.ma { background: linear-gradient(135deg, #cc0000 0%, #FF0000 100%); }
+        .saude-card.pessima { background: linear-gradient(135deg, #800040 0%, #99004C 100%); }
         
-        .health-item h4 {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 12px;
+        .saude-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
         }
         
-        .health-item p {
-            font-size: 12px;
-            line-height: 1.5;
+        .saude-card h4 {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .saude-card p {
+            font-size: 11px;
+            line-height: 1.4;
             opacity: 0.95;
         }
         
-        .health-item .health-icon {
-            font-size: 28px;
-            margin-bottom: 12px;
-        }
-        
-        .filters-bar {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
+        /* ===== Botões de Exportação ===== */
+        .btn-export {
+            padding: 8px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            background: var(--bg-secondary);
+            font-size: 12px;
+            cursor: pointer;
+            display: inline-flex;
             align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
         }
         
-        .filter-group {
-            display: flex;
-            align-items: center;
-            gap: 8px;
+        .btn-export:hover {
+            border-color: var(--primary);
+            color: var(--primary);
         }
         
-        .filter-group label {
-            font-size: 13px;
-            font-weight: 500;
+        /* ===== Sem Dados ===== */
+        .sem-dados {
+            text-align: center;
+            padding: 40px;
             color: var(--text-secondary);
         }
         
-        @media (max-width: 1200px) {
-            .charts-row {
-                grid-template-columns: 1fr;
-            }
-            .health-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
+        .sem-dados i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
         }
         
-        @media (max-width: 768px) {
-            .iqar-current {
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
-            }
-            .health-grid {
-                grid-template-columns: 1fr;
-            }
-            .iqar-scale {
-                flex-direction: column;
-            }
+        .sem-dados p {
+            margin: 8px 0;
         }
     </style>
 </head>
@@ -489,12 +815,9 @@
         </div>
     </aside>
 
-    <!-- Overlay para mobile -->
     <div class="sidebar-overlay"></div>
 
-    <!-- Main Content -->
     <main class="main-content">
-        <!-- Header -->
         <header class="header">
             <div class="header-left">
                 <button class="menu-toggle" onclick="toggleSidebar()">
@@ -543,269 +866,355 @@
             </div>
         </header>
 
-        <!-- Page Content -->
         <div class="page-content">
-            <!-- Page Title -->
             <div class="page-header">
                 <div class="page-title">
-                    <h1>Índice de Qualidade do Ar (IQAr)</h1>
-                    <p>Monitoramento em tempo real da qualidade do ar nas estações</p>
+                    <h1>Relatório de Qualidade do Ar - IQAr</h1>
+                    <p>Análise detalhada do Índice de Qualidade do Ar conforme metodologia CETESB/CONAMA</p>
                 </div>
                 <div class="page-actions">
-                    <button class="btn btn-outline">
-                        <i class="fas fa-sync-alt"></i>
-                        Atualizar
+                    <button class="btn btn-outline" onclick="imprimirRelatorio()">
+                        <i class="fas fa-print"></i>
+                        Imprimir
                     </button>
-                    <button class="btn btn-primary" onclick="exportarRelatorio()">
+                    <button class="btn btn-primary" onclick="exportarRelatorioPDF()">
                         <i class="fas fa-file-pdf"></i>
-                        Relatório IQAr
+                        Exportar PDF
                     </button>
                 </div>
             </div>
 
-            <!-- Hero Section -->
-            <div class="iqar-hero">
-                <h2>Qualidade do Ar Atual</h2>
-                <p>Baseado nos padrões CONAMA nº 491/2018 e metodologia CETESB para cálculo do Índice de Qualidade do Ar</p>
-                
-                <div class="iqar-current">
-                    <div class="iqar-gauge good" id="iqarGauge">
-                        <div class="iqar-gauge-value" id="iqarValue">42</div>
-                        <div class="iqar-gauge-label">IQAr</div>
-                    </div>
-                    <div class="iqar-info">
-                        <div class="iqar-station" id="stationName">Copacabana - Rio de Janeiro</div>
-                        <div class="iqar-pollutant" id="mainPollutant">
-                            <i class="fas fa-info-circle"></i>
-                            Poluente determinante: PM2.5 (15.8 µg/m³)
+            <div class="report-container">
+                <!-- Filtros Globais -->
+                <div class="filtros-globais">
+                    <div class="filtros-row">
+                        <div class="filtro-item">
+                            <label>Estação</label>
+                            <select id="selectEstacao" onchange="atualizarRelatorio()">
+                                <option value="">Todas as estações</option>
+                            </select>
                         </div>
-                        <div class="iqar-recommendation">
-                            <i class="fas fa-check-circle"></i>
-                            <strong>Qualidade Boa:</strong> A qualidade do ar é satisfatória e a poluição atmosférica apresenta pouco ou nenhum risco.
+                        <div class="filtro-item">
+                            <label>Período</label>
+                            <select id="selectPeriodo" onchange="alterarPeriodo()">
+                                <option value="hoje">Hoje</option>
+                                <option value="24h" selected>Últimas 24 horas</option>
+                                <option value="7d">Últimos 7 dias</option>
+                                <option value="30d">Últimos 30 dias</option>
+                                <option value="personalizado">Período personalizado</option>
+                            </select>
+                        </div>
+                        <div class="filtro-item" id="filtroDataInicio" style="display: none;">
+                            <label>Data Início</label>
+                            <input type="date" id="dataInicio">
+                        </div>
+                        <div class="filtro-item" id="filtroDataFim" style="display: none;">
+                            <label>Data Fim</label>
+                            <input type="date" id="dataFim">
+                        </div>
+                        <button class="btn-aplicar" onclick="atualizarRelatorio()">
+                            <i class="fas fa-sync-alt"></i>
+                            Atualizar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Resumo Executivo -->
+                <div class="resumo-executivo">
+                    <div class="resumo-header">
+                        <div class="resumo-titulo">
+                            <h2><i class="fas fa-clipboard-check"></i> Resumo Executivo</h2>
+                            <p>Visão geral da qualidade do ar no período selecionado</p>
+                        </div>
+                        <div class="resumo-data">
+                            <div id="periodoTexto">Últimas 24 horas</div>
+                            <div id="dataAtualizacao">Atualizado: --</div>
+                        </div>
+                    </div>
+                    <div class="resumo-cards">
+                        <div class="resumo-card">
+                            <div class="resumo-card-icon">📊</div>
+                            <div class="resumo-card-valor" id="iqarMedio">--</div>
+                            <div class="resumo-card-label">IQAr Médio</div>
+                        </div>
+                        <div class="resumo-card">
+                            <div class="resumo-card-icon">📍</div>
+                            <div class="resumo-card-valor" id="totalEstacoes">--</div>
+                            <div class="resumo-card-label">Estações</div>
+                        </div>
+                        <div class="resumo-card">
+                            <div class="resumo-card-icon">✅</div>
+                            <div class="resumo-card-valor" id="estacoesConformes">--</div>
+                            <div class="resumo-card-label">Conformes</div>
+                        </div>
+                        <div class="resumo-card">
+                            <div class="resumo-card-icon">⚠️</div>
+                            <div class="resumo-card-valor" id="estacoesAtencao">--</div>
+                            <div class="resumo-card-label">Atenção</div>
+                        </div>
+                        <div class="resumo-card">
+                            <div class="resumo-card-icon">🔴</div>
+                            <div class="resumo-card-valor" id="estacoesCriticas">--</div>
+                            <div class="resumo-card-label">Críticas</div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Filtros -->
-            <div class="filters-bar">
-                <div class="filter-group">
-                    <label>Unidade:</label>
-                    <select class="select-small" id="selectUnidade" onchange="filtrarPorUnidade()">
-                        <option value="">Todas as unidades</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Classificação:</label>
-                    <select class="select-small" id="selectClassificacao" onchange="filtrarPorClassificacao()">
-                        <option value="">Todas</option>
-                        <option value="good">Boa</option>
-                        <option value="moderate">Moderada</option>
-                        <option value="inadequate">Inadequada</option>
-                        <option value="bad">Má</option>
-                        <option value="terrible">Péssima</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Stations Grid -->
-            <div class="stations-grid" id="stationsGrid">
-                <!-- Será preenchido via JavaScript -->
-            </div>
-
-            <!-- Escala IQAr -->
-            <div class="scale-section">
-                <h3><i class="fas fa-ruler-horizontal"></i> Escala do Índice de Qualidade do Ar</h3>
-                
-                <div class="iqar-scale">
-                    <div class="scale-item good">
-                        <span class="scale-value">0-40</span>
-                        <span class="scale-label">BOA</span>
+                <!-- IQAr Principal -->
+                <div class="secao-relatorio">
+                    <div class="secao-header">
+                        <h3><i class="fas fa-tachometer-alt"></i> Índice de Qualidade do Ar Atual</h3>
+                        <span class="status-badge conforme" id="statusGeral">
+                            <i class="fas fa-check-circle"></i> Conforme
+                        </span>
                     </div>
-                    <div class="scale-item moderate">
-                        <span class="scale-value">41-80</span>
-                        <span class="scale-label">MODERADA</span>
-                    </div>
-                    <div class="scale-item inadequate">
-                        <span class="scale-value">81-120</span>
-                        <span class="scale-label">INADEQUADA</span>
-                    </div>
-                    <div class="scale-item bad">
-                        <span class="scale-value">121-200</span>
-                        <span class="scale-label">MÁ</span>
-                    </div>
-                    <div class="scale-item terrible">
-                        <span class="scale-value">>200</span>
-                        <span class="scale-label">PÉSSIMA</span>
+                    <div class="secao-body">
+                        <div class="iqar-principal">
+                            <div class="iqar-gauge boa" id="iqarGauge">
+                                <div class="iqar-gauge-valor" id="iqarValor">--</div>
+                                <div class="iqar-gauge-label">IQAr</div>
+                            </div>
+                            <div class="iqar-detalhes">
+                                <div class="iqar-classificacao">
+                                    <span class="iqar-badge boa" id="iqarBadge">Boa</span>
+                                    <span id="estacaoNome">Selecione uma estação</span>
+                                </div>
+                                <div class="iqar-info-grid">
+                                    <div class="iqar-info-item">
+                                        <label>Poluente Determinante</label>
+                                        <span id="poluenteDeterminante">--</span>
+                                    </div>
+                                    <div class="iqar-info-item">
+                                        <label>Concentração</label>
+                                        <span id="concentracaoPoluente">--</span>
+                                    </div>
+                                    <div class="iqar-info-item">
+                                        <label>Última Medição</label>
+                                        <span id="ultimaMedicao">--</span>
+                                    </div>
+                                </div>
+                                <div class="iqar-recomendacao" id="recomendacao">
+                                    <i class="fas fa-info-circle"></i>
+                                    Selecione uma estação para ver as recomendações.
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
-                <table class="scale-table">
-                    <thead>
-                        <tr>
-                            <th>Qualidade</th>
-                            <th>Índice</th>
-                            <th>PM2.5 (µg/m³)</th>
-                            <th>PM10 (µg/m³)</th>
-                            <th>O₃ (µg/m³)</th>
-                            <th>NO₂ (µg/m³)</th>
-                            <th>SO₂ (µg/m³)</th>
-                            <th>CO (ppm)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><span class="quality-badge good">Boa</span></td>
-                            <td>0-40</td>
-                            <td>0-25</td>
-                            <td>0-50</td>
-                            <td>0-100</td>
-                            <td>0-200</td>
-                            <td>0-20</td>
-                            <td>0-9</td>
-                        </tr>
-                        <tr>
-                            <td><span class="quality-badge moderate">Moderada</span></td>
-                            <td>41-80</td>
-                            <td>26-50</td>
-                            <td>51-100</td>
-                            <td>101-130</td>
-                            <td>201-240</td>
-                            <td>21-40</td>
-                            <td>9.1-11</td>
-                        </tr>
-                        <tr>
-                            <td><span class="quality-badge inadequate">Inadequada</span></td>
-                            <td>81-120</td>
-                            <td>51-75</td>
-                            <td>101-150</td>
-                            <td>131-160</td>
-                            <td>241-320</td>
-                            <td>41-365</td>
-                            <td>11.1-13</td>
-                        </tr>
-                        <tr>
-                            <td><span class="quality-badge bad">Má</span></td>
-                            <td>121-200</td>
-                            <td>76-125</td>
-                            <td>151-250</td>
-                            <td>161-200</td>
-                            <td>321-1130</td>
-                            <td>366-800</td>
-                            <td>13.1-15</td>
-                        </tr>
-                        <tr>
-                            <td><span class="quality-badge terrible">Péssima</span></td>
-                            <td>>200</td>
-                            <td>>125</td>
-                            <td>>250</td>
-                            <td>>200</td>
-                            <td>>1130</td>
-                            <td>>800</td>
-                            <td>>15</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
 
-            <!-- Charts Row -->
-            <div class="charts-row">
-                <div class="chart-card">
-                    <div class="chart-card-header">
-                        <h3><i class="fas fa-chart-line"></i> Evolução do IQAr - Últimas 24 horas</h3>
+                <!-- Escala de Referência -->
+                <div class="secao-relatorio">
+                    <div class="secao-header">
+                        <h3><i class="fas fa-ruler-horizontal"></i> Escala IQAr - Padrão CETESB/CONAMA</h3>
                     </div>
-                    <div class="chart-card-body">
-                        <canvas id="iqarEvolutionChart" height="120"></canvas>
+                    <div class="secao-body">
+                        <div class="escala-iqar">
+                            <div class="escala-item boa">
+                                <span class="escala-valor">0-40</span>
+                                <span class="escala-nome">BOA</span>
+                            </div>
+                            <div class="escala-item moderada">
+                                <span class="escala-valor">41-80</span>
+                                <span class="escala-nome">MODERADA</span>
+                            </div>
+                            <div class="escala-item inadequada">
+                                <span class="escala-valor">81-120</span>
+                                <span class="escala-nome">INADEQUADA</span>
+                            </div>
+                            <div class="escala-item ma">
+                                <span class="escala-valor">121-200</span>
+                                <span class="escala-nome">MÁ</span>
+                            </div>
+                            <div class="escala-item pessima">
+                                <span class="escala-valor">>200</span>
+                                <span class="escala-nome">PÉSSIMA</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="chart-card">
-                    <div class="chart-card-header">
-                        <h3><i class="fas fa-chart-pie"></i> Distribuição por Classificação</h3>
+
+                <!-- Estações -->
+                <div class="secao-relatorio">
+                    <div class="secao-header">
+                        <h3><i class="fas fa-broadcast-tower"></i> IQAr por Estação</h3>
+                        <div style="display: flex; gap: 8px;">
+                            <select id="filtroClassificacao" onchange="filtrarEstacoes()" style="padding: 6px 10px; border-radius: var(--radius); border: 1px solid var(--border-color); font-size: 12px;">
+                                <option value="">Todas</option>
+                                <option value="boa">Boa</option>
+                                <option value="moderada">Moderada</option>
+                                <option value="inadequada">Inadequada</option>
+                                <option value="ma">Má</option>
+                                <option value="pessima">Péssima</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="chart-card-body">
-                        <canvas id="iqarDistributionChart" height="200"></canvas>
+                    <div class="secao-body">
+                        <div class="estacoes-grid" id="estacoesGrid">
+                            <div class="sem-dados">
+                                <i class="fas fa-database"></i>
+                                <p>Carregando dados das estações...</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Efeitos na Saúde -->
-            <div class="health-effects">
-                <h3><i class="fas fa-heartbeat"></i> Efeitos na Saúde e Recomendações</h3>
-                
-                <div class="health-grid">
-                    <div class="health-item good">
-                        <div class="health-icon">😊</div>
-                        <h4>Boa (0-40)</h4>
-                        <p>Qualidade do ar satisfatória. Não há riscos à saúde. Ideal para atividades ao ar livre.</p>
+                <!-- Análise por Poluente -->
+                <div class="secao-relatorio">
+                    <div class="secao-header">
+                        <h3><i class="fas fa-flask"></i> Análise por Poluente</h3>
+                        <button class="btn-export" onclick="exportarPoluentes()">
+                            <i class="fas fa-download"></i> CSV
+                        </button>
                     </div>
-                    <div class="health-item moderate">
-                        <div class="health-icon">😐</div>
-                        <h4>Moderada (41-80)</h4>
-                        <p>Pessoas de grupos sensíveis podem apresentar sintomas como tosse seca. População comum não afetada.</p>
+                    <div class="secao-body">
+                        <div class="poluentes-grid" id="poluentesGrid">
+                            <!-- Preenchido via JS -->
+                        </div>
                     </div>
-                    <div class="health-item inadequate">
-                        <div class="health-icon">😷</div>
-                        <h4>Inadequada (81-120)</h4>
-                        <p>Grupos sensíveis como idosos, crianças e pessoas com doenças respiratórias podem apresentar sintomas.</p>
+                </div>
+
+                <!-- Gráficos -->
+                <div class="graficos-row">
+                    <div class="secao-relatorio">
+                        <div class="secao-header">
+                            <h3><i class="fas fa-chart-line"></i> Evolução do IQAr</h3>
+                        </div>
+                        <div class="secao-body">
+                            <div class="grafico-container">
+                                <canvas id="chartEvolucao"></canvas>
+                            </div>
+                        </div>
                     </div>
-                    <div class="health-item bad">
-                        <div class="health-icon">🤢</div>
-                        <h4>Má (121-200)</h4>
-                        <p>Toda a população pode apresentar agravamento de sintomas. Evite atividades físicas ao ar livre.</p>
+                    
+                    <div class="secao-relatorio">
+                        <div class="secao-header">
+                            <h3><i class="fas fa-chart-pie"></i> Distribuição</h3>
+                        </div>
+                        <div class="secao-body">
+                            <div class="grafico-container">
+                                <canvas id="chartDistribuicao"></canvas>
+                            </div>
+                        </div>
                     </div>
-                    <div class="health-item terrible">
-                        <div class="health-icon">☠️</div>
-                        <h4>Péssima (>200)</h4>
-                        <p>Emergência de saúde! Toda população está sujeita a graves efeitos. Evite sair de casa.</p>
+                </div>
+
+                <!-- Alertas e Excedências -->
+                <div class="secao-relatorio">
+                    <div class="secao-header">
+                        <h3><i class="fas fa-exclamation-triangle"></i> Alertas e Excedências</h3>
+                        <span id="totalAlertas" style="font-size: 12px; color: var(--text-secondary);">0 ocorrências</span>
+                    </div>
+                    <div class="secao-body">
+                        <div class="alertas-container" id="alertasContainer">
+                            <div class="sem-dados">
+                                <i class="fas fa-check-circle" style="color: #10b981;"></i>
+                                <p>Nenhuma excedência registrada no período.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabela Comparativa -->
+                <div class="secao-relatorio">
+                    <div class="secao-header">
+                        <h3><i class="fas fa-table"></i> Tabela Comparativa - Padrões CONAMA 491/2018</h3>
+                        <button class="btn-export" onclick="exportarTabela()">
+                            <i class="fas fa-download"></i> Exportar
+                        </button>
+                    </div>
+                    <div class="secao-body">
+                        <div class="tabela-wrapper">
+                            <table class="tabela-iqar">
+                                <thead>
+                                    <tr>
+                                        <th>Estação</th>
+                                        <th>IQAr</th>
+                                        <th>PM2.5</th>
+                                        <th>PM10</th>
+                                        <th>O₃</th>
+                                        <th>NO₂</th>
+                                        <th>SO₂</th>
+                                        <th>CO</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelaComparativa">
+                                    <tr>
+                                        <td colspan="9" style="text-align: center; padding: 30px;">Carregando dados...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Efeitos na Saúde -->
+                <div class="secao-relatorio">
+                    <div class="secao-header">
+                        <h3><i class="fas fa-heartbeat"></i> Efeitos na Saúde e Recomendações</h3>
+                    </div>
+                    <div class="secao-body">
+                        <div class="saude-grid">
+                            <div class="saude-card boa">
+                                <div class="saude-icon">😊</div>
+                                <h4>Boa (0-40)</h4>
+                                <p>Qualidade satisfatória. Não há riscos à saúde. Ideal para atividades ao ar livre.</p>
+                            </div>
+                            <div class="saude-card moderada">
+                                <div class="saude-icon">😐</div>
+                                <h4>Moderada (41-80)</h4>
+                                <p>Grupos sensíveis podem apresentar sintomas leves. População geral não afetada.</p>
+                            </div>
+                            <div class="saude-card inadequada">
+                                <div class="saude-icon">😷</div>
+                                <h4>Inadequada (81-120)</h4>
+                                <p>Idosos, crianças e pessoas com doenças respiratórias devem reduzir esforços.</p>
+                            </div>
+                            <div class="saude-card ma">
+                                <div class="saude-icon">🤢</div>
+                                <h4>Má (121-200)</h4>
+                                <p>Toda população pode ter sintomas. Evite atividades físicas ao ar livre.</p>
+                            </div>
+                            <div class="saude-card pessima">
+                                <div class="saude-icon">☠️</div>
+                                <h4>Péssima (>200)</h4>
+                                <p>Emergência de saúde! Evite sair de casa. Mantenha janelas fechadas.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Scripts -->
     <script src="../js/api.js"></script>
-    
     <script>
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            const overlay = document.querySelector('.sidebar-overlay');
-            const isMobile = window.innerWidth <= 992;
-            
-            if (isMobile) {
-                sidebar.classList.toggle('open');
-                if (overlay) overlay.classList.toggle('active');
-            } else {
-                sidebar.classList.toggle('collapsed');
-                document.body.classList.toggle('sidebar-collapsed');
-            }
-        }
-        
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('sidebar-overlay')) {
-                document.querySelector('.sidebar').classList.remove('open');
-                document.querySelector('.sidebar-overlay').classList.remove('active');
-            }
-        });
-        
-        window.addEventListener('resize', function() {
-            const sidebar = document.querySelector('.sidebar');
-            const overlay = document.querySelector('.sidebar-overlay');
-            if (window.innerWidth <= 992) {
-                sidebar.classList.remove('collapsed');
-                document.body.classList.remove('sidebar-collapsed');
-            } else {
-                sidebar.classList.remove('open');
-                if (overlay) overlay.classList.remove('active');
-            }
-        });
-    </script>
-    
-    <script>
-        let iqarEvolutionChart, iqarDistributionChart;
+        // ===== Variáveis Globais =====
+        let chartEvolucao, chartDistribuicao;
         let estacoes = [];
+        let dadosIqar = null;
+        let periodoSelecionado = '24h';
         
+        // Limites CONAMA 491/2018
+        const limitesConama = {
+            'PM2.5': { limite: 25, unidade: 'µg/m³' },
+            'PM10': { limite: 50, unidade: 'µg/m³' },
+            'O3': { limite: 100, unidade: 'µg/m³' },
+            'NO2': { limite: 200, unidade: 'µg/m³' },
+            'SO2': { limite: 125, unidade: 'µg/m³' },
+            'CO': { limite: 9, unidade: 'ppm' }
+        };
+        
+        // Recomendações por classificação
+        const recomendacoes = {
+            boa: 'A qualidade do ar é satisfatória e a poluição atmosférica apresenta pouco ou nenhum risco. Condições ideais para atividades ao ar livre.',
+            moderada: 'Pessoas de grupos sensíveis (idosos, crianças, gestantes e portadores de doenças respiratórias) podem apresentar sintomas como tosse seca e cansaço.',
+            inadequada: 'Grupos sensíveis devem evitar esforço físico pesado ao ar livre. Toda a população pode apresentar sintomas como irritação nos olhos e garganta.',
+            ma: 'Toda a população pode apresentar agravamento de sintomas respiratórios. Evite atividades físicas ao ar livre. Grupos sensíveis devem permanecer em ambientes fechados.',
+            pessima: 'ALERTA DE SAÚDE! Toda a população deve evitar qualquer atividade física ao ar livre. Permaneça em ambientes fechados com janelas e portas vedadas.'
+        };
+        
+        // ===== Inicialização =====
         document.addEventListener('DOMContentLoaded', async function() {
             if (!AuthService.isLoggedIn()) {
                 window.location.href = 'login.html';
@@ -819,142 +1228,398 @@
                 document.querySelector('.user-role').textContent = roles[usuario.role] || usuario.role;
             }
             
-            await carregarDados();
+            await carregarEstacoes();
+            await atualizarRelatorio();
             inicializarGraficos();
         });
-
-        async function carregarDados() {
+        
+        // ===== Carregar Estações =====
+        async function carregarEstacoes() {
             try {
-                // Carregar unidades
-                const unidadesResp = await ApiClient.get('/unidades');
-                if (unidadesResp.sucesso) {
-                    const select = document.getElementById('selectUnidade');
-                    unidadesResp.dados.forEach(u => {
-                        select.innerHTML += `<option value="${u.id}">${u.nome}</option>`;
+                const response = await ApiClient.get('/estacoes');
+                if (response.sucesso) {
+                    const select = document.getElementById('selectEstacao');
+                    response.dados.forEach(est => {
+                        select.innerHTML += `<option value="${est.id}">${est.nome}</option>`;
                     });
                 }
-                
-                // Carregar estações com IQAr
-                const estacoesResp = await ApiClient.get('/estacoes/mapa');
-                if (estacoesResp.sucesso) {
-                    estacoes = estacoesResp.dados.map(e => ({
-                        ...e,
-                        iqar: Math.floor(Math.random() * 150) + 10, // Simulado
-                        poluente: ['PM2.5', 'PM10', 'O₃', 'NO₂'][Math.floor(Math.random() * 4)]
-                    }));
-                    renderizarEstacoes(estacoes);
-                }
             } catch (error) {
-                console.error('Erro ao carregar dados:', error);
+                console.error('Erro ao carregar estações:', error);
             }
         }
-
-        function getClassificacao(iqar) {
-            if (iqar <= 40) return { classe: 'good', nome: 'Boa' };
-            if (iqar <= 80) return { classe: 'moderate', nome: 'Moderada' };
-            if (iqar <= 120) return { classe: 'inadequate', nome: 'Inadequada' };
-            if (iqar <= 200) return { classe: 'bad', nome: 'Má' };
-            return { classe: 'terrible', nome: 'Péssima' };
+        
+        // ===== Alterar Período =====
+        function alterarPeriodo() {
+            const periodo = document.getElementById('selectPeriodo').value;
+            const divInicio = document.getElementById('filtroDataInicio');
+            const divFim = document.getElementById('filtroDataFim');
+            
+            if (periodo === 'personalizado') {
+                divInicio.style.display = 'flex';
+                divFim.style.display = 'flex';
+                
+                const hoje = new Date();
+                const semanaPassada = new Date();
+                semanaPassada.setDate(semanaPassada.getDate() - 7);
+                
+                document.getElementById('dataFim').value = hoje.toISOString().split('T')[0];
+                document.getElementById('dataInicio').value = semanaPassada.toISOString().split('T')[0];
+            } else {
+                divInicio.style.display = 'none';
+                divFim.style.display = 'none';
+                periodoSelecionado = periodo;
+                atualizarRelatorio();
+            }
         }
-
-        function renderizarEstacoes(lista) {
-            const grid = document.getElementById('stationsGrid');
+        
+        // ===== Atualizar Relatório =====
+        async function atualizarRelatorio() {
+            try {
+                // Atualizar texto do período
+                const periodoTextos = {
+                    'hoje': 'Hoje',
+                    '24h': 'Últimas 24 horas',
+                    '7d': 'Últimos 7 dias',
+                    '30d': 'Últimos 30 dias'
+                };
+                document.getElementById('periodoTexto').textContent = periodoTextos[periodoSelecionado] || periodoSelecionado;
+                document.getElementById('dataAtualizacao').textContent = `Atualizado: ${new Date().toLocaleString('pt-BR')}`;
+                
+                // Carregar dados IQAr
+                const estacaoId = document.getElementById('selectEstacao').value;
+                
+                // Sempre buscar todas as estações para o grid e resumo
+                const response = await ApiClient.get('/iqar');
+                
+                if (response.sucesso && response.dados) {
+                    estacoes = response.dados.map(e => ({
+                        id: e.estacao_id,
+                        nome: e.estacao_nome,
+                        codigo: e.estacao_codigo,
+                        iqar: e.iqar || 0,
+                        classificacao: getClassificacao(e.iqar),
+                        poluente: e.poluente_predominante || '-',
+                        concentracao: e.valor_poluente || 0,
+                        ultimaMedicao: e.ultima_medicao,
+                        poluentes: e.detalhes || {}  // O backend retorna os poluentes em "detalhes"
+                    }));
+                    
+                    atualizarResumoExecutivo();
+                    renderizarEstacoes();
+                    renderizarPoluentes();
+                    atualizarTabelaComparativa();
+                    atualizarAlertas();
+                    atualizarGraficos();
+                    
+                    // Selecionar a estação escolhida no filtro, ou a primeira se "Todas"
+                    if (estacaoId && estacoes.length > 0) {
+                        const estacaoSelecionada = estacoes.find(e => e.id == estacaoId);
+                        if (estacaoSelecionada) {
+                            selecionarEstacao(estacaoSelecionada.id);
+                        } else {
+                            selecionarEstacao(estacoes[0].id);
+                        }
+                    } else if (estacoes.length > 0) {
+                        selecionarEstacao(estacoes[0].id);
+                    }
+                } else {
+                    mostrarSemDados();
+                }
+            } catch (error) {
+                console.error('Erro ao carregar relatório:', error);
+                mostrarSemDados();
+            }
+        }
+        
+        // ===== Classificação IQAr =====
+        function getClassificacao(iqar) {
+            if (!iqar || iqar <= 40) return 'boa';
+            if (iqar <= 80) return 'moderada';
+            if (iqar <= 120) return 'inadequada';
+            if (iqar <= 200) return 'ma';
+            return 'pessima';
+        }
+        
+        function getClassificacaoNome(classificacao) {
+            const nomes = {
+                'boa': 'Boa',
+                'moderada': 'Moderada',
+                'inadequada': 'Inadequada',
+                'ma': 'Má',
+                'pessima': 'Péssima'
+            };
+            return nomes[classificacao] || 'N/A';
+        }
+        
+        // ===== Resumo Executivo =====
+        function atualizarResumoExecutivo() {
+            const total = estacoes.length;
+            const iqarMedio = total > 0 ? Math.round(estacoes.reduce((acc, e) => acc + (e.iqar || 0), 0) / total) : 0;
+            
+            const conformes = estacoes.filter(e => e.iqar <= 40).length;
+            const atencao = estacoes.filter(e => e.iqar > 40 && e.iqar <= 80).length;
+            const criticas = estacoes.filter(e => e.iqar > 80).length;
+            
+            document.getElementById('iqarMedio').textContent = iqarMedio;
+            document.getElementById('totalEstacoes').textContent = total;
+            document.getElementById('estacoesConformes').textContent = conformes;
+            document.getElementById('estacoesAtencao').textContent = atencao;
+            document.getElementById('estacoesCriticas').textContent = criticas;
+        }
+        
+        // ===== Renderizar Estações =====
+        function renderizarEstacoes() {
+            const grid = document.getElementById('estacoesGrid');
+            const filtro = document.getElementById('filtroClassificacao').value;
+            const estacaoFiltro = document.getElementById('selectEstacao').value;
+            
+            let lista = estacoes;
+            if (filtro) {
+                lista = estacoes.filter(e => e.classificacao === filtro);
+            }
+            
+            if (lista.length === 0) {
+                grid.innerHTML = `
+                    <div class="sem-dados" style="grid-column: 1 / -1;">
+                        <i class="fas fa-database"></i>
+                        <p>Nenhuma estação encontrada.</p>
+                    </div>
+                `;
+                return;
+            }
+            
             grid.innerHTML = lista.map(e => {
-                const { classe, nome } = getClassificacao(e.iqar);
+                const selecionada = (estacaoFiltro && e.id == estacaoFiltro) ? 'selecionada' : '';
                 return `
-                    <div class="station-iqar-card ${classe}" onclick="selecionarEstacao(${e.id})">
-                        <div class="station-iqar-value ${classe}">${e.iqar}</div>
-                        <div class="station-iqar-info">
-                            <div class="station-iqar-name">${e.nome}</div>
-                            <div class="station-iqar-classification">Qualidade: ${nome}</div>
-                            <div class="station-iqar-pollutant">Poluente: ${e.poluente || 'PM2.5'}</div>
+                    <div class="estacao-card ${e.classificacao} ${selecionada}" data-id="${e.id}" onclick="selecionarEstacao(${e.id})">
+                        <div class="estacao-iqar ${e.classificacao}">${e.iqar || '--'}</div>
+                        <div class="estacao-info">
+                            <h4>${e.nome}</h4>
+                            <p>Qualidade: ${getClassificacaoNome(e.classificacao)}</p>
+                            <p>Poluente: ${e.poluente}</p>
                         </div>
                     </div>
                 `;
             }).join('');
         }
-
+        
+        function filtrarEstacoes() {
+            renderizarEstacoes();
+        }
+        
+        // ===== Selecionar Estação =====
         function selecionarEstacao(id) {
             const estacao = estacoes.find(e => e.id === id);
-            if (estacao) {
-                const { classe, nome } = getClassificacao(estacao.iqar);
-                
-                document.getElementById('iqarValue').textContent = estacao.iqar;
-                document.getElementById('stationName').textContent = estacao.nome;
-                document.getElementById('mainPollutant').innerHTML = `
-                    <i class="fas fa-info-circle"></i>
-                    Poluente determinante: ${estacao.poluente || 'PM2.5'}
-                `;
-                
-                const gauge = document.getElementById('iqarGauge');
-                gauge.className = `iqar-gauge ${classe}`;
-                
-                const recommendations = {
-                    good: 'A qualidade do ar é satisfatória e a poluição atmosférica apresenta pouco ou nenhum risco.',
-                    moderate: 'Pessoas de grupos sensíveis podem apresentar sintomas. População comum não afetada.',
-                    inadequate: 'Grupos sensíveis devem reduzir esforço físico intenso ao ar livre.',
-                    bad: 'Toda a população pode apresentar agravamento de sintomas. Evite atividades ao ar livre.',
-                    terrible: 'Emergência de saúde! Evite sair de casa. Mantenha janelas fechadas.'
-                };
-                
-                document.querySelector('.iqar-recommendation').innerHTML = `
-                    <i class="fas fa-${classe === 'good' ? 'check-circle' : 'exclamation-triangle'}"></i>
-                    <strong>Qualidade ${nome}:</strong> ${recommendations[classe]}
-                `;
-            }
-        }
-
-        function filtrarPorUnidade() {
-            const unidadeId = document.getElementById('selectUnidade').value;
-            const classificacao = document.getElementById('selectClassificacao').value;
+            if (!estacao) return;
             
-            let filtradas = estacoes;
-            if (unidadeId) {
-                filtradas = filtradas.filter(e => e.unidadeId == unidadeId);
+            const classificacao = estacao.classificacao;
+            
+            // Sincronizar o dropdown de estação
+            const selectEstacao = document.getElementById('selectEstacao');
+            if (selectEstacao.value != id) {
+                selectEstacao.value = id;
             }
-            if (classificacao) {
-                filtradas = filtradas.filter(e => getClassificacao(e.iqar).classe === classificacao);
+            
+            // Remover seleção anterior e adicionar na nova
+            document.querySelectorAll('.estacao-card').forEach(card => {
+                card.classList.remove('selecionada');
+            });
+            const cardSelecionado = document.querySelector(`.estacao-card[data-id="${id}"]`);
+            if (cardSelecionado) {
+                cardSelecionado.classList.add('selecionada');
             }
-            renderizarEstacoes(filtradas);
+            
+            // Atualizar gauge
+            document.getElementById('iqarValor').textContent = estacao.iqar || '--';
+            document.getElementById('iqarGauge').className = `iqar-gauge ${classificacao}`;
+            
+            // Atualizar badge e nome
+            document.getElementById('iqarBadge').className = `iqar-badge ${classificacao}`;
+            document.getElementById('iqarBadge').textContent = getClassificacaoNome(classificacao);
+            document.getElementById('estacaoNome').textContent = estacao.nome;
+            
+            // Atualizar detalhes
+            document.getElementById('poluenteDeterminante').textContent = estacao.poluente || '-';
+            document.getElementById('concentracaoPoluente').textContent = estacao.concentracao ? `${estacao.concentracao.toFixed(1)} µg/m³` : '-';
+            document.getElementById('ultimaMedicao').textContent = estacao.ultimaMedicao ? new Date(estacao.ultimaMedicao).toLocaleString('pt-BR') : '-';
+            
+            // Atualizar recomendação
+            document.getElementById('recomendacao').innerHTML = `
+                <i class="fas fa-${classificacao === 'boa' ? 'check-circle' : 'exclamation-triangle'}"></i>
+                <strong>Qualidade ${getClassificacaoNome(classificacao)}:</strong> ${recomendacoes[classificacao]}
+            `;
+            
+            // Atualizar status geral
+            const statusEl = document.getElementById('statusGeral');
+            if (estacao.iqar <= 40) {
+                statusEl.className = 'status-badge conforme';
+                statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Conforme';
+            } else if (estacao.iqar <= 80) {
+                statusEl.className = 'status-badge atencao';
+                statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Atenção';
+            } else {
+                statusEl.className = 'status-badge excedido';
+                statusEl.innerHTML = '<i class="fas fa-times-circle"></i> Excedido';
+            }
         }
-
-        function filtrarPorClassificacao() {
-            filtrarPorUnidade();
+        
+        // ===== Renderizar Poluentes =====
+        function renderizarPoluentes() {
+            const grid = document.getElementById('poluentesGrid');
+            
+            // Calcular médias por poluente com base nos dados reais das estações
+            const poluentesConfig = [
+                { nome: 'PM2.5', formula: 'Material Particulado Fino', limite: 25 },
+                { nome: 'PM10', formula: 'Material Particulado Inalável', limite: 50 },
+                { nome: 'O3', formula: 'Ozônio', limite: 100 },
+                { nome: 'NO2', formula: 'Dióxido de Nitrogênio', limite: 200 },
+                { nome: 'SO2', formula: 'Dióxido de Enxofre', limite: 20 },
+                { nome: 'CO', formula: 'Monóxido de Carbono', limite: 9 }
+            ];
+            
+            grid.innerHTML = poluentesConfig.map(p => {
+                // Calcular média real a partir dos dados das estações
+                let soma = 0;
+                let count = 0;
+                
+                estacoes.forEach(e => {
+                    if (e.poluentes && e.poluentes[p.nome] && e.poluentes[p.nome].valor !== null && e.poluentes[p.nome].valor !== undefined) {
+                        soma += parseFloat(e.poluentes[p.nome].valor);
+                        count++;
+                    }
+                });
+                
+                // Se não houver dados para este poluente, mostrar "--"
+                if (count === 0) {
+                    return `
+                        <div class="poluente-card">
+                            <div class="poluente-nome">${p.nome}</div>
+                            <div class="poluente-formula">${p.formula}</div>
+                            <div class="poluente-valor">--</div>
+                            <div class="poluente-unidade">${p.nome === 'CO' ? 'ppm' : 'µg/m³'}</div>
+                            <div class="poluente-iqar" style="background: #999;">Sem dados</div>
+                            <div class="poluente-limite">Limite: ${p.limite}</div>
+                        </div>
+                    `;
+                }
+                
+                const valor = soma / count;
+                const percentual = (valor / p.limite * 100).toFixed(0);
+                const status = valor > p.limite ? 'critico' : valor > p.limite * 0.8 ? 'atencao' : 'ok';
+                const iqarPoluente = getClassificacao(valor / p.limite * 80);
+                
+                return `
+                    <div class="poluente-card ${status}">
+                        <div class="poluente-nome">${p.nome}</div>
+                        <div class="poluente-formula">${p.formula}</div>
+                        <div class="poluente-valor">${valor.toFixed(1)}</div>
+                        <div class="poluente-unidade">${p.nome === 'CO' ? 'ppm' : 'µg/m³'}</div>
+                        <div class="poluente-iqar ${iqarPoluente}">${getClassificacaoNome(iqarPoluente)}</div>
+                        <div class="poluente-limite">Limite: ${p.limite} (${percentual}%)</div>
+                    </div>
+                `;
+            }).join('');
         }
-
+        
+        // ===== Tabela Comparativa =====
+        // Função auxiliar para obter valor formatado de um poluente
+        function getValorPoluente(estacao, poluente) {
+            if (estacao.poluentes && estacao.poluentes[poluente] && estacao.poluentes[poluente].valor !== null && estacao.poluentes[poluente].valor !== undefined) {
+                return parseFloat(estacao.poluentes[poluente].valor).toFixed(1);
+            }
+            return '--';
+        }
+        
+        function atualizarTabelaComparativa() {
+            const tbody = document.getElementById('tabelaComparativa');
+            
+            if (estacoes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 30px;">Sem dados disponíveis</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = estacoes.map(e => {
+                const status = e.iqar <= 40 ? 'conforme' : e.iqar <= 80 ? 'atencao' : 'excedido';
+                const statusLabel = e.iqar <= 40 ? 'Conforme' : e.iqar <= 80 ? 'Atenção' : 'Excedido';
+                
+                return `
+                    <tr>
+                        <td><strong>${e.nome}</strong></td>
+                        <td><span class="badge-iqar ${e.classificacao}">${e.iqar || '--'}</span></td>
+                        <td>${getValorPoluente(e, 'PM2.5')}</td>
+                        <td>${getValorPoluente(e, 'PM10')}</td>
+                        <td>${getValorPoluente(e, 'O3')}</td>
+                        <td>${getValorPoluente(e, 'NO2')}</td>
+                        <td>${getValorPoluente(e, 'SO2')}</td>
+                        <td>${getValorPoluente(e, 'CO')}</td>
+                        <td><span class="status-badge ${status}">${statusLabel}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        // ===== Alertas =====
+        function atualizarAlertas() {
+            const container = document.getElementById('alertasContainer');
+            const criticas = estacoes.filter(e => e.iqar > 80);
+            
+            document.getElementById('totalAlertas').textContent = `${criticas.length} ocorrência${criticas.length !== 1 ? 's' : ''}`;
+            
+            if (criticas.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 30px; color: #10b981;">
+                        <i class="fas fa-check-circle" style="font-size: 36px; margin-bottom: 12px;"></i>
+                        <p style="margin: 0;">Nenhuma excedência registrada no período.</p>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">Todas as estações estão dentro dos padrões CONAMA.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = criticas.map(e => {
+                const tipo = e.iqar > 120 ? 'critico' : 'atencao';
+                const icone = tipo === 'critico' ? 'exclamation-circle' : 'exclamation-triangle';
+                
+                return `
+                    <div class="alerta-item ${tipo}">
+                        <div class="alerta-icon">
+                            <i class="fas fa-${icone}"></i>
+                        </div>
+                        <div class="alerta-texto">
+                            <h4>${e.nome}</h4>
+                            <p>IQAr ${e.iqar} - ${getClassificacaoNome(e.classificacao)} | Poluente: ${e.poluente}</p>
+                        </div>
+                        <div class="alerta-hora">${e.ultimaMedicao ? new Date(e.ultimaMedicao).toLocaleTimeString('pt-BR') : '--'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // ===== Gráficos =====
         function inicializarGraficos() {
             // Gráfico de Evolução
-            const evolutionCtx = document.getElementById('iqarEvolutionChart').getContext('2d');
-            const hours = [];
-            const iqarValues = [];
-            for (let i = 23; i >= 0; i--) {
-                const h = new Date();
-                h.setHours(h.getHours() - i);
-                hours.push(h.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
-                iqarValues.push(Math.floor(35 + Math.sin(i / 3) * 15 + Math.random() * 10));
-            }
-            
-            iqarEvolutionChart = new Chart(evolutionCtx, {
+            const ctxEvolucao = document.getElementById('chartEvolucao').getContext('2d');
+            chartEvolucao = new Chart(ctxEvolucao, {
                 type: 'line',
                 data: {
-                    labels: hours,
+                    labels: [],
                     datasets: [{
                         label: 'IQAr',
-                        data: iqarValues,
+                        data: [],
                         borderColor: '#00A19A',
                         backgroundColor: 'rgba(0, 161, 154, 0.1)',
                         fill: true,
                         tension: 0.4
                     }, {
                         label: 'Limite Moderado',
-                        data: Array(24).fill(40),
+                        data: [],
                         borderColor: '#FFFF00',
                         borderDash: [5, 5],
                         pointRadius: 0,
                         fill: false
                     }, {
                         label: 'Limite Inadequado',
-                        data: Array(24).fill(80),
+                        data: [],
                         borderColor: '#FF7E00',
                         borderDash: [5, 5],
                         pointRadius: 0,
@@ -964,40 +1629,21 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'top' }
-                    },
+                    plugins: { legend: { position: 'top' } },
                     scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 150,
-                            title: { display: true, text: 'Índice IQAr' }
-                        }
+                        y: { beginAtZero: true, max: 150 }
                     }
                 }
             });
             
             // Gráfico de Distribuição
-            const distributionCtx = document.getElementById('iqarDistributionChart').getContext('2d');
-            
-            // Calcular distribuição
-            const distribuicao = { good: 0, moderate: 0, inadequate: 0, bad: 0, terrible: 0 };
-            estacoes.forEach(e => {
-                distribuicao[getClassificacao(e.iqar).classe]++;
-            });
-            
-            iqarDistributionChart = new Chart(distributionCtx, {
+            const ctxDistribuicao = document.getElementById('chartDistribuicao').getContext('2d');
+            chartDistribuicao = new Chart(ctxDistribuicao, {
                 type: 'doughnut',
                 data: {
                     labels: ['Boa', 'Moderada', 'Inadequada', 'Má', 'Péssima'],
                     datasets: [{
-                        data: [
-                            distribuicao.good || 0,
-                            distribuicao.moderate || 0,
-                            distribuicao.inadequate || 0,
-                            distribuicao.bad || 0,
-                            distribuicao.terrible || 0
-                        ],
+                        data: [0, 0, 0, 0, 0],
                         backgroundColor: ['#00A651', '#FFFF00', '#FF7E00', '#FF0000', '#99004C'],
                         borderWidth: 2,
                         borderColor: '#fff'
@@ -1006,30 +1652,128 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
+                    plugins: { legend: { position: 'bottom' } }
                 }
             });
         }
-
-        function exportarRelatorio() {
-            alert('Funcionalidade de exportação de relatório IQAr será implementada');
+        
+        function atualizarGraficos() {
+            // Gerar dados de evolução
+            const horas = [];
+            const valores = [];
+            const mediaIqar = estacoes.length > 0 ? estacoes.reduce((acc, e) => acc + (e.iqar || 0), 0) / estacoes.length : 30;
+            
+            for (let i = 23; i >= 0; i--) {
+                const h = new Date();
+                h.setHours(h.getHours() - i);
+                horas.push(h.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+                valores.push(Math.max(0, Math.round(mediaIqar + Math.sin(i / 4) * 15)));
+            }
+            
+            chartEvolucao.data.labels = horas;
+            chartEvolucao.data.datasets[0].data = valores;
+            chartEvolucao.data.datasets[1].data = Array(24).fill(40);
+            chartEvolucao.data.datasets[2].data = Array(24).fill(80);
+            chartEvolucao.update();
+            
+            // Atualizar distribuição
+            const distribuicao = {
+                boa: estacoes.filter(e => e.classificacao === 'boa').length,
+                moderada: estacoes.filter(e => e.classificacao === 'moderada').length,
+                inadequada: estacoes.filter(e => e.classificacao === 'inadequada').length,
+                ma: estacoes.filter(e => e.classificacao === 'ma').length,
+                pessima: estacoes.filter(e => e.classificacao === 'pessima').length
+            };
+            
+            chartDistribuicao.data.datasets[0].data = [
+                distribuicao.boa,
+                distribuicao.moderada,
+                distribuicao.inadequada,
+                distribuicao.ma,
+                distribuicao.pessima
+            ];
+            chartDistribuicao.update();
         }
-
+        
+        // ===== Sem Dados =====
+        function mostrarSemDados() {
+            document.getElementById('estacoesGrid').innerHTML = `
+                <div class="sem-dados" style="grid-column: 1 / -1;">
+                    <i class="fas fa-database"></i>
+                    <p>Nenhum dado de IQAr disponível.</p>
+                    <p style="font-size: 12px;">Execute uma importação para carregar os dados.</p>
+                </div>
+            `;
+        }
+        
+        // ===== Exportações =====
+        function exportarRelatorioPDF() {
+            alert('Exportação de relatório PDF em desenvolvimento. Em breve você poderá gerar relatórios completos em PDF.');
+        }
+        
+        function imprimirRelatorio() {
+            window.print();
+        }
+        
+        function exportarPoluentes() {
+            alert('Exportação CSV dos poluentes em desenvolvimento.');
+        }
+        
+        function exportarTabela() {
+            const rows = [['Estação', 'IQAr', 'PM2.5', 'PM10', 'O3', 'NO2', 'SO2', 'CO', 'Status']];
+            estacoes.forEach(e => {
+                rows.push([
+                    e.nome,
+                    e.iqar,
+                    getValorPoluente(e, 'PM2.5'),
+                    getValorPoluente(e, 'PM10'),
+                    getValorPoluente(e, 'O3'),
+                    getValorPoluente(e, 'NO2'),
+                    getValorPoluente(e, 'SO2'),
+                    getValorPoluente(e, 'CO'),
+                    e.iqar <= 40 ? 'Conforme' : e.iqar <= 80 ? 'Atenção' : 'Excedido'
+                ]);
+            });
+            
+            const csv = rows.map(r => r.join(';')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `relatorio_iqar_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+        
+        // ===== Funções Auxiliares =====
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            const isMobile = window.innerWidth <= 992;
+            
+            if (isMobile) {
+                sidebar.classList.toggle('open');
+                if (overlay) overlay.classList.toggle('active');
+            } else {
+                sidebar.classList.toggle('collapsed');
+            }
+        }
+        
         function fazerLogout() {
             AuthService.logout();
         }
-
+        
         function toggleUserDropdown() {
             document.getElementById('userDropdown').classList.toggle('active');
         }
-
-        document.addEventListener('click', function(event) {
+        
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('sidebar-overlay')) {
+                document.querySelector('.sidebar').classList.remove('open');
+                document.querySelector('.sidebar-overlay').classList.remove('active');
+            }
+            
             const userMenu = document.getElementById('userMenu');
-            if (userMenu && !userMenu.contains(event.target)) {
+            if (userMenu && !userMenu.contains(e.target)) {
                 document.getElementById('userDropdown').classList.remove('active');
             }
         });

@@ -387,6 +387,106 @@
             color: var(--text-primary);
         }
 
+        /* Últimos Dados */
+        .ultimos-dados-section {
+            padding: 12px 16px;
+            border-top: 1px solid var(--border);
+            background: var(--bg-primary);
+        }
+
+        .ultimos-dados-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .ultimos-dados-header h4 {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .ultimos-dados-header .tempo-atualizacao {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .dados-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .dado-destaque {
+            background: var(--bg-secondary);
+            border-radius: var(--radius);
+            padding: 12px;
+            text-align: center;
+            border-left: 4px solid var(--primary);
+        }
+
+        .dado-destaque .dado-classificacao {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .dado-destaque .dado-parametro {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .dado-destaque .dado-valor {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .dado-destaque .dado-unidade {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-left: 4px;
+        }
+
+        .dado-destaque .dado-horario {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border);
+        }
+
+        .dado-destaque .dado-horario i {
+            margin-right: 4px;
+        }
+
+        .dado-item .dado-nome {
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .loading-dados {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .loading-dados i {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
         /* Stats Bar */
         .map-stats-bar {
             display: flex;
@@ -751,6 +851,20 @@
                                 <span class="value" id="infoCoordenadas">-</span>
                             </div>
                         </div>
+                        
+                        <!-- Últimos Dados -->
+                        <div class="ultimos-dados-section" id="ultimosDadosSection">
+                            <div class="ultimos-dados-header">
+                                <h4><i class="fas fa-clock"></i> Últimos Dados</h4>
+                                <span class="tempo-atualizacao" id="tempoAtualizacao">-</span>
+                            </div>
+                            <div class="dados-grid" id="dadosGrid">
+                                <div class="loading-dados">
+                                    <i class="fas fa-spinner"></i> Carregando...
+                                </div>
+                            </div>
+                        </div>
+                        
                         <div class="info-panel-footer">
                             <button class="btn-reports" onclick="verRelatorios()">
                                 <i class="fas fa-chart-line"></i> Relatórios
@@ -858,30 +972,32 @@
             });
         }
 
-        // Carregar estações
+        // Carregar estações com dados reais do banco
         async function carregarEstacoes() {
             try {
-                // Usar endpoint getMapa que já filtra apenas estações ativas
-                const response = await EstacoesService.getMapa();
+                // Usar endpoint /estacoes/mapa que já retorna coordenadas e IQAr real
+                const response = await ApiClient.get('/estacoes/mapa');
+                
                 if (response && response.sucesso) {
-                    estacoes = response.dados.map(est => {
-                        const iqarValor = est.iqar || Math.floor(Math.random() * 180) + 20;
-                        return {
-                            id: est.id,
-                            nome: est.nome,
-                            codigo: est.codigo,
-                            unidade: est.unidade || 'N/A',
-                            latitude: est.latitude || getRandomLat(),
-                            longitude: est.longitude || getRandomLng(),
-                            // Status baseado no IQAr: 0-80 normal, 81-120 warning, >120 critical
-                            status: est.ativo ? getStatusFromIqar(iqarValor) : 'offline',
-                            iqar: iqarValor
-                        };
-                    });
+                    estacoes = response.dados.map(est => ({
+                        id: est.id,
+                        nome: est.nome,
+                        codigo: est.codigo,
+                        unidade: est.unidade || 'N/A',
+                        latitude: est.latitude,
+                        longitude: est.longitude,
+                        // Status baseado no IQAr real: 0-80 normal, 81-120 warning, >120 critical
+                        status: est.ativo ? getStatusFromIqar(est.iqar || 0) : 'offline',
+                        iqar: est.iqar || 0,
+                        classificacao: est.classificacao || 'N/A',
+                        poluente_predominante: est.poluente_predominante || '-',
+                        cor: est.cor
+                    }));
 
                     atualizarMarcadores();
                     atualizarLista();
                     atualizarContadores();
+                    console.log(`[Mapa] ${estacoes.length} estações carregadas com coordenadas e IQAr real`);
                 }
             } catch (error) {
                 console.error('Erro ao carregar estações:', error);
@@ -1030,7 +1146,7 @@
         }
 
         // Selecionar estação
-        function selecionarEstacao(estacao) {
+        async function selecionarEstacao(estacao) {
             estacaoSelecionada = estacao;
             
             // Centralizar mapa na estação
@@ -1045,8 +1161,85 @@
             document.getElementById('infoIqar').innerHTML = `<span style="color: ${getIqarColor(estacao.iqar)}">${estacao.iqar} - ${getIqarLabel(estacao.iqar)}</span>`;
             document.getElementById('infoCoordenadas').textContent = `${estacao.latitude.toFixed(4)}, ${estacao.longitude.toFixed(4)}`;
 
+            // Mostrar loading nos últimos dados
+            document.getElementById('dadosGrid').innerHTML = `
+                <div class="loading-dados" style="grid-column: 1/-1;">
+                    <i class="fas fa-spinner"></i> Carregando...
+                </div>
+            `;
+            document.getElementById('tempoAtualizacao').textContent = '-';
+            
+            // Buscar últimos dados da estação
+            await carregarUltimosDados(estacao.id);
+
             // Atualizar lista
             atualizarLista();
+        }
+
+        // Buscar e exibir últimos dados da estação (apenas parâmetro predominante do IQAR)
+        async function carregarUltimosDados(estacaoId) {
+            try {
+                const response = await ApiClient.get(`/medicoes/ultimos/${estacaoId}`);
+                
+                if (response && response.sucesso && response.dados) {
+                    const dados = response.dados;
+                    const poluente = dados.poluente_predominante;
+                    
+                    // Atualizar tempo desde última atualização
+                    document.getElementById('tempoAtualizacao').textContent = dados.tempo_desde_atualizacao || 'Sem dados';
+                    
+                    // Verificar se há parâmetro predominante
+                    if (!poluente || poluente.valor === null || poluente.valor === undefined) {
+                        document.getElementById('dadosGrid').innerHTML = `
+                            <div class="loading-dados" style="color: var(--text-secondary);">
+                                <i class="fas fa-info-circle"></i> Sem dados disponíveis
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    // Obter cor do IQAR
+                    const corIqar = dados.cor || getIqarColor(dados.classificacao);
+                    
+                    // Renderizar apenas o parâmetro predominante
+                    document.getElementById('dadosGrid').innerHTML = `
+                        <div class="dado-destaque" style="border-left-color: ${corIqar};">
+                            <div class="dado-classificacao" style="color: ${corIqar};">
+                                IQAR ${dados.classificacao || 'N/A'}
+                            </div>
+                            <div class="dado-parametro">${poluente.parametro}</div>
+                            <div class="dado-valor" style="color: ${corIqar};">
+                                ${formatarValor(poluente.valor)}<span class="dado-unidade">${poluente.unidade || ''}</span>
+                            </div>
+                            <div class="dado-horario">
+                                <i class="fas fa-clock"></i> ${poluente.hora_formatada} - ${poluente.data_formatada}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('dadosGrid').innerHTML = `
+                        <div class="loading-dados" style="color: var(--text-secondary);">
+                            <i class="fas fa-exclamation-triangle"></i> Erro ao carregar dados
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Erro ao carregar últimos dados:', error);
+                document.getElementById('dadosGrid').innerHTML = `
+                    <div class="loading-dados" style="color: var(--text-secondary);">
+                        <i class="fas fa-exclamation-triangle"></i> Erro ao carregar dados
+                    </div>
+                `;
+            }
+        }
+
+        // Formatar valor numérico
+        function formatarValor(valor) {
+            if (valor === null || valor === undefined) return '-';
+            if (typeof valor === 'number') {
+                return valor < 10 ? valor.toFixed(2) : valor.toFixed(1);
+            }
+            return valor;
         }
 
         // Fechar painel de informações

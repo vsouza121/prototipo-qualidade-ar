@@ -1,6 +1,13 @@
 /**
  * Job Scheduler para importação automática de dados
  * Executa importações periódicas das APIs externas
+ * 
+ * A importação contínua garante que os dados da API externa
+ * sejam sempre inseridos no banco de dados e exibidos no sistema.
+ * 
+ * IMPORTANTE: A API retorna dados da hora atual + últimas 5 horas.
+ * O sistema verifica duplicatas por (estacao_id + parametro_id + data_hora)
+ * e só insere registros NOVOS que ainda não existem no banco.
  */
 const cron = require('node-cron');
 const apiRioService = require('../services/apiRioService');
@@ -8,28 +15,39 @@ const apiRioService = require('../services/apiRioService');
 // Armazenar referências dos jobs
 const jobs = {};
 
+// Configuração padrão do intervalo de importação (em minutos)
+let intervaloImportacao = 60; // A cada 1 hora por padrão
+
 // Status das execuções
 const statusExecucoes = {
     rio: {
         ultima_execucao: null,
         proxima_execucao: null,
         status: 'parado',
-        ultima_resposta: null
+        ultima_resposta: null,
+        intervalo_minutos: intervaloImportacao,
+        total_importacoes: 0,
+        medicoes_totais: 0
     }
 };
 
 /**
- * Calcula próxima execução baseado na expressão cron
+ * Calcula próxima execução no minuto 05 de cada hora
  */
-function calcularProximaExecucao(cronExpression) {
+function calcularProximaExecucao() {
     try {
-        // Formato simples: calcular próxima hora cheia + 5 minutos
         const agora = new Date();
         const proxima = new Date(agora);
-        proxima.setMinutes(5, 0, 0);
-        if (proxima <= agora) {
-            proxima.setHours(proxima.getHours() + 1);
+        
+        // Se ainda não passou do minuto 05 desta hora, executa nesta hora
+        if (agora.getMinutes() < 5) {
+            proxima.setMinutes(5, 0, 0);
+        } else {
+            // Já passou do minuto 05, executa na próxima hora
+            proxima.setHours(agora.getHours() + 1);
+            proxima.setMinutes(5, 0, 0);
         }
+        
         return proxima;
     } catch (e) {
         return null;
@@ -37,15 +55,29 @@ function calcularProximaExecucao(cronExpression) {
 }
 
 /**
- * Job para importar dados da API do Rio de Janeiro
- * Padrão: a cada hora (minuto 5)
+ * Converte intervalo em minutos para expressão cron
  */
-function iniciarJobRio(cronExpression = '5 * * * *') {
+function intervaloParaCron(minutos) {
+    if (minutos < 1) minutos = 1;
+    if (minutos >= 60) {
+        // A cada X horas
+        const horas = Math.floor(minutos / 60);
+        return `0 */${horas} * * *`;
+    }
+    // A cada X minutos
+    return `*/${minutos} * * * *`;
+}
+
+/**
+ * Job para importar dados da API do Rio de Janeiro
+ * Padrão: a cada 5 minutos
+ */
+function iniciarJobRio(cronExpression = '*/' + intervaloImportacao + ' * * * *') {
     if (jobs.rio) {
         jobs.rio.stop();
     }
 
-    console.log(`[Scheduler] Iniciando job API Rio com expressão: ${cronExpression}`);
+    console.log(`[Scheduler] Iniciando job API Rio com expressão: ${cronExpression} (intervalo: ${intervaloImportacao} min)`);
     
     jobs.rio = cron.schedule(cronExpression, async () => {
         console.log('[Scheduler] Executando importação API Rio...');
@@ -56,6 +88,8 @@ function iniciarJobRio(cronExpression = '5 * * * *') {
             const resultado = await apiRioService.importarDadosApiRio();
             statusExecucoes.rio.ultima_resposta = resultado;
             statusExecucoes.rio.status = resultado.sucesso ? 'sucesso' : 'erro';
+            statusExecucoes.rio.total_importacoes++;
+            statusExecucoes.rio.medicoes_totais += resultado.medicoes_inseridas || 0;
             console.log(`[Scheduler] Importação API Rio concluída: ${resultado.medicoes_inseridas} novas medições`);
         } catch (e) {
             statusExecucoes.rio.status = 'erro';
@@ -64,13 +98,32 @@ function iniciarJobRio(cronExpression = '5 * * * *') {
         }
 
         // Calcular próxima execução
-        statusExecucoes.rio.proxima_execucao = calcularProximaExecucao(cronExpression);
+        statusExecucoes.rio.proxima_execucao = calcularProximaExecucao();
     });
 
     statusExecucoes.rio.status = 'agendado';
-    statusExecucoes.rio.proxima_execucao = calcularProximaExecucao(cronExpression);
+    statusExecucoes.rio.intervalo_minutos = 60; // A cada hora no minuto 05
+    statusExecucoes.rio.proxima_execucao = calcularProximaExecucao();
 
     return jobs.rio;
+}
+
+/**
+ * Configura intervalo de importação - fixo no minuto 05 de cada hora
+ * Mantido para compatibilidade com a API, mas sempre usa minuto 05
+ */
+function configurarIntervalo(minutos) {
+    console.log(`[Scheduler] Configuração de intervalo ignorada - usando minuto 05 fixo de cada hora`);
+    
+    // Reiniciar job com minuto 05 fixo
+    const cronExpr = '5 * * * *';
+    iniciarJobRio(cronExpr);
+    
+    return {
+        intervalo_minutos: 60,
+        cron_expression: cronExpr,
+        proxima_execucao: statusExecucoes.rio.proxima_execucao
+    };
 }
 
 /**
@@ -115,6 +168,8 @@ async function executarImediato(api = 'rio') {
             const resultado = await apiRioService.importarDadosApiRio();
             statusExecucoes.rio.ultima_resposta = resultado;
             statusExecucoes.rio.status = resultado.sucesso ? 'sucesso' : 'erro';
+            statusExecucoes.rio.total_importacoes++;
+            statusExecucoes.rio.medicoes_totais += resultado.medicoes_inseridas || 0;
             return resultado;
         } catch (e) {
             statusExecucoes.rio.status = 'erro';
@@ -130,27 +185,30 @@ async function executarImediato(api = 'rio') {
  * Inicializa todos os jobs ao iniciar o servidor
  */
 function inicializarJobs() {
-    console.log('[Scheduler] Inicializando jobs de importação...');
+    console.log('[Scheduler] Inicializando jobs de importação contínua...');
     
-    // Iniciar job da API do Rio (a cada hora, no minuto 5)
-    iniciarJobRio('5 * * * *');
+    // Iniciar job da API do Rio no minuto 05 de cada hora (ex: 00:05, 01:05, 02:05...)
+    const cronExpr = '5 * * * *';
+    iniciarJobRio(cronExpr);
     
-    // Executar uma importação inicial após 10 segundos
+    // Executar uma importação inicial após 5 segundos
     setTimeout(async () => {
         console.log('[Scheduler] Executando importação inicial...');
         try {
             await executarImediato('rio');
+            console.log('[Scheduler] Importação inicial concluída com sucesso');
         } catch (e) {
             console.error('[Scheduler] Erro na importação inicial:', e.message);
         }
-    }, 10000);
+    }, 5000);
     
-    console.log('[Scheduler] Jobs inicializados com sucesso');
+    console.log('[Scheduler] Jobs inicializados - Importação no minuto 05 de cada hora');
 }
 
 module.exports = {
     iniciarJobRio,
     pararJobRio,
+    configurarIntervalo,
     getStatus,
     executarImediato,
     inicializarJobs

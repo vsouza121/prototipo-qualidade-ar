@@ -167,14 +167,25 @@ const tempoReal = async (req, res) => {
 const porEstacao = async (req, res) => {
   try {
     const { id } = req.params;
-    const { horas = 24, parametro } = req.query;
+    const { horas = 24, parametro, data_inicio, data_fim } = req.query;
 
-    const dataInicio = new Date();
-    dataInicio.setHours(dataInicio.getHours() - parseInt(horas));
+    // Determinar período: data personalizada ou horas
+    let dataInicio, dataFim;
+    
+    if (data_inicio && data_fim) {
+      dataInicio = new Date(data_inicio);
+      dataInicio.setHours(0, 0, 0, 0);
+      dataFim = new Date(data_fim);
+      dataFim.setHours(23, 59, 59, 999);
+    } else {
+      dataFim = new Date();
+      dataInicio = new Date();
+      dataInicio.setHours(dataInicio.getHours() - parseInt(horas));
+    }
 
     const where = {
       estacao_id: id,
-      data_hora: { [Op.gte]: dataInicio }
+      data_hora: { [Op.gte]: dataInicio, [Op.lte]: dataFim }
     };
 
     const include = [{
@@ -198,7 +209,7 @@ const porEstacao = async (req, res) => {
       dados: medicoes,
       periodo: {
         inicio: dataInicio,
-        fim: new Date(),
+        fim: dataFim,
         horas: parseInt(horas)
       }
     });
@@ -377,12 +388,26 @@ const estatisticas = async (req, res) => {
     const {
       estacao_id,
       parametro, // código do parâmetro (ex: PM2.5)
-      dias = 30
+      dias = 30,
+      data_inicio,
+      data_fim
     } = req.query;
 
-    // Calcular data de início baseada nos dias
-    const dataInicio = new Date();
-    dataInicio.setDate(dataInicio.getDate() - parseInt(dias));
+    // Determinar período: data personalizada ou dias
+    let dataInicio, dataFim;
+    
+    if (data_inicio && data_fim) {
+      // Período personalizado
+      dataInicio = new Date(data_inicio);
+      dataInicio.setHours(0, 0, 0, 0);
+      dataFim = new Date(data_fim);
+      dataFim.setHours(23, 59, 59, 999);
+    } else {
+      // Calcular data de início baseada nos dias
+      dataFim = new Date();
+      dataInicio = new Date();
+      dataInicio.setDate(dataInicio.getDate() - parseInt(dias));
+    }
 
     // Construir filtros base
     const where = {};
@@ -390,7 +415,10 @@ const estatisticas = async (req, res) => {
       where.estacao_id = estacao_id;
     }
     
-    where.data_hora = { [Op.gte]: dataInicio };
+    where.data_hora = { 
+      [Op.gte]: dataInicio,
+      [Op.lte]: dataFim
+    };
 
     // Buscar o parâmetro pelo código
     let parametroObj = null;
@@ -530,23 +558,30 @@ const estatisticas = async (req, res) => {
         ? (vals[n / 2 - 1] + vals[n / 2]) / 2 
         : vals[Math.floor(n / 2)];
       
+      // Desvio padrão por estação
+      const varianciaEst = vals.reduce((acc, val) => acc + Math.pow(val - avg, 2), 0) / n;
+      const desvPadrao = Math.sqrt(varianciaEst);
+      
       // Classificação baseada na média
       let classificacao = 'good';
       if (avg > 25) classificacao = 'bad';
       else if (avg > 15) classificacao = 'moderate';
 
       return {
+        id: e.estacao_id, // Alias para compatibilidade com frontend
         estacao_id: e.estacao_id,
         nome: e.nome,
         codigo: e.codigo,
         media: parseFloat(avg.toFixed(2)),
         mediana: parseFloat(med.toFixed(2)),
+        desvio_padrao: parseFloat(desvPadrao.toFixed(2)),
         minimo: vals[0],
         maximo: vals[n - 1],
         amostras: n,
         classificacao,
         q1: calcularPercentil(vals, 25),
-        q3: calcularPercentil(vals, 75)
+        q3: calcularPercentil(vals, 75),
+        p90: calcularPercentil(vals, 90)
       };
     }).sort((a, b) => a.media - b.media);
 
@@ -1005,7 +1040,7 @@ const importar = async (req, res) => {
  */
 const rosaVentos = async (req, res) => {
   try {
-    const { estacao_id, dias = 30 } = req.query;
+    const { estacao_id, dias = 30, data_inicio, data_fim } = req.query;
 
     if (!estacao_id) {
       return res.status(400).json({
@@ -1014,9 +1049,19 @@ const rosaVentos = async (req, res) => {
       });
     }
 
-    // Calcular data de início
-    const dataInicio = new Date();
-    dataInicio.setDate(dataInicio.getDate() - parseInt(dias));
+    // Determinar período: data personalizada ou dias
+    let dataInicio, dataFim;
+    
+    if (data_inicio && data_fim) {
+      dataInicio = new Date(data_inicio);
+      dataInicio.setHours(0, 0, 0, 0);
+      dataFim = new Date(data_fim);
+      dataFim.setHours(23, 59, 59, 999);
+    } else {
+      dataFim = new Date();
+      dataInicio = new Date();
+      dataInicio.setDate(dataInicio.getDate() - parseInt(dias));
+    }
 
     // Buscar parâmetros de direção e velocidade do vento
     const paramDirecao = await Parametro.findOne({ where: { codigo: 'DV', ativo: true } });
@@ -1042,7 +1087,7 @@ const rosaVentos = async (req, res) => {
       where: {
         estacao_id,
         parametro_id: paramDirecao.id,
-        data_hora: { [Op.gte]: dataInicio }
+        data_hora: { [Op.gte]: dataInicio, [Op.lte]: dataFim }
       },
       attributes: ['valor', 'data_hora'],
       order: [['data_hora', 'ASC']],
@@ -1054,7 +1099,7 @@ const rosaVentos = async (req, res) => {
       where: {
         estacao_id,
         parametro_id: paramVelocidade.id,
-        data_hora: { [Op.gte]: dataInicio }
+        data_hora: { [Op.gte]: dataInicio, [Op.lte]: dataFim }
       },
       attributes: ['valor', 'data_hora'],
       order: [['data_hora', 'ASC']],
@@ -1115,6 +1160,21 @@ const rosaVentos = async (req, res) => {
     
     // Agregar por hora do dia
     const porHora = Array(24).fill(0).map(() => ({ soma: 0, contagem: 0 }));
+    
+    // Faixas de velocidade do vento (padrão INEA)
+    const faixasVelocidade = [
+      { id: 0, min: 0.5, max: 2, label: '>=0,5 - <2', cor: '#c8e6c9' },      // Verde claro
+      { id: 1, min: 2, max: 4, label: '>=2 - <4', cor: '#fff176' },          // Amarelo
+      { id: 2, min: 4, max: 7, label: '>=4 - <7', cor: '#ffb74d' },          // Laranja
+      { id: 3, min: 7, max: 12, label: '>=7 - <12', cor: '#ef5350' },        // Vermelho
+      { id: 4, min: 12, max: 999, label: '>=12', cor: '#b71c1c' }            // Vermelho escuro
+    ];
+    
+    // Contagem por direção e faixa de velocidade
+    const contagemPorFaixa = {};
+    direcoes.forEach(d => {
+      contagemPorFaixa[d] = [0, 0, 0, 0, 0]; // 5 faixas
+    });
 
     medicoesDirecao.forEach(m => {
       const direcao = grausParaDirecao(parseFloat(m.valor));
@@ -1135,6 +1195,17 @@ const rosaVentos = async (req, res) => {
       }
       if (velocidade < 0.5) {
         calmaria++;
+      }
+      
+      // Classificar por faixa de velocidade
+      if (velocidade >= 0.5) {
+        for (let i = 0; i < faixasVelocidade.length; i++) {
+          const faixa = faixasVelocidade[i];
+          if (velocidade >= faixa.min && velocidade < faixa.max) {
+            contagemPorFaixa[direcao][i]++;
+            break;
+          }
+        }
       }
       
       // Agregar por hora
@@ -1170,6 +1241,14 @@ const rosaVentos = async (req, res) => {
       hora: i,
       velocidadeMedia: h.contagem > 0 ? parseFloat((h.soma / h.contagem).toFixed(1)) : 0
     }));
+    
+    // Calcular frequências por faixa de velocidade para cada direção (em %)
+    const frequenciasPorFaixa = {};
+    direcoes.forEach(d => {
+      frequenciasPorFaixa[d] = contagemPorFaixa[d].map(count => 
+        totalMedicoes > 0 ? parseFloat(((count / totalMedicoes) * 100).toFixed(2)) : 0
+      );
+    });
 
     res.json({
       sucesso: true,
@@ -1177,11 +1256,13 @@ const rosaVentos = async (req, res) => {
         directions: direcoes,
         frequencies,
         avgSpeeds,
+        faixasVelocidade,
+        frequenciasPorFaixa,
         estatisticas: {
           velocidadeMedia: totalMedicoes > 0 ? parseFloat((somaVelocidadeTotal / totalMedicoes).toFixed(1)) : 0,
           velocidadeMaxima: parseFloat(velocidadeMax.toFixed(1)),
           direcaoPredominante,
-          calmaria: totalMedicoes > 0 ? parseFloat(((calmaria / totalMedicoes) * 100).toFixed(1)) : 0,
+          calmaria: totalMedicoes > 0 ? parseFloat(((calmaria / totalMedicoes) * 100).toFixed(2)) : 0,
           totalMedicoes
         },
         porHora: velocidadePorHora,
@@ -1209,7 +1290,7 @@ const rosaVentos = async (req, res) => {
  */
 const radarPoluentes = async (req, res) => {
   try {
-    const { estacao_id, dias = 30 } = req.query;
+    const { estacao_id, dias = 30, data_inicio, data_fim } = req.query;
 
     if (!estacao_id) {
       return res.status(400).json({
@@ -1218,9 +1299,19 @@ const radarPoluentes = async (req, res) => {
       });
     }
 
-    // Calcular data de início
-    const dataInicio = new Date();
-    dataInicio.setDate(dataInicio.getDate() - parseInt(dias));
+    // Determinar período: data personalizada ou dias
+    let dataInicio, dataFim;
+    
+    if (data_inicio && data_fim) {
+      dataInicio = new Date(data_inicio);
+      dataInicio.setHours(0, 0, 0, 0);
+      dataFim = new Date(data_fim);
+      dataFim.setHours(23, 59, 59, 999);
+    } else {
+      dataFim = new Date();
+      dataInicio = new Date();
+      dataInicio.setDate(dataInicio.getDate() - parseInt(dias));
+    }
 
     // Buscar parâmetro de direção do vento
     const paramDirecao = await Parametro.findOne({ where: { codigo: 'DV', ativo: true } });
@@ -1256,7 +1347,7 @@ const radarPoluentes = async (req, res) => {
       where: {
         estacao_id,
         parametro_id: paramDirecao.id,
-        data_hora: { [Op.gte]: dataInicio }
+        data_hora: { [Op.gte]: dataInicio, [Op.lte]: dataFim }
       },
       attributes: ['valor', 'data_hora'],
       raw: true
@@ -1307,7 +1398,7 @@ const radarPoluentes = async (req, res) => {
         where: {
           estacao_id,
           parametro_id: parametro.id,
-          data_hora: { [Op.gte]: dataInicio }
+          data_hora: { [Op.gte]: dataInicio, [Op.lte]: dataFim }
         },
         attributes: ['valor', 'data_hora'],
         raw: true
@@ -1583,6 +1674,133 @@ const sazonalidade = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/medicoes/ultimos/:estacao_id
+ * Busca os últimos dados de cada parâmetro de uma estação
+ */
+const ultimosDados = async (req, res) => {
+  try {
+    const { estacao_id } = req.params;
+
+    if (!estacao_id) {
+      return res.status(400).json({
+        sucesso: false,
+        mensagem: 'estacao_id é obrigatório'
+      });
+    }
+
+    // Verificar se a estação existe
+    const estacao = await Estacao.findByPk(estacao_id);
+    if (!estacao) {
+      return res.status(404).json({
+        sucesso: false,
+        mensagem: 'Estação não encontrada'
+      });
+    }
+
+    // Calcular IQAr atual da estação para saber o poluente predominante
+    const iqar = await iqarService.calcularIQArEstacao(estacao_id);
+    
+    // Buscar apenas o parâmetro predominante que definiu o IQAR
+    let parametroPredominante = null;
+    let ultimaLeitura = null;
+    
+    if (iqar.poluente_predominante) {
+      const parametro = await Parametro.findOne({
+        where: { 
+          codigo: iqar.poluente_predominante,
+          ativo: true
+        },
+        attributes: ['id', 'codigo', 'nome', 'unidade_medida']
+      });
+      
+      if (parametro) {
+        const ultimaMedicao = await Medicao.findOne({
+          where: {
+            estacao_id: estacao_id,
+            parametro_id: parametro.id
+          },
+          order: [['data_hora', 'DESC']],
+          attributes: ['id', 'valor', 'data_hora', 'flag', 'iqar_calculado', 'classificacao_iqar']
+        });
+        
+        if (ultimaMedicao) {
+          // Formatar horário da leitura
+          const dataHora = new Date(ultimaMedicao.data_hora);
+          const horaFormatada = dataHora.toLocaleTimeString('pt-BR', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            timeZone: 'America/Sao_Paulo'
+          });
+          const dataFormatada = dataHora.toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            timeZone: 'America/Sao_Paulo'
+          });
+          
+          parametroPredominante = {
+            parametro: parametro.codigo,
+            nome: parametro.nome,
+            valor: parseFloat(ultimaMedicao.valor),
+            unidade: parametro.unidade_medida,
+            data_hora: ultimaMedicao.data_hora,
+            data_formatada: dataFormatada,
+            hora_formatada: horaFormatada,
+            iqar: ultimaMedicao.iqar_calculado,
+            classificacao: ultimaMedicao.classificacao_iqar
+          };
+          
+          ultimaLeitura = ultimaMedicao.data_hora;
+        }
+      }
+    }
+
+    // Calcular tempo desde última atualização
+    let tempoDesdeAtualizacao = null;
+    if (ultimaLeitura) {
+      const agora = new Date();
+      const diff = agora - new Date(ultimaLeitura);
+      const horas = Math.floor(diff / (1000 * 60 * 60));
+      const minutos = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      
+      if (horas > 24) {
+        const dias = Math.floor(horas / 24);
+        tempoDesdeAtualizacao = `${dias} dia${dias > 1 ? 's' : ''} atrás`;
+      } else if (horas > 0) {
+        tempoDesdeAtualizacao = `${horas}h ${minutos}min atrás`;
+      } else {
+        tempoDesdeAtualizacao = `${minutos} min atrás`;
+      }
+    }
+
+    res.json({
+      sucesso: true,
+      dados: {
+        estacao: {
+          id: estacao.id,
+          codigo: estacao.codigo,
+          nome: estacao.nome,
+          ativo: estacao.ativo
+        },
+        ultima_atualizacao: ultimaLeitura,
+        tempo_desde_atualizacao: tempoDesdeAtualizacao,
+        iqar: iqar.iqar,
+        classificacao: iqar.classificacao,
+        cor: iqar.cor,
+        poluente_predominante: parametroPredominante
+      }
+    });
+
+  } catch (error) {
+    console.error('Erro ao buscar últimos dados:', error);
+    res.status(500).json({
+      sucesso: false,
+      mensagem: 'Erro interno no servidor'
+    });
+  }
+};
+
 module.exports = {
   listar,
   tempoReal,
@@ -1597,5 +1815,6 @@ module.exports = {
   importar,
   rosaVentos,
   radarPoluentes,
-  sazonalidade
+  sazonalidade,
+  ultimosDados
 };

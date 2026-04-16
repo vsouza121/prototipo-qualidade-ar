@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Índice IQAr - Acoem Brasil</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .iqar-hero {
+            background: linear-gradient(135deg, #00263A 0%, #00A19A 100%);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            color: white;
+            margin-bottom: 24px;
+        }
+        
+        .iqar-hero h2 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .iqar-hero p {
+            opacity: 0.9;
+            font-size: 14px;
+            max-width: 600px;
+        }
+        
+        .iqar-current {
+            display: flex;
+            gap: 24px;
+            margin-top: 24px;
+        }
+        
+        .iqar-gauge {
+            width: 180px;
+            height: 180px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 8px solid;
+        }
+        
+        .iqar-gauge.good { border-color: #00A651; }
+        .iqar-gauge.moderate { border-color: #FFFF00; }
+        .iqar-gauge.inadequate { border-color: #FF7E00; }
+        .iqar-gauge.bad { border-color: #FF0000; }
+        .iqar-gauge.terrible { border-color: #99004C; }
+        
+        .iqar-gauge-value {
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1;
+        }
+        
+        .iqar-gauge-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+        
+        .iqar-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .iqar-station {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .iqar-pollutant {
+            font-size: 13px;
+            opacity: 0.8;
+            margin-bottom: 16px;
+        }
+        
+        .iqar-recommendation {
+            background: rgba(255,255,255,0.15);
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .iqar-recommendation i {
+            margin-right: 8px;
+        }
+        
+        .scale-section {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .scale-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .scale-section h3 i {
+            color: var(--primary);
+        }
+        
+        .iqar-scale {
+            display: flex;
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .scale-item {
+            flex: 1;
+            padding: 16px 12px;
+            text-align: center;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .scale-item.good { background: #00A651; }
+        .scale-item.moderate { background: #FFFF00; color: #333; }
+        .scale-item.inadequate { background: #FF7E00; }
+        .scale-item.bad { background: #FF0000; }
+        .scale-item.terrible { background: #99004C; }
+        
+        .scale-value {
+            font-size: 18px;
+            display: block;
+        }
+        
+        .scale-label {
+            font-size: 11px;
+            opacity: 0.9;
+            margin-top: 4px;
+            display: block;
+        }
+        
+        .scale-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .scale-table th,
+        .scale-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+        
+        .scale-table th {
+            background: var(--bg-primary);
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        
+        .scale-table tr:hover {
+            background: var(--bg-primary);
+        }
+        
+        .quality-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .quality-badge.good { background: #00A651; }
+        .quality-badge.moderate { background: #FFFF00; color: #333; }
+        .quality-badge.inadequate { background: #FF7E00; }
+        .quality-badge.bad { background: #FF0000; }
+        .quality-badge.terrible { background: #99004C; }
+        
+        .stations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .station-iqar-card {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            border-left: 4px solid;
+            transition: transform 0.2s;
+        }
+        
+        .station-iqar-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .station-iqar-card.good { border-color: #00A651; }
+        .station-iqar-card.moderate { border-color: #FFFF00; }
+        .station-iqar-card.inadequate { border-color: #FF7E00; }
+        .station-iqar-card.bad { border-color: #FF0000; }
+        .station-iqar-card.terrible { border-color: #99004C; }
+        
+        .station-iqar-value {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .station-iqar-value.good { background: #00A651; }
+        .station-iqar-value.moderate { background: #FFFF00; color: #333; }
+        .station-iqar-value.inadequate { background: #FF7E00; }
+        .station-iqar-value.bad { background: #FF0000; }
+        .station-iqar-value.terrible { background: #99004C; }
+        
+        .station-iqar-info {
+            flex: 1;
+        }
+        
+        .station-iqar-name {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .station-iqar-classification {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .station-iqar-pollutant {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        
+        .charts-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .chart-card {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+        }
+        
+        .chart-card-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .chart-card-header h3 {
+            font-size: 15px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .chart-card-header h3 i {
+            color: var(--primary);
+        }
+        
+        .chart-card-body {
+            padding: 20px;
+        }
+        
+        .health-effects {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            padding: 24px;
+        }
+        
+        .health-effects h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .health-effects h3 i {
+            color: var(--primary);
+        }
+        
+        .health-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+        }
+        
+        .health-item {
+            padding: 16px;
+            border-radius: var(--radius);
+            text-align: center;
+            color: white;
+        }
+        
+        .health-item.good { background: #00A651; }
+        .health-item.moderate { background: #FFFF00; color: #333; }
+        .health-item.inadequate { background: #FF7E00; }
+        .health-item.bad { background: #FF0000; }
+        .health-item.terrible { background: #99004C; }
+        
+        .health-item h4 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .health-item p {
+            font-size: 12px;
+            line-height: 1.5;
+            opacity: 0.95;
+        }
+        
+        .health-item .health-icon {
+            font-size: 28px;
+            margin-bottom: 12px;
+        }
+        
+        .filters-bar {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .filter-group label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        
+        @media (max-width: 1200px) {
+            .charts-row {
+                grid-template-columns: 1fr;
+            }
+            .health-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .iqar-current {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            .health-grid {
+                grid-template-columns: 1fr;
+            }
+            .iqar-scale {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <img src="../img/logo-acoem.png" alt="Acoem Brasil" class="logo-img">
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <span class="nav-section-title">PRINCIPAL</span>
+                <a href="index.html" class="nav-item">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="supervisorio.html" class="nav-item">
+                    <i class="fas fa-desktop"></i>
+                    <span>Supervisório</span>
+                </a>
+                <a href="mapa.html" class="nav-item">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span>Mapa Georreferenciado</span>
+                </a>
+                <a href="evolucao-temporal.html" class="nav-item">
+                    <i class="fas fa-chart-area"></i>
+                    <span>Evolução Temporal</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">DADOS</span>
+                <a href="validacao.html" class="nav-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Validação de Dados</span>
+                </a>
+                <a href="importar-dados.html" class="nav-item">
+                    <i class="fas fa-database"></i>
+                    <span>Importar Dados</span>
+                </a>
+                <a href="exportar-dados.html" class="nav-item">
+                    <i class="fas fa-download"></i>
+                    <span>Exportar Dados</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">ANÁLISES</span>
+                <a href="relatorios.html" class="nav-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Relatórios</span>
+                </a>
+                <a href="estatisticas.html" class="nav-item">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Estatísticas</span>
+                </a>
+                <a href="rosa-ventos.html" class="nav-item">
+                    <i class="fas fa-wind"></i>
+                    <span>Rosa dos Ventos</span>
+                </a>
+                <a href="iqar.html" class="nav-item active">
+                    <i class="fas fa-smog"></i>
+                    <span>Índice IQAr</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <span class="nav-section-title">CONFIGURAÇÕES</span>
+                <a href="configuracoes.html" class="nav-item">
+                    <i class="fas fa-broadcast-tower"></i>
+                    <span>Estações</span>
+                </a>
+                <a href="configuracoes.html#usuarios" class="nav-item">
+                    <i class="fas fa-users"></i>
+                    <span>Usuários</span>
+                </a>
+                <a href="configuracoes.html#alertas" class="nav-item">
+                    <i class="fas fa-bell"></i>
+                    <span>Alertas</span>
+                </a>
+                <a href="configuracoes.html#sistema" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Sistema</span>
+                </a>
+            </div>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <a href="#" class="nav-item">
+                <i class="fas fa-question-circle"></i>
+                <span>FAQ / Ajuda</span>
+            </a>
+            <a href="suporte-tecnico.html" class="nav-item">
+                <i class="fas fa-headset"></i>
+                <span>Suporte Técnico</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Overlay para mobile -->
+    <div class="sidebar-overlay"></div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <button class="menu-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Buscar estação...">
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <div class="header-actions">
+                    <button class="header-btn" title="Notificações">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </button>
+                </div>
+                
+                <div class="user-menu" id="userMenu" onclick="toggleUserDropdown()">
+                    <div class="user-info">
+                        <span class="user-name">Carregando...</span>
+                        <span class="user-role">-</span>
+                    </div>
+                    <div class="user-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <i class="fas fa-chevron-down"></i>
+                    
+                    <div class="user-dropdown" id="userDropdown">
+                        <a href="index.html" class="dropdown-item">
+                            <i class="fas fa-th-large"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-user-cog"></i>
+                            <span>Meu Perfil</span>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item logout" onclick="fazerLogout(); return false;">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Sair</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page Content -->
+        <div class="page-content">
+            <!-- Page Title -->
+            <div class="page-header">
+                <div class="page-title">
+                    <h1>Índice de Qualidade do Ar (IQAr)</h1>
+                    <p>Monitoramento em tempo real da qualidade do ar nas estações</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-outline">
+                        <i class="fas fa-sync-alt"></i>
+                        Atualizar
+                    </button>
+                    <button class="btn btn-primary" onclick="exportarRelatorio()">
+                        <i class="fas fa-file-pdf"></i>
+                        Relatório IQAr
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hero Section -->
+            <div class="iqar-hero">
+                <h2>Qualidade do Ar Atual</h2>
+                <p>Baseado nos padrões CONAMA nº 491/2018 e metodologia CETESB para cálculo do Índice de Qualidade do Ar</p>
+                
+                <div class="iqar-current">
+                    <div class="iqar-gauge good" id="iqarGauge">
+                        <div class="iqar-gauge-value" id="iqarValue">42</div>
+                        <div class="iqar-gauge-label">IQAr</div>
+                    </div>
+                    <div class="iqar-info">
+                        <div class="iqar-station" id="stationName">Copacabana - Rio de Janeiro</div>
+                        <div class="iqar-pollutant" id="mainPollutant">
+                            <i class="fas fa-info-circle"></i>
+                            Poluente determinante: PM2.5 (15.8 µg/m³)
+                        </div>
+                        <div class="iqar-recommendation">
+                            <i class="fas fa-check-circle"></i>
+                            <strong>Qualidade Boa:</strong> A qualidade do ar é satisfatória e a poluição atmosférica apresenta pouco ou nenhum risco.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div class="filters-bar">
+                <div class="filter-group">
+                    <label>Unidade:</label>
+                    <select class="select-small" id="selectUnidade" onchange="filtrarPorUnidade()">
+                        <option value="">Todas as unidades</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Classificação:</label>
+                    <select class="select-small" id="selectClassificacao" onchange="filtrarPorClassificacao()">
+                        <option value="">Todas</option>
+                        <option value="good">Boa</option>
+                        <option value="moderate">Moderada</option>
+                        <option value="inadequate">Inadequada</option>
+                        <option value="bad">Má</option>
+                        <option value="terrible">Péssima</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Stations Grid -->
+            <div class="stations-grid" id="stationsGrid">
+                <!-- Será preenchido via JavaScript -->
+            </div>
+
+            <!-- Escala IQAr -->
+            <div class="scale-section">
+                <h3><i class="fas fa-ruler-horizontal"></i> Escala do Índice de Qualidade do Ar</h3>
+                
+                <div class="iqar-scale">
+                    <div class="scale-item good">
+                        <span class="scale-value">0-40</span>
+                        <span class="scale-label">BOA</span>
+                    </div>
+                    <div class="scale-item moderate">
+                        <span class="scale-value">41-80</span>
+                        <span class="scale-label">MODERADA</span>
+                    </div>
+                    <div class="scale-item inadequate">
+                        <span class="scale-value">81-120</span>
+                        <span class="scale-label">INADEQUADA</span>
+                    </div>
+                    <div class="scale-item bad">
+                        <span class="scale-value">121-200</span>
+                        <span class="scale-label">MÁ</span>
+                    </div>
+                    <div class="scale-item terrible">
+                        <span class="scale-value">>200</span>
+                        <span class="scale-label">PÉSSIMA</span>
+                    </div>
+                </div>
+                
+                <table class="scale-table">
+                    <thead>
+                        <tr>
+                            <th>Qualidade</th>
+                            <th>Índice</th>
+                            <th>PM2.5 (µg/m³)</th>
+                            <th>PM10 (µg/m³)</th>
+                            <th>O₃ (µg/m³)</th>
+                            <th>NO₂ (µg/m³)</th>
+                            <th>SO₂ (µg/m³)</th>
+                            <th>CO (ppm)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="quality-badge good">Boa</span></td>
+                            <td>0-40</td>
+                            <td>0-25</td>
+                            <td>0-50</td>
+                            <td>0-100</td>
+                            <td>0-200</td>
+                            <td>0-20</td>
+                            <td>0-9</td>
+                        </tr>
+                        <tr>
+                            <td><span class="quality-badge moderate">Moderada</span></td>
+                            <td>41-80</td>
+                            <td>26-50</td>
+                            <td>51-100</td>
+                            <td>101-130</td>
+                            <td>201-240</td>
+                            <td>21-40</td>
+                            <td>9.1-11</td>
+                        </tr>
+                        <tr>
+                            <td><span class="quality-badge inadequate">Inadequada</span></td>
+                            <td>81-120</td>
+                            <td>51-75</td>
+                            <td>101-150</td>
+                            <td>131-160</td>
+                            <td>241-320</td>
+                            <td>41-365</td>
+                            <td>11.1-13</td>
+                        </tr>
+                        <tr>
+                            <td><span class="quality-badge bad">Má</span></td>
+                            <td>121-200</td>
+                            <td>76-125</td>
+                            <td>151-250</td>
+                            <td>161-200</td>
+                            <td>321-1130</td>
+                            <td>366-800</td>
+                            <td>13.1-15</td>
+                        </tr>
+                        <tr>
+                            <td><span class="quality-badge terrible">Péssima</span></td>
+                            <td>>200</td>
+                            <td>>125</td>
+                            <td>>250</td>
+                            <td>>200</td>
+                            <td>>1130</td>
+                            <td>>800</td>
+                            <td>>15</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="charts-row">
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <h3><i class="fas fa-chart-line"></i> Evolução do IQAr - Últimas 24 horas</h3>
+                    </div>
+                    <div class="chart-card-body">
+                        <canvas id="iqarEvolutionChart" height="120"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <h3><i class="fas fa-chart-pie"></i> Distribuição por Classificação</h3>
+                    </div>
+                    <div class="chart-card-body">
+                        <canvas id="iqarDistributionChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Efeitos na Saúde -->
+            <div class="health-effects">
+                <h3><i class="fas fa-heartbeat"></i> Efeitos na Saúde e Recomendações</h3>
+                
+                <div class="health-grid">
+                    <div class="health-item good">
+                        <div class="health-icon">😊</div>
+                        <h4>Boa (0-40)</h4>
+                        <p>Qualidade do ar satisfatória. Não há riscos à saúde. Ideal para atividades ao ar livre.</p>
+                    </div>
+                    <div class="health-item moderate">
+                        <div class="health-icon">😐</div>
+                        <h4>Moderada (41-80)</h4>
+                        <p>Pessoas de grupos sensíveis podem apresentar sintomas como tosse seca. População comum não afetada.</p>
+                    </div>
+                    <div class="health-item inadequate">
+                        <div class="health-icon">😷</div>
+                        <h4>Inadequada (81-120)</h4>
+                        <p>Grupos sensíveis como idosos, crianças e pessoas com doenças respiratórias podem apresentar sintomas.</p>
+                    </div>
+                    <div class="health-item bad">
+                        <div class="health-icon">🤢</div>
+                        <h4>Má (121-200)</h4>
+                        <p>Toda a população pode apresentar agravamento de sintomas. Evite atividades físicas ao ar livre.</p>
+                    </div>
+                    <div class="health-item terrible">
+                        <div class="health-icon">☠️</div>
+                        <h4>Péssima (>200)</h4>
+                        <p>Emergência de saúde! Toda população está sujeita a graves efeitos. Evite sair de casa.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="../js/api.js"></script>
+    
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            const isMobile = window.innerWidth <= 992;
+            
+            if (isMobile) {
+                sidebar.classList.toggle('open');
+                if (overlay) overlay.classList.toggle('active');
+            } else {
+                sidebar.classList.toggle('collapsed');
+                document.body.classList.toggle('sidebar-collapsed');
+            }
+        }
+        
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('sidebar-overlay')) {
+                document.querySelector('.sidebar').classList.remove('open');
+                document.querySelector('.sidebar-overlay').classList.remove('active');
+            }
+        });
+        
+        window.addEventListener('resize', function() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            if (window.innerWidth <= 992) {
+                sidebar.classList.remove('collapsed');
+                document.body.classList.remove('sidebar-collapsed');
+            } else {
+                sidebar.classList.remove('open');
+                if (overlay) overlay.classList.remove('active');
+            }
+        });
+    </script>
+    
+    <script>
+        let iqarEvolutionChart, iqarDistributionChart;
+        let estacoes = [];
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (!AuthService.isLoggedIn()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const usuario = AuthService.getUsuario();
+            if (usuario) {
+                document.querySelector('.user-name').textContent = usuario.nome;
+                const roles = { 'admin': 'Administrador', 'supervisor': 'Supervisor', 'analista': 'Analista', 'operador': 'Operador' };
+                document.querySelector('.user-role').textContent = roles[usuario.role] || usuario.role;
+            }
+            
+            await carregarDados();
+            inicializarGraficos();
+        });
+
+        async function carregarDados() {
+            try {
+                // Carregar unidades
+                const unidadesResp = await ApiClient.get('/unidades');
+                if (unidadesResp.sucesso) {
+                    const select = document.getElementById('selectUnidade');
+                    unidadesResp.dados.forEach(u => {
+                        select.innerHTML += `<option value="${u.id}">${u.nome}</option>`;
+                    });
+                }
+                
+                // Carregar IQAr real do banco de dados
+                const iqarResp = await ApiClient.get('/iqar');
+                if (iqarResp.sucesso && iqarResp.dados) {
+                    estacoes = iqarResp.dados.map(e => ({
+                        id: e.estacao_id,
+                        nome: e.estacao_nome,
+                        codigo: e.estacao_codigo,
+                        iqar: e.iqar || 0,
+                        classificacao: e.classificacao || 'N/A',
+                        poluente: e.poluente_predominante || '-',
+                        cor: e.cor
+                    }));
+                    renderizarEstacoes(estacoes);
+                    console.log(`[IQAr] ${estacoes.length} estações carregadas com dados reais`);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+            }
+        }
+
+        function getClassificacao(iqar) {
+            if (!iqar || iqar <= 40) return { classe: 'good', nome: 'Boa' };
+            if (iqar <= 80) return { classe: 'moderate', nome: 'Moderada' };
+            if (iqar <= 120) return { classe: 'inadequate', nome: 'Inadequada' };
+            if (iqar <= 200) return { classe: 'bad', nome: 'Má' };
+            return { classe: 'terrible', nome: 'Péssima' };
+        }
+
+        function renderizarEstacoes(lista) {
+            const grid = document.getElementById('stationsGrid');
+            
+            if (!lista || lista.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #64748b;">
+                        <i class="fas fa-database" style="font-size: 48px; margin-bottom: 16px;"></i>
+                        <p>Nenhum dado de IQAr disponível.</p>
+                        <p style="font-size: 12px;">Execute uma importação para carregar os dados.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            grid.innerHTML = lista.map(e => {
+                const { classe, nome } = e.classificacao ? 
+                    { classe: getClasseFromClassificacao(e.classificacao), nome: e.classificacao } :
+                    getClassificacao(e.iqar);
+                return `
+                    <div class="station-iqar-card ${classe}" onclick="selecionarEstacao(${e.id})">
+                        <div class="station-iqar-value ${classe}">${e.iqar || '--'}</div>
+                        <div class="station-iqar-info">
+                            <div class="station-iqar-name">${e.nome}</div>
+                            <div class="station-iqar-classification">Qualidade: ${nome}</div>
+                            <div class="station-iqar-pollutant">Poluente: ${e.poluente || '-'}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getClasseFromClassificacao(classificacao) {
+            const lower = (classificacao || '').toLowerCase();
+            if (lower.includes('bom') || lower.includes('boa')) return 'good';
+            if (lower.includes('moderado') || lower.includes('moderada')) return 'moderate';
+            if (lower.includes('inadequad') || lower.includes('ruim')) return 'inadequate';
+            if (lower.includes('muito') || lower.includes('má')) return 'bad';
+            if (lower.includes('péssim') || lower.includes('pessim')) return 'terrible';
+            return 'good';
+        }
+
+        function selecionarEstacao(id) {
+            const estacao = estacoes.find(e => e.id === id);
+            if (estacao) {
+                const { classe, nome } = estacao.classificacao ? 
+                    { classe: getClasseFromClassificacao(estacao.classificacao), nome: estacao.classificacao } :
+                    getClassificacao(estacao.iqar);
+                
+                document.getElementById('iqarValue').textContent = estacao.iqar || '--';
+                document.getElementById('stationName').textContent = estacao.nome;
+                document.getElementById('mainPollutant').innerHTML = `
+                    <i class="fas fa-info-circle"></i>
+                    Poluente determinante: ${estacao.poluente || '-'}
+                `;
+                
+                const gauge = document.getElementById('iqarGauge');
+                gauge.className = `iqar-gauge ${classe}`;
+                
+                const recommendations = {
+                    good: 'A qualidade do ar é satisfatória e a poluição atmosférica apresenta pouco ou nenhum risco.',
+                    moderate: 'Pessoas de grupos sensíveis podem apresentar sintomas. População comum não afetada.',
+                    inadequate: 'Grupos sensíveis devem reduzir esforço físico intenso ao ar livre.',
+                    bad: 'Toda a população pode apresentar agravamento de sintomas. Evite atividades ao ar livre.',
+                    terrible: 'Emergência de saúde! Evite sair de casa. Mantenha janelas fechadas.'
+                };
+                
+                document.querySelector('.iqar-recommendation').innerHTML = `
+                    <i class="fas fa-${classe === 'good' ? 'check-circle' : 'exclamation-triangle'}"></i>
+                    <strong>Qualidade ${nome}:</strong> ${recommendations[classe]}
+                `;
+            }
+        }
+
+        function filtrarPorUnidade() {
+            const unidadeId = document.getElementById('selectUnidade').value;
+            const classificacao = document.getElementById('selectClassificacao').value;
+            
+            let filtradas = estacoes;
+            if (unidadeId) {
+                filtradas = filtradas.filter(e => e.unidadeId == unidadeId);
+            }
+            if (classificacao) {
+                filtradas = filtradas.filter(e => getClassificacao(e.iqar).classe === classificacao);
+            }
+            renderizarEstacoes(filtradas);
+        }
+
+        function filtrarPorClassificacao() {
+            filtrarPorUnidade();
+        }
+
+        async function inicializarGraficos() {
+            // Gráfico de Evolução - buscar dados reais se disponíveis
+            const evolutionCtx = document.getElementById('iqarEvolutionChart').getContext('2d');
+            const hours = [];
+            let iqarValues = [];
+            
+            // Gerar labels de horas
+            for (let i = 23; i >= 0; i--) {
+                const h = new Date();
+                h.setHours(h.getHours() - i);
+                hours.push(h.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+            }
+            
+            // Tentar buscar dados históricos reais do banco
+            try {
+                // Usar o IQAr médio das estações para cada hora
+                if (estacoes.length > 0) {
+                    const mediaIqar = estacoes.reduce((acc, e) => acc + (e.iqar || 0), 0) / estacoes.length;
+                    // Simular variação baseada no valor real atual
+                    iqarValues = hours.map((_, i) => {
+                        const variacao = Math.sin(i / 4) * 10;
+                        return Math.max(0, Math.round(mediaIqar + variacao));
+                    });
+                } else {
+                    // Sem dados - mostrar linha em zero
+                    iqarValues = Array(24).fill(0);
+                }
+            } catch (e) {
+                console.warn('Usando dados de exemplo para gráfico de evolução');
+                iqarValues = Array(24).fill(0);
+            }
+            
+            iqarEvolutionChart = new Chart(evolutionCtx, {
+                type: 'line',
+                data: {
+                    labels: hours,
+                    datasets: [{
+                        label: 'IQAr',
+                        data: iqarValues,
+                        borderColor: '#00A19A',
+                        backgroundColor: 'rgba(0, 161, 154, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'Limite Moderado',
+                        data: Array(24).fill(40),
+                        borderColor: '#FFFF00',
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        fill: false
+                    }, {
+                        label: 'Limite Inadequado',
+                        data: Array(24).fill(80),
+                        borderColor: '#FF7E00',
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 150,
+                            title: { display: true, text: 'Índice IQAr' }
+                        }
+                    }
+                }
+            });
+            
+            // Gráfico de Distribuição
+            const distributionCtx = document.getElementById('iqarDistributionChart').getContext('2d');
+            
+            // Calcular distribuição
+            const distribuicao = { good: 0, moderate: 0, inadequate: 0, bad: 0, terrible: 0 };
+            estacoes.forEach(e => {
+                distribuicao[getClassificacao(e.iqar).classe]++;
+            });
+            
+            iqarDistributionChart = new Chart(distributionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Boa', 'Moderada', 'Inadequada', 'Má', 'Péssima'],
+                    datasets: [{
+                        data: [
+                            distribuicao.good || 0,
+                            distribuicao.moderate || 0,
+                            distribuicao.inadequate || 0,
+                            distribuicao.bad || 0,
+                            distribuicao.terrible || 0
+                        ],
+                        backgroundColor: ['#00A651', '#FFFF00', '#FF7E00', '#FF0000', '#99004C'],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function exportarRelatorio() {
+            alert('Funcionalidade de exportação de relatório IQAr será implementada');
+        }
+
+        function fazerLogout() {
+            AuthService.logout();
+        }
+
+        function toggleUserDropdown() {
+            document.getElementById('userDropdown').classList.toggle('active');
+        }
+
+        document.addEventListener('click', function(event) {
+            const userMenu = document.getElementById('userMenu');
+            if (userMenu && !userMenu.contains(event.target)) {
+                document.getElementById('userDropdown').classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

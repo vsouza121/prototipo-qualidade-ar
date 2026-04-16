@@ -628,6 +628,9 @@
         </div>
     </div>
 
+    <!-- API e Autenticação - Deve ser carregado PRIMEIRO -->
+    <script src="../js/api.js?v=5"></script>
+
     <script>
         // Variáveis globais
         let paginaAtual = 1;
@@ -771,9 +774,6 @@
         });
     </script>
     
-    <!-- API e Autenticação -->
-    <script src="../js/api.js?v=4"></script>
-    
     <!-- Sidebar Toggle Script -->
     <script>
         function toggleSidebar() {
@@ -889,8 +889,32 @@
         }
 
         async function carregarDadosValidacao() {
+            const tbody = document.querySelector('.validation-table tbody');
+            
+            // Mostrar indicador de carregamento
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 32px; margin-bottom: 16px; display: block;"></i>
+                        Carregando dados...
+                    </td>
+                </tr>`;
+            
             try {
                 const token = AuthService.getToken();
+                
+                // Verificar se há token
+                if (!token) {
+                    console.error('Token não encontrado. Usuário não está logado.');
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="9" style="text-align: center; padding: 40px; color: var(--warning);">
+                                <i class="fas fa-exclamation-circle" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+                                Sessão expirada. <a href="login.html">Faça login novamente</a>
+                            </td>
+                        </tr>`;
+                    return;
+                }
                 
                 // Coletar filtros
                 const unidade = document.getElementById('filtroUnidade')?.value || '';
@@ -918,19 +942,41 @@
                 if (dataFim) url += `&data_fim=${dataFim}`;
                 if (flags.length > 0) url += `&flags=${flags.join(',')}`;
 
+                console.log('Carregando validação, URL:', url);
+                console.log('Token:', token ? 'presente' : 'ausente');
+                
                 const response = await fetch(url, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const data = await response.json();
+                console.log('Resposta da API:', data);
 
                 if (data.sucesso) {
                     medicoesCarregadas = data.dados;
                     totalPaginas = data.paginacao.totalPaginas;
                     renderizarTabela(data.dados);
                     atualizarBadge(data.paginacao.total);
+                } else {
+                    console.error('API retornou erro:', data.mensagem);
+                    const tbody = document.querySelector('.validation-table tbody');
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="9" style="text-align: center; padding: 40px; color: var(--danger);">
+                                <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+                                Erro ao carregar dados: ${data.mensagem || 'Erro desconhecido'}
+                            </td>
+                        </tr>`;
                 }
             } catch (error) {
                 console.error('Erro ao carregar dados de validação:', error);
+                const tbody = document.querySelector('.validation-table tbody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 40px; color: var(--danger);">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 16px; display: block;"></i>
+                            Erro de conexão: ${error.message}
+                        </td>
+                    </tr>`;
             }
         }
 
