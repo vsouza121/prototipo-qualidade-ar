@@ -433,6 +433,369 @@
             .sazonalidade-cards { grid-template-columns: repeat(2, 1fr); }
             .sazonalidade-graficos { grid-template-columns: 1fr; }
         }
+        
+        /* Estilos para multi-seleção de estações */
+        .evolucao-filtros {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            padding: 16px;
+            background: var(--bg-primary);
+            border-radius: var(--radius);
+            margin-bottom: 16px;
+        }
+        
+        .evolucao-filtros .filtro-grupo {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .evolucao-filtros .filtro-grupo label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+        
+        .multi-select-wrapper {
+            position: relative;
+        }
+        
+        .multi-select-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 8px 14px;
+            min-width: 220px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            background: var(--bg-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            color: var(--text-primary);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        
+        .multi-select-btn:hover {
+            border-color: var(--primary);
+        }
+        
+        .multi-select-btn i {
+            font-size: 10px;
+            color: var(--text-secondary);
+            transition: transform 0.2s;
+        }
+        
+        .multi-select-wrapper.open .multi-select-btn i {
+            transform: rotate(180deg);
+        }
+        
+        .multi-select-panel {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            min-width: 280px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            display: none;
+        }
+        
+        .multi-select-wrapper.open .multi-select-panel {
+            display: block;
+        }
+        
+        .multi-select-search {
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .multi-select-search input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            font-size: 13px;
+        }
+        
+        .multi-select-list {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        
+        .multi-select-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            cursor: pointer;
+            transition: background-color 0.15s;
+        }
+        
+        .multi-select-item:hover {
+            background-color: var(--bg-primary);
+        }
+        
+        .multi-select-item.selected {
+            background-color: rgba(0, 161, 154, 0.1);
+        }
+        
+        .multi-select-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary);
+        }
+        
+        .multi-select-item label {
+            flex: 1;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        
+        .multi-select-footer {
+            padding: 10px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .multi-select-footer button {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: var(--radius);
+            cursor: pointer;
+        }
+        
+        .multi-select-footer .btn-limpar {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+        }
+        
+        .multi-select-footer .btn-aplicar {
+            background: var(--primary);
+            border: none;
+            color: white;
+        }
+        
+        .estacoes-selecionadas {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .estacao-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(0, 161, 154, 0.1);
+            border-radius: 20px;
+            font-size: 12px;
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .estacao-tag .remove-tag {
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        
+        .estacao-tag .remove-tag:hover {
+            opacity: 1;
+        }
+        
+        /* Toggle de Visualização Gráfico/Tabela */
+        .view-toggle {
+            display: flex;
+            background: var(--bg-primary);
+            border-radius: var(--radius);
+            padding: 3px;
+            gap: 2px;
+        }
+        
+        .view-toggle-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border: none;
+            background: transparent;
+            border-radius: calc(var(--radius) - 2px);
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .view-toggle-btn:hover {
+            color: var(--text-primary);
+        }
+        
+        .view-toggle-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 2px 4px rgba(0, 161, 154, 0.3);
+        }
+        
+        .evolucao-view {
+            display: none;
+        }
+        
+        .evolucao-view.active {
+            display: block;
+        }
+        
+        /* Tabela de Evolução */
+        .evolucao-tabela-container {
+            padding: 0 20px 20px;
+            overflow-x: auto;
+        }
+        
+        .evolucao-tabela {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        
+        .evolucao-tabela th {
+            background: var(--bg-primary);
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border-color);
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+        }
+        
+        .evolucao-tabela td {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+        
+        .evolucao-tabela tbody tr:hover {
+            background: rgba(0, 161, 154, 0.05);
+        }
+        
+        .evolucao-tabela .valor-cell {
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 500;
+        }
+        
+        .evolucao-tabela .estacao-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .tabela-scroll {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .tabela-resumo {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            padding: 0 20px;
+            margin-bottom: 20px;
+        }
+        
+        .tabela-resumo-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 18px;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .tabela-resumo-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .tabela-resumo-item .icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        
+        .tabela-resumo-item:nth-child(1) .icon {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            color: #1976d2;
+        }
+        
+        .tabela-resumo-item:nth-child(2) .icon {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            color: #388e3c;
+        }
+        
+        .tabela-resumo-item:nth-child(3) .icon {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            color: #f57c00;
+        }
+        
+        .tabela-resumo-item:nth-child(4) .icon {
+            background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%);
+            color: #c2185b;
+        }
+        
+        .tabela-resumo-item .content {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 0;
+        }
+        
+        .tabela-resumo-item .label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        .tabela-resumo-item .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        @media (max-width: 900px) {
+            .tabela-resumo {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 500px) {
+            .tabela-resumo {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -459,11 +822,7 @@
                     <i class="fas fa-map-marked-alt"></i>
                     <span>Mapa Georreferenciado</span>
                 </a>
-                <a href="evolucao-temporal.html" class="nav-item">
-                    <i class="fas fa-chart-area"></i>
-                    <span>Evolução Temporal</span>
-                </a>
-            </div>
+                </div>
             
             <div class="nav-section">
                 <span class="nav-section-title">DADOS</span>
@@ -606,12 +965,7 @@
                         <div class="filtro-item">
                             <label>Parâmetro</label>
                             <select id="selectParametro" onchange="atualizarDados()">
-                                <option value="PM2.5">PM2.5 - Material Particulado Fino</option>
-                                <option value="PM10">PM10 - Material Particulado Inalável</option>
-                                <option value="O3">O3 - Ozônio</option>
-                                <option value="NO2">NO2 - Dióxido de Nitrogênio</option>
-                                <option value="SO2">SO2 - Dióxido de Enxofre</option>
-                                <option value="CO">CO - Monóxido de Carbono</option>
+                                <option value="">Carregando...</option>
                             </select>
                         </div>
                         <div class="filtro-item">
@@ -802,6 +1156,50 @@
                     <div class="grafico-container">
                         <div class="grafico-header">
                             <h3><i class="fas fa-chart-line"></i> Evolução Temporal</h3>
+                            <div class="grafico-acoes">
+                                <button class="btn-export" title="Exportar PNG" onclick="exportarGrafico('chartEvolucao')">
+                                    <i class="fas fa-image"></i> PNG
+                                </button>
+                                <button class="btn-export" title="Exportar CSV" onclick="exportarDadosEvolucao()">
+                                    <i class="fas fa-file-csv"></i> CSV
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Filtros de Evolução com Multi-Seleção de Estações -->
+                        <div class="evolucao-filtros">
+                            <div class="filtro-grupo">
+                                <label>Estações</label>
+                                <div class="multi-select-wrapper" id="evolucaoEstacaoWrapper">
+                                    <button type="button" class="multi-select-btn" onclick="toggleEvolucaoEstacaoPanel(event)">
+                                        <span id="evolucaoEstacaoBtnText">Selecionar estações...</span>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                    <div class="multi-select-panel" id="evolucaoEstacaoPanel">
+                                        <div class="multi-select-search">
+                                            <input type="text" placeholder="Buscar estação..." id="evolucaoSearchEstacao" oninput="filtrarEvolucaoEstacoes()">
+                                        </div>
+                                        <div class="multi-select-list" id="evolucaoEstacaoList">
+                                            <!-- Estações serão carregadas aqui -->
+                                        </div>
+                                        <div class="multi-select-footer">
+                                            <button type="button" class="btn-limpar" onclick="limparEvolucaoEstacoes()">Limpar</button>
+                                            <button type="button" class="btn-aplicar" onclick="aplicarEvolucaoEstacoes()">Aplicar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Toggle Gráfico/Tabela -->
+                            <div class="view-toggle">
+                                <button type="button" class="view-toggle-btn active" onclick="toggleEvolucaoView('grafico')">
+                                    <i class="fas fa-chart-line"></i> Gráfico
+                                </button>
+                                <button type="button" class="view-toggle-btn" onclick="toggleEvolucaoView('tabela')">
+                                    <i class="fas fa-table"></i> Tabela
+                                </button>
+                            </div>
+                            
                             <div class="grafico-filtros">
                                 <label style="display: flex; align-items: center; gap: 6px; font-size: 13px;">
                                     <input type="checkbox" id="mostrarTendencia" checked onchange="carregarEvolucao()">
@@ -809,16 +1207,73 @@
                                 </label>
                             </div>
                         </div>
-                        <div class="grafico-body">
-                            <canvas id="chartEvolucao"></canvas>
+                        
+                        <!-- Tags das Estações Selecionadas -->
+                        <div class="estacoes-selecionadas" id="evolucaoEstacoesTags" style="padding: 0 20px;">
+                            <!-- Tags serão inseridas aqui -->
                         </div>
-                        <div class="grafico-footer">
-                            <div class="grafico-info"><span id="infoEvolucao">Carregando...</span></div>
-                            <div class="grafico-acoes">
-                                <button class="btn-export" onclick="exportarGrafico('chartEvolucao')">
-                                    <i class="fas fa-image"></i> PNG
-                                </button>
+                        
+                        <!-- View: Gráfico -->
+                        <div id="evolucaoViewGrafico" class="evolucao-view active">
+                            <div class="grafico-body">
+                                <canvas id="chartEvolucao"></canvas>
                             </div>
+                        </div>
+                        
+                        <!-- View: Tabela -->
+                        <div id="evolucaoViewTabela" class="evolucao-view">
+                            <div class="tabela-resumo" id="evolucaoTabelaResumo">
+                                <div class="tabela-resumo-item">
+                                    <div class="icon"><i class="fas fa-database"></i></div>
+                                    <div class="content">
+                                        <span class="label">Total Registros</span>
+                                        <span class="value" id="evolucaoTotalRegistros">--</span>
+                                    </div>
+                                </div>
+                                <div class="tabela-resumo-item">
+                                    <div class="icon"><i class="fas fa-chart-line"></i></div>
+                                    <div class="content">
+                                        <span class="label">Média Geral</span>
+                                        <span class="value" id="evolucaoMediaGeral">--</span>
+                                    </div>
+                                </div>
+                                <div class="tabela-resumo-item">
+                                    <div class="icon"><i class="fas fa-arrow-down"></i></div>
+                                    <div class="content">
+                                        <span class="label">Mínimo</span>
+                                        <span class="value" id="evolucaoMinimo">--</span>
+                                    </div>
+                                </div>
+                                <div class="tabela-resumo-item">
+                                    <div class="icon"><i class="fas fa-arrow-up"></i></div>
+                                    <div class="content">
+                                        <span class="label">Máximo</span>
+                                        <span class="value" id="evolucaoMaximo">--</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="evolucao-tabela-container">
+                                <div class="tabela-scroll">
+                                    <table class="evolucao-tabela">
+                                        <thead>
+                                            <tr>
+                                                <th>Data/Hora</th>
+                                                <th>Estação</th>
+                                                <th>Valor</th>
+                                                <th>Unidade</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="evolucaoTabelaBody">
+                                            <tr><td colspan="5" style="text-align: center; padding: 40px;">Selecione estações para visualizar</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="grafico-footer">
+                            <div class="grafico-info"><span id="infoEvolucao">Selecione estações para visualizar a evolução temporal</span></div>
                         </div>
                     </div>
                 </div>
@@ -939,11 +1394,17 @@
         let chartEvolucao, chartHistograma, chartSazonalidade, chartMensal;
         let dadosRelatorio = null;
         let todasEstacoes = [];
+        let todosParametros = [];
         let tipoAtual = 'resumo';
         let periodoPersonalizado = false;
+        let evolucaoEstacoesSelecionadas = [];
+        let dadosEvolucaoTabela = [];
+        let evolucaoViewAtual = 'grafico';
         
         const limitesConama = {
+            'PM2,5': { diario: 25, anual: 10 },
             'PM2.5': { diario: 25, anual: 10 },
+            'MP2,5': { diario: 25, anual: 10 },
             'PM10': { diario: 50, anual: 20 },
             'O3': { diario: 100, anual: null },
             'NO2': { diario: 200, anual: 40 },
@@ -964,9 +1425,64 @@
                 document.querySelector('.user-role').textContent = roles[usuario.role] || usuario.role;
             }
             
+            await carregarParametros();
             await carregarEstacoes();
             await atualizarDados();
+            
+            // Verificar se há hash na URL para auto-selecionar tipo de relatório
+            verificarHashURL();
         });
+        
+        function verificarHashURL() {
+            const hash = window.location.hash.replace('#', '');
+            if (hash) {
+                const tipoMap = {
+                    'evolucao': 'evolucao',
+                    'histograma': 'histograma',
+                    'boxplot': 'boxplot',
+                    'sazonalidade': 'sazonalidade',
+                    'resumo': 'resumo'
+                };
+                if (tipoMap[hash]) {
+                    const card = document.querySelector(`.report-type-card[onclick*="${hash}"]`);
+                    if (card) selecionarTipo(card, hash);
+                }
+            }
+        }
+        
+        async function carregarParametros() {
+            try {
+                const response = await ApiClient.get('/parametros');
+                if (response.sucesso) {
+                    todosParametros = response.dados;
+                    const select = document.getElementById('selectParametro');
+                    
+                    // Filtrar apenas parâmetros de qualidade do ar (que calculam IQAr)
+                    const parametrosQualidadeAr = response.dados.filter(p => 
+                        p.calcula_iqar || ['PM10', 'PM2,5', 'MP2,5', 'O3', 'NO2', 'SO2', 'CO'].includes(p.codigo)
+                    );
+                    
+                    if (parametrosQualidadeAr.length > 0) {
+                        select.innerHTML = parametrosQualidadeAr.map((p, i) => 
+                            `<option value="${p.codigo}" ${i === 0 ? 'selected' : ''}>${p.codigo} - ${p.nome}</option>`
+                        ).join('');
+                    } else {
+                        // Fallback: usar todos os parâmetros disponíveis
+                        select.innerHTML = response.dados.map((p, i) => 
+                            `<option value="${p.codigo}" ${i === 0 ? 'selected' : ''}>${p.codigo} - ${p.nome}</option>`
+                        ).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao carregar parâmetros:', error);
+                // Fallback com valores padrão
+                document.getElementById('selectParametro').innerHTML = `
+                    <option value="PM10">PM10 - Material Particulado</option>
+                    <option value="O3">O3 - Ozônio</option>
+                    <option value="NO2">NO2 - Dióxido de Nitrogênio</option>
+                `;
+            }
+        }
         
         async function carregarEstacoes() {
             try {
@@ -977,10 +1493,271 @@
                     response.dados.forEach(est => {
                         selectEstacao.innerHTML += `<option value="${est.id}">${est.nome}</option>`;
                     });
+                    
+                    // Popular lista de multi-seleção para evolução temporal
+                    renderizarEvolucaoEstacoes();
+                    
+                    // Selecionar primeira estação por padrão
+                    if (todasEstacoes.length > 0) {
+                        evolucaoEstacoesSelecionadas = [todasEstacoes[0].id];
+                        atualizarEvolucaoCheckboxes();
+                        atualizarEvolucaoTags();
+                        atualizarEvolucaoBtnText();
+                    }
                 }
             } catch (error) {
                 console.error('Erro ao carregar estações:', error);
             }
+        }
+        
+        // ===== Funções de Multi-Seleção de Estações (Evolução Temporal) =====
+        
+        function renderizarEvolucaoEstacoes(filtro = '') {
+            const container = document.getElementById('evolucaoEstacaoList');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            const filtradas = todasEstacoes.filter(e => 
+                e.codigo.toLowerCase().includes(filtro.toLowerCase()) ||
+                e.nome.toLowerCase().includes(filtro.toLowerCase())
+            );
+            
+            filtradas.forEach(est => {
+                const checked = evolucaoEstacoesSelecionadas.includes(est.id) ? 'checked' : '';
+                const selected = evolucaoEstacoesSelecionadas.includes(est.id) ? 'selected' : '';
+                
+                container.innerHTML += `
+                    <div class="multi-select-item ${selected}" data-id="${est.id}" onclick="toggleEvolucaoEstacao(${est.id})">
+                        <input type="checkbox" id="evo-chk-${est.id}" ${checked}>
+                        <label for="evo-chk-${est.id}">${est.codigo} - ${est.nome}</label>
+                    </div>
+                `;
+            });
+        }
+        
+        function toggleEvolucaoEstacao(id) {
+            const index = evolucaoEstacoesSelecionadas.indexOf(id);
+            if (index > -1) {
+                evolucaoEstacoesSelecionadas.splice(index, 1);
+            } else {
+                evolucaoEstacoesSelecionadas.push(id);
+            }
+            atualizarEvolucaoCheckboxes();
+            atualizarEvolucaoTags();
+            atualizarEvolucaoBtnText();
+        }
+        
+        function atualizarEvolucaoCheckboxes() {
+            document.querySelectorAll('#evolucaoEstacaoList .multi-select-item').forEach(item => {
+                const id = parseInt(item.dataset.id);
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                if (evolucaoEstacoesSelecionadas.includes(id)) {
+                    item.classList.add('selected');
+                    if (checkbox) checkbox.checked = true;
+                } else {
+                    item.classList.remove('selected');
+                    if (checkbox) checkbox.checked = false;
+                }
+            });
+        }
+        
+        function atualizarEvolucaoTags() {
+            const container = document.getElementById('evolucaoEstacoesTags');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            evolucaoEstacoesSelecionadas.forEach(id => {
+                const est = todasEstacoes.find(e => e.id === id);
+                if (est) {
+                    container.innerHTML += `
+                        <span class="estacao-tag">
+                            ${est.codigo}
+                            <i class="fas fa-times remove-tag" onclick="removerEvolucaoEstacao(${id})"></i>
+                        </span>
+                    `;
+                }
+            });
+        }
+        
+        function atualizarEvolucaoBtnText() {
+            const btn = document.getElementById('evolucaoEstacaoBtnText');
+            if (!btn) return;
+            
+            if (evolucaoEstacoesSelecionadas.length === 0) {
+                btn.textContent = 'Selecionar estações...';
+            } else if (evolucaoEstacoesSelecionadas.length === 1) {
+                const est = todasEstacoes.find(e => e.id === evolucaoEstacoesSelecionadas[0]);
+                btn.textContent = est ? est.codigo : '1 estação';
+            } else {
+                btn.textContent = `${evolucaoEstacoesSelecionadas.length} estações`;
+            }
+        }
+        
+        function removerEvolucaoEstacao(id) {
+            const index = evolucaoEstacoesSelecionadas.indexOf(id);
+            if (index > -1) {
+                evolucaoEstacoesSelecionadas.splice(index, 1);
+                atualizarEvolucaoCheckboxes();
+                atualizarEvolucaoTags();
+                atualizarEvolucaoBtnText();
+                if (tipoAtual === 'evolucao') carregarEvolucao();
+            }
+        }
+        
+        function toggleEvolucaoEstacaoPanel(event) {
+            event.stopPropagation();
+            const wrapper = document.getElementById('evolucaoEstacaoWrapper');
+            wrapper.classList.toggle('open');
+        }
+        
+        function filtrarEvolucaoEstacoes() {
+            const termo = document.getElementById('evolucaoSearchEstacao').value;
+            renderizarEvolucaoEstacoes(termo);
+        }
+        
+        function limparEvolucaoEstacoes() {
+            evolucaoEstacoesSelecionadas = [];
+            atualizarEvolucaoCheckboxes();
+            atualizarEvolucaoTags();
+            atualizarEvolucaoBtnText();
+        }
+        
+        function aplicarEvolucaoEstacoes() {
+            document.getElementById('evolucaoEstacaoWrapper').classList.remove('open');
+            if (tipoAtual === 'evolucao') carregarEvolucao();
+        }
+        
+        // ===== Toggle Gráfico/Tabela para Evolução =====
+        function toggleEvolucaoView(view) {
+            evolucaoViewAtual = view;
+            
+            // Atualizar botões
+            document.querySelectorAll('.view-toggle-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.closest('.view-toggle-btn').classList.add('active');
+            
+            // Alternar views
+            document.getElementById('evolucaoViewGrafico').classList.toggle('active', view === 'grafico');
+            document.getElementById('evolucaoViewTabela').classList.toggle('active', view === 'tabela');
+            
+            // Esconder opção de tendência quando em tabela
+            const filtroTendencia = document.getElementById('mostrarTendencia')?.closest('.grafico-filtros');
+            if (filtroTendencia) {
+                filtroTendencia.style.display = view === 'grafico' ? 'flex' : 'none';
+            }
+        }
+        
+        function atualizarEvolucaoTabela() {
+            const tbody = document.getElementById('evolucaoTabelaBody');
+            const unidade = dadosRelatorio?.unidade || 'µg/m³';
+            
+            if (dadosEvolucaoTabela.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;">Sem dados para exibir</td></tr>';
+                document.getElementById('evolucaoTotalRegistros').textContent = '--';
+                document.getElementById('evolucaoMediaGeral').textContent = '--';
+                document.getElementById('evolucaoMinimo').textContent = '--';
+                document.getElementById('evolucaoMaximo').textContent = '--';
+                return;
+            }
+            
+            // Calcular estatísticas
+            const valores = dadosEvolucaoTabela.map(d => d.valor);
+            const media = valores.reduce((a, b) => a + b, 0) / valores.length;
+            const minimo = Math.min(...valores);
+            const maximo = Math.max(...valores);
+            
+            // Atualizar resumo
+            document.getElementById('evolucaoTotalRegistros').textContent = dadosEvolucaoTabela.length.toLocaleString('pt-BR');
+            document.getElementById('evolucaoMediaGeral').textContent = media.toFixed(2) + ' ' + unidade;
+            document.getElementById('evolucaoMinimo').textContent = minimo.toFixed(2) + ' ' + unidade;
+            document.getElementById('evolucaoMaximo').textContent = maximo.toFixed(2) + ' ' + unidade;
+            
+            // Cores para estações
+            const cores = ['#00A19A', '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#E7E9ED'];
+            const estacaoCores = {};
+            evolucaoEstacoesSelecionadas.forEach((id, idx) => {
+                estacaoCores[id] = cores[idx % cores.length];
+            });
+            
+            // Ordenar por data
+            dadosEvolucaoTabela.sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora));
+            
+            // Gerar linhas da tabela (limitar a 500 para performance)
+            const dadosExibir = dadosEvolucaoTabela.slice(0, 500);
+            
+            tbody.innerHTML = dadosExibir.map(d => {
+                const cor = estacaoCores[d.estacaoId] || '#666';
+                const dataFormatada = new Date(d.dataHora).toLocaleString('pt-BR');
+                const statusIcon = d.flag === 'valid' ? '✅' : d.flag === 'pending' ? '⏳' : '❌';
+                
+                return `
+                    <tr>
+                        <td>${dataFormatada}</td>
+                        <td>
+                            <span class="estacao-badge" style="background: ${cor}20; color: ${cor};">
+                                ${d.estacaoCodigo}
+                            </span>
+                        </td>
+                        <td class="valor-cell">${d.valor.toFixed(2)}</td>
+                        <td>${unidade}</td>
+                        <td>${statusIcon}</td>
+                    </tr>
+                `;
+            }).join('');
+            
+            // Aviso se truncado
+            if (dadosEvolucaoTabela.length > 500) {
+                tbody.innerHTML += `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 12px; background: #fff3e0; color: #e65100;">
+                            <i class="fas fa-info-circle"></i> Exibindo 500 de ${dadosEvolucaoTabela.length.toLocaleString('pt-BR')} registros. Exporte para ver todos.
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        // Fechar dropdown de evolução ao clicar fora
+        document.addEventListener('click', function(event) {
+            const wrapper = document.getElementById('evolucaoEstacaoWrapper');
+            if (wrapper && !wrapper.contains(event.target)) {
+                wrapper.classList.remove('open');
+            }
+        });
+        
+        function exportarDadosEvolucao() {
+            if (evolucaoEstacoesSelecionadas.length === 0 || dadosEvolucaoTabela.length === 0) {
+                alert('Sem dados para exportar. Selecione estações e carregue os dados primeiro.');
+                return;
+            }
+            
+            const parametro = document.getElementById('selectParametro').value;
+            const unidade = dadosRelatorio?.unidade || 'µg/m³';
+            
+            // Cabeçalho CSV
+            let csv = 'Data/Hora;Estação;Código;Valor;Unidade;Status\n';
+            
+            // Ordenar por data
+            const dadosOrdenados = [...dadosEvolucaoTabela].sort((a, b) => new Date(a.dataHora) - new Date(b.dataHora));
+            
+            // Linhas
+            dadosOrdenados.forEach(d => {
+                const dataFormatada = new Date(d.dataHora).toLocaleString('pt-BR');
+                const statusTexto = d.flag === 'valid' ? 'Válido' : d.flag === 'pending' ? 'Pendente' : 'Inválido';
+                csv += `${dataFormatada};${d.estacaoNome};${d.estacaoCodigo};${d.valor.toFixed(2)};${unidade};${statusTexto}\n`;
+            });
+            
+            // Download
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `evolucao_temporal_${parametro}_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
         
 
@@ -991,6 +1768,12 @@
             tipoAtual = tipo;
             
             document.querySelectorAll('.secao-grafico').forEach(sec => sec.classList.remove('visible'));
+            
+            // Esconder/mostrar filtro de estação global (evolução usa seu próprio multi-select)
+            const filtroEstacaoGlobal = document.getElementById('selectEstacao')?.closest('.filtro-item');
+            if (filtroEstacaoGlobal) {
+                filtroEstacaoGlobal.style.display = tipo === 'evolucao' ? 'none' : 'flex';
+            }
             
             const secaoId = {
                 'resumo': 'secaoResumo',
@@ -1207,72 +1990,167 @@
         }
         
         async function carregarEvolucao() {
-            if (!dadosRelatorio || !dadosRelatorio.serie_temporal) {
-                document.getElementById('infoEvolucao').textContent = 'Sem dados disponíveis';
+            const parametro = document.getElementById('selectParametro').value;
+            const periodo = document.getElementById('selectPeriodo').value;
+            const mostrarTendencia = document.getElementById('mostrarTendencia')?.checked;
+            
+            // Verificar se há estações selecionadas
+            if (evolucaoEstacoesSelecionadas.length === 0) {
+                if (chartEvolucao) chartEvolucao.destroy();
+                dadosEvolucaoTabela = [];
+                atualizarEvolucaoTabela();
+                document.getElementById('infoEvolucao').textContent = 'Selecione estações para visualizar a evolução temporal';
                 return;
             }
             
-            const mostrarTendencia = document.getElementById('mostrarTendencia').checked;
-            const dados = dadosRelatorio.serie_temporal;
-            const parametro = document.getElementById('selectParametro').value;
-            const unidade = dadosRelatorio.unidade || 'µg/m³';
+            const cores = ['#00A19A', '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#E7E9ED'];
+            const unidade = dadosRelatorio?.unidade || 'µg/m³';
             
-            if (chartEvolucao) chartEvolucao.destroy();
+            // Construir parâmetros da requisição
+            let queryParams = `parametro=${parametro}`;
             
-            const ctx = document.getElementById('chartEvolucao').getContext('2d');
+            const dataInicio = document.getElementById('dataInicio')?.value;
+            const dataFim = document.getElementById('dataFim')?.value;
             
-            const datasets = [{
-                label: parametro,
-                data: dados.map(d => d.media),
-                borderColor: '#00A19A',
-                backgroundColor: 'rgba(0, 161, 154, 0.1)',
-                fill: true,
-                tension: 0.4,
-                pointRadius: 2
-            }];
-            
-            if (mostrarTendencia && dados.length > 1) {
-                const tendencia = calcularTendencia(dados.map(d => d.media));
-                datasets.push({
-                    label: 'Tendência',
-                    data: tendencia,
-                    borderColor: '#ef4444',
-                    borderDash: [5, 5],
-                    fill: false,
-                    pointRadius: 0
-                });
+            if (periodo === 'personalizado' && dataInicio && dataFim) {
+                queryParams += `&data_inicio=${dataInicio}&data_fim=${dataFim}`;
+            } else {
+                const horasMap = { '7': 168, '30': 720, '90': 2160, '180': 4320, '365': 8760 };
+                const horas = horasMap[periodo] || 720;
+                queryParams += `&horas=${horas}`;
             }
             
-            const limite = limitesConama[parametro]?.diario;
-            if (limite) {
-                datasets.push({
-                    label: `Limite CONAMA (${limite})`,
-                    data: dados.map(() => limite),
-                    borderColor: '#f97316',
-                    borderDash: [10, 5],
-                    fill: false,
-                    pointRadius: 0
-                });
-            }
-            
-            chartEvolucao = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: dados.map(d => formatarData(d.data)),
-                    datasets: datasets
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'top' } },
-                    scales: {
-                        y: { beginAtZero: true, title: { display: true, text: `Concentração (${unidade})` } },
-                        x: { title: { display: true, text: 'Data' } }
+            try {
+                // Carregar dados de cada estação selecionada
+                const promessas = evolucaoEstacoesSelecionadas.map(id => 
+                    ApiClient.get(`/medicoes/estacao/${id}?${queryParams}`)
+                );
+                
+                const respostas = await Promise.all(promessas);
+                const datasets = [];
+                let allLabels = [];
+                
+                // Limpar dados da tabela
+                dadosEvolucaoTabela = [];
+                
+                respostas.forEach((response, index) => {
+                    if (response && response.sucesso && response.dados.length > 0) {
+                        const est = todasEstacoes.find(e => e.id === evolucaoEstacoesSelecionadas[index]);
+                        const medicoes = response.dados;
+                        
+                        // Coletar dados para tabela
+                        medicoes.forEach(m => {
+                            dadosEvolucaoTabela.push({
+                                dataHora: m.data_hora,
+                                estacaoId: evolucaoEstacoesSelecionadas[index],
+                                estacaoCodigo: est ? est.codigo : `Est ${index + 1}`,
+                                estacaoNome: est ? est.nome : `Estação ${index + 1}`,
+                                valor: parseFloat(m.valor) || 0,
+                                flag: m.flag || 'pending'
+                            });
+                        });
+                        
+                        // Coletar labels
+                        const labels = medicoes.map(m => {
+                            const date = new Date(m.data_hora);
+                            return date.toLocaleString('pt-BR', { 
+                                day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' 
+                            });
+                        });
+                        
+                        if (labels.length > allLabels.length) allLabels = labels;
+                        
+                        datasets.push({
+                            label: est ? est.codigo : `Estação ${index + 1}`,
+                            data: medicoes.map(m => parseFloat(m.valor) || 0),
+                            borderColor: cores[index % cores.length],
+                            backgroundColor: cores[index % cores.length] + '20',
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: 2,
+                            borderWidth: 2
+                        });
                     }
+                });
+                
+                // Atualizar tabela
+                atualizarEvolucaoTabela();
+                
+                if (datasets.length === 0) {
+                    if (chartEvolucao) chartEvolucao.destroy();
+                    dadosEvolucaoTabela = [];
+                    atualizarEvolucaoTabela();
+                    document.getElementById('infoEvolucao').textContent = 'Sem dados para as estações selecionadas';
+                    return;
                 }
-            });
-            
-            document.getElementById('infoEvolucao').textContent = `${dados.length} pontos | Média: ${dadosRelatorio.estatisticas.media?.toFixed(2)} ${unidade}`;
+                
+                // Adicionar linha de tendência se habilitado (apenas para primeira série)
+                if (mostrarTendencia && datasets.length > 0 && datasets[0].data.length > 1) {
+                    const tendencia = calcularTendencia(datasets[0].data);
+                    datasets.push({
+                        label: 'Tendência',
+                        data: tendencia,
+                        borderColor: '#ef4444',
+                        borderDash: [5, 5],
+                        fill: false,
+                        pointRadius: 0
+                    });
+                }
+                
+                // Adicionar limite CONAMA
+                const limite = limitesConama[parametro]?.diario;
+                if (limite && allLabels.length > 0) {
+                    datasets.push({
+                        label: `Limite CONAMA (${limite})`,
+                        data: allLabels.map(() => limite),
+                        borderColor: '#f97316',
+                        borderDash: [10, 5],
+                        fill: false,
+                        pointRadius: 0
+                    });
+                }
+                
+                if (chartEvolucao) chartEvolucao.destroy();
+                
+                const ctx = document.getElementById('chartEvolucao').getContext('2d');
+                chartEvolucao = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels: allLabels, datasets: datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { 
+                            legend: { 
+                                position: 'top',
+                                labels: { usePointStyle: true, padding: 20 }
+                            },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false
+                            }
+                        },
+                        scales: {
+                            y: { 
+                                beginAtZero: true, 
+                                title: { display: true, text: `${parametro} (${unidade})` } 
+                            },
+                            x: { 
+                                title: { display: true, text: 'Data/Hora' },
+                                ticks: { maxTicksLimit: 12, maxRotation: 45 }
+                            }
+                        },
+                        interaction: { intersect: false, mode: 'index' }
+                    }
+                });
+                
+                const totalPontos = datasets.reduce((sum, ds) => sum + (ds.data?.length || 0), 0);
+                document.getElementById('infoEvolucao').textContent = 
+                    `${evolucaoEstacoesSelecionadas.length} estação(ões) | ${totalPontos} pontos`;
+                
+            } catch (error) {
+                console.error('Erro ao carregar evolução:', error);
+                document.getElementById('infoEvolucao').textContent = 'Erro ao carregar dados';
+            }
         }
         
         function calcularTendencia(valores) {
